@@ -1,83 +1,142 @@
-import { useState, useEffect, useMemo } from "react";
-import { cellStore } from "../store/store";
-import { validateMove, isGameSolved } from "../utilities/utilities";
+import { useState, useEffect } from "react";
+import { cellStore, useHintStore, useCellActions } from "../store/store";
+import { validateMove, RCS } from "../utilities/utilities";
+import { runHints } from "../utilities/hints";
+import { Hint } from "../store/store";
+//import Spinner from "./Spinner";
 
 export default function PlayMenu() {
-	const { selectedCell, getCell, setCellValue, setSelectedValue, setSelectedCell, updateGS, gameSolved } = cellStore();
-	const [message, setMessage] = useState(gameSolved ? "Game Complete" : null);
+	const { selectedValue } = cellStore();
+	const { setCellValue, setSelectedValue, setCellSelected, clearSelected, getSelected } = useCellActions();
+	const { checkGameSolved, calcNumbersUsed } = useCellActions();
+	const { updateCandidates } = useCellActions();
+	const { gameComplete, numbersUsed } = cellStore();
+	const { hint, setHint, setHintMsg, resetHint } = useHintStore();
+	const [message, setMessage] = useState(gameComplete ? "Game Complete" : null);
 	const selection = [1,2,3,4,5,6,7,8,9];
 
 	useEffect(() => {
 		console.log("PlayMenu UE");
-		const solved = isGameSolved();
-		if (solved == 0) {
+		calcNumbersUsed();
+		const solved = checkGameSolved();
+		//console.log("solved:", solved);
+		if (solved == 1) {
 			console.log("game solved");
-			updateGS(true);
-		} else if (solved == 1) {
+			//setMessage("Game Solved");
+		} else if (solved == 2) {
 			console.log("game solved, alternate solution");
-			updateGS(true);
+			//setMessage("Game Solved, Alternate Solution");
 		}
 	},[])
 
+	function doHint(e) {
+		e.preventDefault();
+		console.log("hint");
+		var h = runHints();
+		if (!h) {
+			//resetHint();
+			console.log("No Hints");
+			setHintMsg("No Hints");
+			return;
+		}
+		var newHint = {...Hint}
+		newHint.type = h.type;
+		newHint.cell = h.cell;
+		var rcs = RCS[newHint.cell];
+		newHint.row = rcs[0];
+		newHint.col = rcs[1];
+		newHint.sq = rcs[2];
+
+		var type = h.type;
+		var hmsg;
+		switch (type) {
+			case 'row':
+				hmsg = `Row at ${h.index} value ${h.value} cell ${h.cell}`;
+				break;
+			case 'col':
+				hmsg = `Column at ${h.index} value ${h.value} cell ${h.cell}`;
+				break;
+			case 'square':
+				hmsg = `Square ${h.index} value ${h.value} cell ${h.cell}`;
+				break;
+			case 'cell':
+				hmsg = `Cell at ${h.cell+1} value ${h.value}`;
+				break;
+		}
+		newHint.msg = hmsg;
+		//console.log("hint:", h, newHint, rcs);
+		setHint(newHint);
+		setCellSelected(h.cell);
+	}
+
 	function select(e,s) {
 		e.preventDefault();
-		const sc = getCell(selectedCell);
-		console.log("select:", s, selectedCell, sc);
-		if (s === 0) {
-			if (selectedCell >= 0) setCellValue(selectedCell, 0);
-			setSelectedCell(-1);
-			setSelectedValue(-1);
-			setMessage(null);
-			return;
-		}
-
-		if (selectedCell > 0) {
-			const val = validateMove(selectedCell, s);
-			console.log("val:", val);
-			if (val < 0) {
-				setMessage("Invalid Move");
-				return;
-			}
-			if (val > 0) {
-				setMessage("Bad Move");
-				console.log("Bad Move:", s);
-			}
-
-// 			const sc = getCell(selectedCell);
-// 			if (sc.value > 0) {
-// 				// error??
-// 				//return;
-// 				console.log("Changing cell value:", sc.value, s);
-// 			}
-
-			setCellValue(selectedCell, s);
-			setSelectedCell(-1);
-			setSelectedValue(s);
-			setMessage(null);
-			return;
-		}
-
-		setSelectedValue(s);
-		setSelectedCell(-1);
-		setMessage(null);
+		doSelect(s);
+		calcNumbersUsed();
 	}
+
+	function doSelect(s) {
+		const selected = getSelected();
+		console.log("select:", s, selected, selected.length);
+		selected.forEach((sel) => {
+			//console.log("forEach:", sel, s)
+			if (s > 0) {
+				const val = validateMove(sel, s);
+				//console.log("val:", val);
+				if (val < 0) {
+					setMessage("Invalid Move");
+				} else if (val > 0) {
+					setMessage("Bad Move");
+					//console.log("Bad Move:", s);
+					setCellValue(sel, s);
+				} else {
+					//console.log("Set:", sel, s)
+					setMessage(null);
+					setCellValue(sel, s);
+					clearSelected();
+				}
+			} else {
+				setCellValue(sel, s);
+				clearSelected();
+			}
+		});
+		if (s > 0) setSelectedValue(s);
+		updateCandidates();
+		resetHint();
+	}
+
+	//if (!used.current) return <Spinner />;
+	//console.log("used:", numbersUsed)
+	//console.log("hint:", hint);
+
 
 	return (
 		<div>
 			<div className="flex flex-row justify-between w-full mt-6" >
 			{selection.map((s) => {
+				var cn = " bg-green-300";
+				if (numbersUsed[s] == 9)
+					cn = " bg-green-100 pointer-events-none";
+				else if (selectedValue === s)
+					cn = " bg-green-500";
 
 				return (
-					<div key={s} className=" " >
-						<div className="flex justify-center size-8 text-xl font-bold rounded-md bg-green-400 hover:cursor-pointer " onClick={(e) => select(e,s)} >
-						{s}
-						</div>
+					<div key={s} className={"flex justify-center size-8 text-xl font-bold rounded-md hover:cursor-pointer " + cn} onClick={(e) => select(e,s)} >
+					{s}
 					</div>
 				)})
 			}
-				<div className=" ">
-					<div className="flex justify-center size-8 text-xl font-bold rounded-md bg-green-400 hover:cursor-pointer " onClick={(e) => select(e,0)} >
-					C
+			</div>
+			<div className="flex flex-row mt-4">
+				<div className="flex justify-center mr-4 size-8 text-xl font-bold rounded-md bg-green-400 hover:cursor-pointer " onClick={(e) => select(e,0)} >
+				C
+				</div>
+				<div className="flex flex-row">
+					<div className="flex justify-center size-8 text-xl font-bold rounded-md bg-green-400 hover:cursor-pointer " onClick={(e) => doHint(e)} >
+					?
+					</div>
+					<div className="pl-4">
+						{hint.msg}
 					</div>
 				</div>
 			</div>

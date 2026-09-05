@@ -1,12 +1,15 @@
 import { cellStore } from "../store/store";
-import { sudoku_generate } from "./generator";
 
-const getCell = cellStore.getState().getCell;
-const cells = cellStore.getState().cells;
-const cellsLoaded = cellStore.getState().cellsLoaded;
+function getCellLocal(ix) {
+	const getCell = cellStore.getState().actions.getCell;
+	return getCell(ix);
+}
 
+// array of squares to linear - keep if needed later
 export function getNewGame(dif) {
-	let { board, solution } = sudoku_generate(dif, true);
+	var board;
+	var solution;
+	//let { board, solution } = sudoku_generate(dif, true);
 	console.log(board);
 	console.log(solution);
 
@@ -30,13 +33,13 @@ export function getNewGame(dif) {
 	for (let x = 0; x < 9; ++x)
 		for (let y = 0; y < 9; ++y) puzzleGrid.push(supuzzle[x][y]);
 
-		var sudoix = 0;
-	var sqix = 0;
+	sudoix = 0;
+	sqix = 0;
 	var susolution = [[], [], [], [], [], [], [], [], []];
 	while (sqix < 9) {
-		for (var row = 0; row < 9; row += 3) {
-			for (var i3 = 0; i3 < 3; ++i3) {
-				for (var x = 0; x < 3; ++x) {
+		for (row = 0; row < 9; row += 3) {
+			for (i3 = 0; i3 < 3; ++i3) {
+				for (x = 0; x < 3; ++x) {
 					const off = sqix + i3;
 					//console.log(sqix, row, i3, x, off);
 					susolution[off].push(Number(solution[sudoix++]));
@@ -53,38 +56,30 @@ export function getNewGame(dif) {
 	return {puzzleGrid, solutionGrid};
 }
 
-export function getCandidates(cellIx) {
-	const c = getCell(cellIx);
-	const ev = getExclusionValues(cellIx);
-
-}
-
-export function getExclusionValues(cellIx) {
-	const values = [];
+export function findCandidates(cellIx, cells) {
+	var values = [1,2,3,4,5,6,7,8,9];
 	const rowix = cellRow[cellIx];
 	const colix = cellCol[cellIx];
 	//console.log("valInRow:", value, cellIx, rowix, colix);
 	//console.log(rows[rowix], cols[colix]);
 	rows[rowix].map(rix => {
-		const r = getCell(rix);
-		if (r.value > 0 && !values.includes(r.value)) values.push(r.value);
+		const rv = cells[rix].value;
+		if (rv > 0) values = values.filter(v => v !== rv);
 	})
 	cols[colix].map(cix => {
-		const c = getCell(cix);
-		if (c.value > 0 && !values.includes(c.value)) values.push(c.value);
+		const cv = cells[cix].value;
+		if (cv > 0) values = values.filter(v => v !== cv);
 	})
 	const sqix = Math.floor(cellIx/9);
 	//console.log(sqix, squares[sqix]);
 	squares[sqix].map(six => {
-		const s = getCell(six);
-		if (s.value > 0 && !values.includes(s.value)) {
-			//console.log(six, s);
-			values.push(s.value);
-		}
+		const sv = cells[six].value;
+		if (sv > 0) values = values.filter(v => v !== sv);
 	})
 
 	return values;
 }
+
 
 export function getRemainingValues(cellIx) {
 	var values = [1,2,3,4,5,6,7,8,9];
@@ -93,17 +88,17 @@ export function getRemainingValues(cellIx) {
 	//console.log("valInRow:", value, cellIx, rowix, colix);
 	//console.log(rows[rowix], cols[colix]);
 	rows[rowix].map(rix => {
-		const r = getCell(rix);
+		const r = getCellLocal(rix);
 		if (r.value > 0) values = values.filter(v => v !== r.value);
 	})
 	cols[colix].map(cix => {
-		const c = getCell(cix);
+		const c = getCellLocal(cix);
 		if (c.value > 0) values = values.filter(v => v !== c.value);
 	})
 	const sqix = Math.floor(cellIx/9);
 	//console.log(sqix, squares[sqix]);
 	squares[sqix].map(six => {
-		const s = getCell(six);
+		const s = getCellLocal(six);
 		if (s.value > 0) values = values.filter(v => v !== s.value);
 	})
 
@@ -117,18 +112,18 @@ export function valueInRowColSq(cellIx, value) {
 	//console.log("valInRow:", value, cellIx, rowix, colix);
 	//console.log(rows[rowix], cols[colix]);
 	rows[rowix].map(rix => {
-		const r = getCell(rix);
+		const r = getCellLocal(rix);
 		//console.log(rix, r);
 		if (r.value === value) included=true;
 	})
 	cols[colix].map(cix => {
-		const c = getCell(cix);
+		const c = getCellLocal(cix);
 		//console.log(cix, c);
 		if (c.value === value) included=true;
 	})
-	const sqix = Math.floor(cellIx/9);
+	const sqix = cellSquare[cellIx];
 	squares[sqix].map(six => {
-		const s = getCell(six);
+		const s = getCellLocal(six);
 		//console.log(cix, c);
 		if (s.value === value) included=true;
 	})
@@ -136,76 +131,64 @@ export function valueInRowColSq(cellIx, value) {
 	return included;
 }
 
-// -1: still in progress
-//  0: finished
-//  1: finished, alternate solution
-export function isGameSolved() {
-	if (!cellsLoaded) return -1;
-	var nonStandard = false;
-	for (var i=0; i<81; ++i) {
-		const c = cells[i];
-		if (c.value === 0) return -1;
-		if (c.value !== c.solutionValue) nonStandard = true;
-	}
+// export function validateBoard() {
+// 	const { getCells } = useCellActions();
+// 	const cells = getCells();
+// 	// check each row for duplicates
+// 	for (var i=0; i<9; ++i) {
+// 		const row = rows[i];
+// 		var vals = [];
+// 		for (var j=0; j<9; ++j) {
+// 			const cix = row[j];
+// 			const val = cells[cix].value;
+// 			if (val > 0) {
+// 				if (vals.includes(val)) return false;
+// 				vals.push(val);
+// 			}
+// 		}
+// 	}
+// 	// check each col for duplicates
+// 	for (var i=0; i<9; ++i) {
+// 		const col = cols[i];
+// 		var vals = [];
+// 		for (var j=0; j<9; ++j) {
+// 			const cix = col[j];
+// 			const val = cells[cix].value;
+// 			if (val > 0) {
+// 				if (vals.includes(val)) return false;
+// 				vals.push(val);
+// 			}
+// 		}
+// 	}
+// 	// check each square for duplicates
+// 	for (var i=0; i<9; ++i) {
+// 		const sq = squares[i];
+// 		var vals = [];
+// 		for (var j=0; j<9; ++j) {
+// 			const cix = sq[j];
+// 			const val = cells[cix].value;
+// 			if (val > 0) {
+// 				if (vals.includes(val)) return false;
+// 				vals.push(val);
+// 			}
+// 		}
+// 	}
 
-	if (!validateBoard) return -2;
-	return nonStandard ? 1 : 0;
-}
-
-export function validateBoard() {
-	// check each row for duplicates
-	for (var i=0; i<9; ++i) {
-		const row = rows[i];
-		var vals = [];
-		for (var j=0; j<9; ++j) {
-			const cix = row[j];
-			const val = cells[cix].value;
-			if (val > 0) {
-				if (vals.includes(val)) return false;
-				vals.push(val);
-			}
-		}
-	}
-	// check each col for duplicates
-	for (var i=0; i<9; ++i) {
-		const col = cols[i];
-		var vals = [];
-		for (var j=0; j<9; ++j) {
-			const cix = col[j];
-			const val = cells[cix].value;
-			if (val > 0) {
-				if (vals.includes(val)) return false;
-				vals.push(val);
-			}
-		}
-	}
-	// check each square for duplicates
-	for (var i=0; i<9; ++i) {
-		const sq = squares[i];
-		var vals = [];
-		for (var j=0; j<9; ++j) {
-			const cix = sq[j];
-			const val = cells[cix].value;
-			if (val > 0) {
-				if (vals.includes(val)) return false;
-				vals.push(val);
-			}
-		}
-	}
-
-	return true;
-}
+// 	return true;
+// }
 
 // -1: value already in row col
 // 	0: valid move
 // >0: value does not match solution
 export function validateMove(cellIx, value) {
-	const rc = valueInRowColSq(cellIx, value);
-	if (rc) return (-1);
+	const rcs = valueInRowColSq(cellIx, value);
+	if (rcs) return (-1);
 
-	const sc = getCell(cellIx);
-	if (value !== sc.originalValue) {
-		return sc.originalValue;
+	const cell = cellStore.getState().cells[cellIx];
+	const rc = cell.candidates.filter(function (x) {return cell.noncandidates.indexOf(x) < 0;});
+	if (!rc.includes(value)) return (-1);
+	if (value !== cell.originalValue) {
+		return cell.originalValue;
 	}
 	return 0;
 }
@@ -264,7 +247,103 @@ export const cellRow = [
 6,6,6,7,7,7,8,8,8,6,6,6,7,7,7,8,8,8,6,6,6,7,7,7,8,8,8
 ];
 
+// floor(cellIx/9)
 export const cellSquare = [
+0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,
+3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,
+6,6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8,8
+];
 
+// row, column, square
+export const RCS = [
+[0,0,0],
+[0,1,0],
+[0,2,0],
+[1,0,0],
+[1,1,0],
+[1,2,0],
+[2,0,0],
+[2,1,0],
+[2,2,0],
+
+[0,3,1],
+[0,4,1],
+[0,5,1],
+[1,3,1],
+[1,4,1],
+[1,5,1],
+[2,3,1],
+[2,4,1],
+[2,5,1],
+
+[0,6,2],
+[0,7,2],
+[0,8,2],
+[1,6,2],
+[1,7,2],
+[1,8,2],
+[2,6,2],
+[2,7,2],
+[2,8,2],
+
+[3,0,3],
+[3,1,3],
+[3,2,3],
+[4,0,3],
+[4,1,3],
+[4,2,3],
+[5,0,3],
+[5,1,3],
+[5,2,3],
+
+[3,3,4],
+[3,4,4],
+[3,5,4],
+[4,3,4],
+[4,4,4],
+[4,5,4],
+[5,3,4],
+[5,4,4],
+[5,5,4],
+
+[3,6,5],
+[3,7,5],
+[3,8,5],
+[4,6,5],
+[4,7,5],
+[4,8,5],
+[5,6,5],
+[5,7,5],
+[5,8,5],
+
+[6,0,6],
+[6,1,6],
+[6,2,6],
+[7,0,6],
+[7,1,6],
+[7,2,6],
+[8,0,6],
+[8,1,6],
+[8,2,6],
+
+[6,3,7],
+[6,4,7],
+[6,5,7],
+[7,3,7],
+[7,4,7],
+[7,5,7],
+[8,3,7],
+[8,4,7],
+[8,5,7],
+
+[6,6,8],
+[6,7,8],
+[6,8,8],
+[7,6,8],
+[7,7,8],
+[7,8,8],
+[8,6,8],
+[8,7,8],
+[8,8,8]
 ];
 

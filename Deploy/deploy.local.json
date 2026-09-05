@@ -1,0 +1,8 @@
+{
+  "ssh_host": "spectrum",
+  "sudoku": {
+    "local_path": "/home/james/Development/Games/sudoku/build",
+    "remote_path": "/var/www/games/sudoku",
+    "restartCaddy": true
+  }
+}
