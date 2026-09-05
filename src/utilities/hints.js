@@ -144,9 +144,11 @@ export function singletons() {
 	const cells = cellStore.getState().cells;
 	for (var ix=0; ix<81; ++ix) {
 		var c = cells[ix];
-		if (c.value === 0 && c.candidates.length === 1){
+		const candid = c.candidates.filter(function (x) {return c.noncandidates.indexOf(x) < 0;});
+
+		if (c.value === 0 && candid.length === 1){
 			//console.log("single:", ix, c.candidates[0]);
-			return {type: 'cell', index: -1, cell: ix, offset: ix, value: c.candidates[0]};
+			return {type: 'cell', index: -1, cell: ix, offset: ix, value: candid[0]};
 		}
 	};
 	return null;

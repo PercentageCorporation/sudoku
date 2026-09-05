@@ -18,20 +18,37 @@ export default function PlayMenu() {
 	useEffect(() => {
 		console.log("PlayMenu UE");
 		calcNumbersUsed();
-		const solved = checkGameSolved();
-		//console.log("solved:", solved);
+		const solved = gameComplete;
+		console.log("solved:", solved);
 		if (solved == 1) {
 			console.log("game solved");
-			//setMessage("Game Solved");
+			setMessage("Game Solved");
 		} else if (solved == 2) {
 			console.log("game solved, alternate solution");
-			//setMessage("Game Solved, Alternate Solution");
-		}
-	},[])
+			setMessage("Game Solved, Alternate Solution");
+		} else
+			setMessage(null);
+
+	},[gameComplete])
 
 	function doHint(e) {
 		e.preventDefault();
-		console.log("hint");
+		var h = runHints();
+		if (!h) return;
+		console.log("doHint", h);
+		var cix = h.cell;
+		var v = h.value;
+		setCellValue(cix, v);
+		clearSelected();
+		updateCandidates();
+		setSelectedValue(v);
+		resetHint();
+		checkGameSolved();
+	}
+
+	function showHint(e) {
+		e.preventDefault();
+		//console.log("showHint", hint);
 		var h = runHints();
 		if (!h) {
 			//resetHint();
@@ -103,6 +120,7 @@ export default function PlayMenu() {
 		if (s > 0) setSelectedValue(s);
 		updateCandidates();
 		resetHint();
+		checkGameSolved();
 	}
 
 	//if (!used.current) return <Spinner />;
@@ -132,12 +150,19 @@ export default function PlayMenu() {
 				C
 				</div>
 				<div className="flex flex-row">
-					<div className="flex justify-center size-8 text-xl font-bold rounded-md bg-green-400 hover:cursor-pointer " onClick={(e) => doHint(e)} >
+					<div
+					className="flex justify-center size-8 text-xl font-bold rounded-md bg-green-400 hover:cursor-pointer "
+					onClick={(e) => showHint(e)} >
 					?
 					</div>
-					<div className="pl-4">
+					{ hint.msg &&
+					<div
+						className="ml-4 px-2 bg-green-300 rounded-md"
+						onClick={(e)=>doHint(e)}
+						>
 						{hint.msg}
 					</div>
+					}
 				</div>
 			</div>
 			<div className="mt-4 flex text-lg font-bold text-red-600">

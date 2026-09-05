@@ -1,7 +1,8 @@
 import { cellStore, useCellActions, useCells, useHintStore } from "../store/store";
-import { getRemainingValues, RCS } from "../utilities/utilities";
+import { getRemainingValues, RCS, bstyles } from "../utilities/utilities";
 import CandidatesModal from "./CandidatesModal";
 import Spinner from "./Spinner";
+import "/src/styles/borders.css";
 
 function Candidates({ix}) {
 	const selectedValue = cellStore.getState().selectedValue;
@@ -10,7 +11,7 @@ function Candidates({ix}) {
 	const clist = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 	return (
-		<div className="grid grid-cols-3 leading-none pt-0.5]">
+		<div className="grid grid-cols-3 leading-none pt-0.5">
 			{clist.map((c) => {
 				var val = c.toString();
 				var cn = " font-normal";
@@ -18,7 +19,7 @@ function Candidates({ix}) {
 				if (!can.includes(c))
 					val = "";
 				else if (noncan.includes(c))
-					cn = "font-extralight"
+					cn = " font-extralight"
 
 				return (
 					<div key={c}
@@ -36,8 +37,9 @@ function Cell({ix}) {
 	const { getCell, setCellValue, setSelectedValue, setCellSelected, clearSelected } = useCellActions();
 	const { setEditCandidates, updateCandidates, calcNumbersUsed } = useCellActions();
 	const { selectedValue } = cellStore();
+
 	const { hint, resetHint } = useHintStore();
-	const cell = cellStore.getState().cells[Number(ix)];
+	const cell = cellStore.getState().cells[ix];
 	//console.log("Cell:", ix, typeof(ix), cells);
 
 	function selectCell(e, ix) {
@@ -76,7 +78,7 @@ function Cell({ix}) {
 	var rcs = RCS[ix];
 	var selMode = (cell.value > 0 && cell.value === selectedValue) ? 1 : 0;
 	selMode += cell.selected ? 2 : 0;
-	if (cell.value > 0 && cell.value !== cell.solutionValue) selMode = 4;
+	if (cell.value > 0 && cell.solutionValue > 0 && cell.value !== cell.solutionValue) selMode = 4;
 	if (hint.type === 'row' && hint.row >= 0 && hint.row === rcs[0]) selMode = 5;
 	if (hint.type === 'col' && hint.col >= 0 && hint.col === rcs[1]) selMode = 5;
 	if (hint.type && hint.cell === ix) selMode = 6;
@@ -102,10 +104,12 @@ function Cell({ix}) {
 			cn = "bg-orange-200";
 			break;
 	}
+	const bs = bstyles[ix];
+
 	//console.log("Cell:", ix, selectedCell, cn);
 	return (
 		<div
-			className={"border border-black-100 size-11 " + cn}
+			className={"size-11 " + cn + bs}
 			onDoubleClick={(e)=>doubleClick(e,ix)}
 			onClick={(e)=>selectCell(e, ix)}
 			>
@@ -127,7 +131,7 @@ function Grid9({y}) {
 
 	return (
 		<>
-			<div className="grid grid-cols-3 w-full border border-black-300">
+			<div className="grid grid-cols-3 w-full">
 			{
 			index.map((x, ix) => {
 				const cellIx = (y*9) + x;
@@ -152,7 +156,7 @@ export default function GameGrid() {
 	return (
 		<div className="">
 			<CandidatesModal onConfirm={modalConfirm} />
-			<div className="grid grid-cols-3 w-full border border-black-900">
+			<div className="px-1 grid grid-cols-3 w-full">
 				{
 					index.map((y, ix) => { return (<Grid9 key={ix} y={y} />) })
 				}

@@ -1,15 +1,58 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { findCandidates } from "../utilities/utilities";
 
-export const Cell = {
-	value: 0,
-	originalValue: 0,
-	solutionValue: 0,
-	candidates: [],
-	noncandidates: [],
-	selected: false,
-};
+// export const ManCell = {
+// 	value: 0,
+// 	selected: false
+// };
+
+export const useManCells = () => useManCellsStore((state) => state.cells);
+
+export const useManCellsStore = create (
+	persist (
+		(set, get) => ({
+			cells: [],
+			selectedCell: 0,
+			initialized: false,
+
+			initialize: () => {
+				var init = [];
+				for (var i = 0; i < 81; ++i) init.push(0);
+				set({
+					cells: init,
+					selectedCell: 0,
+					initialized: true
+				})
+			},
+
+			getManCells: () => {
+				return get().cells
+			},
+
+			getManCell: (ix) => {
+				return get().cells[ix]
+			},
+
+			setManCellValue: (ix, value) => {
+				set((state) => {
+					const cells = [...state.cells]
+					cells[ix] = value
+					return { cells }
+				})
+			},
+
+			setManSelectedCell: (ix) => {
+				set({ selectedCell: ix })
+			},
+
+		}),
+		{
+			name: 'sudoku-game', // Unique name for the storage item
+			storage: createJSONStorage(() => sessionStorage), // Use session storage
+		}
+	)
+);
 
 export const Hint = {
 	type: null,
@@ -19,6 +62,8 @@ export const Hint = {
 	sq: -1,
 	msg: ""
 	};
+
+export const useHint = () => useHintStore((state) => state.hint);
 
 export const useHintStore = create (
 	(set, get) => ({
@@ -42,7 +87,16 @@ export const useHintStore = create (
 
 	})
 );
-export const useHint = () => useHintStore((state) => state.hint);
+
+
+export const Cell = {
+	value: 0,
+	originalValue: 0,
+	solutionValue: 0,
+	candidates: [],
+	noncandidates: [],
+	selected: false,
+};
 
 export const useCells = () => cellStore((state) => state.cells);
 export const useCellActions = () => cellStore((state) => state.actions);
@@ -98,6 +152,33 @@ export const cellStore = create(
 						difficulty: "",
 						gameComplete: false,
 						gameLoaded: false,
+						hint: {...Hint}
+					})
+				},
+
+				loadGame: (values) => {
+					const initcells = [];
+					//console.log("values:", values);
+					for (var i = 0; i < 81; ++i) initcells.push(
+					{
+						value: values[i],
+						originalValue: values[i],
+						solutionValue: 0,
+						candidates: [],
+						noncandidates: [],
+						selected: false
+					});
+					for (i = 0; i < 81; ++i) {
+						initcells[i].candidates = findCandidates(i, initcells);
+					};
+					set({
+						cells: initcells,
+						selectedCell: -1,
+						selectedValue: -1,
+						currentValue: -1,
+						difficulty: "",
+						gameComplete: false,
+						gameLoaded: true,
 						hint: {...Hint}
 					})
 				},
@@ -213,19 +294,18 @@ export const cellStore = create(
 							solved = false;
 							break;
 						}
-						if (c.value !== c.solutionValue) alt = true;
+						if (c.solutionValue > 0 && c.value !== c.solutionValue) alt = true;
+					}
+
+					var s = 0;
+					if (!solved) {
+						s = 1;
+						if (alt) s = 2;
 					}
 
 					set({
-						gameComplete: solved
+						gameComplete: s
 					})
-
-					if (!solved)
-						return 0;
-					else if (alt)
-						return 2;
-					else
-						return 1;
 				},
 
 				getCells: () => {
