@@ -1,5 +1,6 @@
 import { cellStore, useCellActions, useCells, useHintStore } from "../store/store";
-import { getRemainingValues, RCS, bstyles } from "../utilities/utilities";
+import { getRemainingValues } from "../utilities/utilities";
+import { RCS, bstyles } from "../utilities/constants";
 import CandidatesModal from "./CandidatesModal";
 import Spinner from "./Spinner";
 import "/src/styles/borders.css";

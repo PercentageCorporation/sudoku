@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { cellStore, useHintStore, useCellActions } from "../store/store";
-import { validateMove, RCS } from "../utilities/utilities";
+import { validateMove } from "../utilities/utilities";
+import { RCS } from "../utilities/constants";
 import { runHints } from "../utilities/hints";
 import { Hint } from "../store/store";
 //import Spinner from "./Spinner";
@@ -68,16 +69,16 @@ export default function PlayMenu() {
 		var hmsg;
 		switch (type) {
 			case 'row':
-				hmsg = `Row at ${h.index} value ${h.value} cell ${h.cell}`;
+				hmsg = `Row ${h.index}, cell ${h.cell}, value ${h.value}`;
 				break;
 			case 'col':
-				hmsg = `Column at ${h.index} value ${h.value} cell ${h.cell}`;
+				hmsg = `Column ${h.index}, cell ${h.cell}, value ${h.value}`;
 				break;
 			case 'square':
-				hmsg = `Square ${h.index} value ${h.value} cell ${h.cell}`;
+				hmsg = `Square ${h.index}, cell ${h.cell}, value ${h.value}`;
 				break;
 			case 'cell':
-				hmsg = `Cell at ${h.cell+1} value ${h.value}`;
+				hmsg = `Cell ${h.cell+1}, value ${h.value}`;
 				break;
 		}
 		newHint.msg = hmsg;

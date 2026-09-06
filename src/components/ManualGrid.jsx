@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCellActions, useManCellsStore } from "../store/store";
-import Spinner from "./Spinner";
-import { LRUD, bstyles } from "../utilities/utilities";
+import { LRUD, bstyles } from "../utilities/constants";
 import "/src/styles/borders.css";
 
 function ManualCell({ix}) {

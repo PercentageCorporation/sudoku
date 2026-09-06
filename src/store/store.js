@@ -95,6 +95,7 @@ export const Cell = {
 	solutionValue: 0,
 	candidates: [],
 	noncandidates: [],
+	activecandidates: [],
 	selected: false,
 };
 
@@ -124,6 +125,7 @@ export const cellStore = create(
 						solutionValue: solutionValues[i],
 						candidates: [],
 						noncandidates: [],
+						activecandidates: [],
 						selected: false
 						});
 					for (i = 0; i < 81; ++i) {
@@ -166,6 +168,7 @@ export const cellStore = create(
 						solutionValue: 0,
 						candidates: [],
 						noncandidates: [],
+						activecandidates: [],
 						selected: false
 					});
 					for (i = 0; i < 81; ++i) {
@@ -224,24 +227,17 @@ export const cellStore = create(
 						const cells = [...state.cells]
 						for (var ix = 0; ix < 81; ++ix) {
 							const candidates = findCandidates(ix, cells);
-							cells[ix] = { ...cells[ix], candidates }
+							const activecandidates = candidates.filter(c => cells[ix].noncandidates.indexOf(c) < 0);
+							cells[ix] = { ...cells[ix], candidates, activecandidates }
 						}
 						return { cells }
 					})
 				},
 
-// 				updateCandidates: () => {
-// 					const cptr = get().cells;
-// 					for (var ix = 0; ix < 81; ++ix) {
-// 						const candid = findCandidates(ix, cptr);
-// 						set((state) => ({
-// 							cells: state.cells.map((c,iy) => (
-// 								ix === iy ?	{...c, candidates: candid} :	c
-// 							))
-// 						}))
-// 					};
-// 				},
-//
+				getActiveCandidates: (ix) => {
+					return get().cells[ix].activecandidates;
+				},
+
 				getNonCandidates: (ix) => {
 					return get().cells[ix].noncandidates;
 				},
@@ -258,9 +254,12 @@ export const cellStore = create(
 					set((state) => {
 						const cells = [...state.cells]
 						if (!cells[ix].noncandidates.includes(value)) {
+							const noncandidates = [...cells[ix].noncandidates, value]
+							const activecandidates = cells[ix].candidates.filter(c => cells[ix].noncandidates.indexOf(c) < 0);
 							cells[ix] = {
 								...cells[ix],
-								noncandidates: [...cells[ix].noncandidates, value]
+								noncandidates,
+								activecandidates
 							}
 						}
 						return { cells }
