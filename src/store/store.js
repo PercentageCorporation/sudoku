@@ -172,7 +172,10 @@ export const cellStore = create(
 						selected: false
 					});
 					for (i = 0; i < 81; ++i) {
-						initcells[i].candidates = findCandidates(i, initcells);
+						if (initcells[i].value === 0) {
+							initcells[i].candidates = findCandidates(i, initcells);
+							initcells[i].activecandidates = initcells[i].candidates;
+						}
 					};
 					set({
 						cells: initcells,
@@ -245,7 +248,8 @@ export const cellStore = create(
 				setNonCandidates: (ix, noncandidates) => {
 					set((state) => {
 						const cells = [...state.cells]
-						cells[ix] = { ...cells[ix], noncandidates }
+						const activecandidates = cells[ix].candidates.filter(c => noncandidates.indexOf(c) < 0);
+						cells[ix] = { ...cells[ix], noncandidates, activecandidates }
 						return { cells }
 					})
 				},
@@ -255,7 +259,7 @@ export const cellStore = create(
 						const cells = [...state.cells]
 						if (!cells[ix].noncandidates.includes(value)) {
 							const noncandidates = [...cells[ix].noncandidates, value]
-							const activecandidates = cells[ix].candidates.filter(c => cells[ix].noncandidates.indexOf(c) < 0);
+							const activecandidates = cells[ix].candidates.filter(c => noncandidates.indexOf(c) < 0);
 							cells[ix] = {
 								...cells[ix],
 								noncandidates,
@@ -270,9 +274,12 @@ export const cellStore = create(
 					set((state) => {
 						const cells = [...state.cells]
 						if (cells[ix].noncandidates.includes(value)) {
+							const noncandidates = cells[ix].noncandidates.filter(v != value)
+							const activecandidates = cells[ix].candidates.filter(c => noncandidates.indexOf(c) < 0);
 							cells[ix] = {
 								...cells[ix],
-								noncandidates: [...cells[ix].noncandidates.filter(v != value)]
+								noncandidates,
+								activecandidates
 							}
 						}
 						return { cells }
@@ -344,6 +351,10 @@ export const cellStore = create(
 
 				setSelectedValue: (sel) => {
 					set({ selectedValue: sel})
+				},
+
+				clearSelectedValue: () => {
+					set({ selectedValue: -1})
 				},
 
 				setCellCandidates: (ix, candidates) => {

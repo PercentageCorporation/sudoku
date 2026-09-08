@@ -20,7 +20,7 @@ function Candidates({ix}) {
 				if (!can.includes(c))
 					val = "";
 				else if (noncan.includes(c))
-					cn = " font-extralight"
+					cn = " font-thin"
 
 				return (
 					<div key={c}
@@ -77,12 +77,45 @@ function Cell({ix}) {
 		resetHint();
 	}
 	var rcs = RCS[ix];
-	var selMode = (cell.value > 0 && cell.value === selectedValue) ? 1 : 0;
-	selMode += cell.selected ? 2 : 0;
-	if (cell.value > 0 && cell.solutionValue > 0 && cell.value !== cell.solutionValue) selMode = 4;
-	if (hint.type === 'row' && hint.row >= 0 && hint.row === rcs[0]) selMode = 5;
-	if (hint.type === 'col' && hint.col >= 0 && hint.col === rcs[1]) selMode = 5;
-	if (hint.type && hint.cell === ix) selMode = 6;
+	var selMode = 0;
+	if (cell.value > 0 ) {
+		if (cell.selected)
+			selMode = 2;
+		else if (cell.value === selectedValue)
+			selMode = 1;
+
+		// check for invalid value
+		if (cell.value > 0 && cell.solutionValue > 0 && cell.value !== cell.solutionValue) selMode = 4;
+	}
+	else if (hint.type) {
+		if (hint.type === "pointingPair") {
+			if (hint.cells.includes(ix))
+				selMode = 3;
+			else if (hint.row === rcs[0] || hint.col === rcs[1]) {
+				if (cell.activecandidates.includes(hint.value)) selMode = 2;
+			}
+		}
+		else if (hint.type === "pointingPairs2") {
+			if (hint.cells.includes(ix))
+				selMode = 3;
+			else if (hint.row === rcs[0] || hint.col === rcs[1]) {
+				if (cell.activecandidates.includes(hint.values[0])
+					|| cell.activecandidates.includes(hint.values[1])) selMode = 2;
+			}
+		}
+		else if (hint.type === "pointingPairSquare") {
+			if (hint.cells.includes(ix))
+				selMode = 3;
+			else if (hint.square === rcs[2]) {
+				if (cell.activecandidates.includes(hint.value)) selMode = 2;
+			}
+		}
+		else if (hint.type === 'row' && hint.row >= 0 && hint.row === rcs[0]) selMode = 5;
+		else if (hint.type === 'col' && hint.col >= 0 && hint.col === rcs[1]) selMode = 5;
+		else if (hint.type && hint.cell === ix) selMode = 6;
+	} else {
+		if (cell.selected) selMode = 2;
+	}
 	var cn = "bg-white";
 	switch (selMode) {
 		case 1:
@@ -103,6 +136,9 @@ function Cell({ix}) {
 			break;
 		case 6:
 			cn = "bg-orange-200";
+			break;
+		case 7:
+			cn = "bg-slate-200";
 			break;
 	}
 	const bs = bstyles[ix];

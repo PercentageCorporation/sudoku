@@ -31,7 +31,7 @@ export default function CandidatesModal({ onConfirm, onCancel }) {
 	}
 
 	function handleConfirm() {
-		console.log('handleConfirm');
+		console.log('handleConfirm', noncandidates);
 		setNonCandidates(cellIx.current, noncandidates);
 		if (onConfirm) onConfirm(candidates);
 		setEditCandidates(-1);

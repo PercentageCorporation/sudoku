@@ -1,5 +1,5 @@
 import { cellStore } from "../store/store";
-import { rows, cols, squares, cellRow, cellCol } from './constants';
+import { rows, cols, squares, cellRow, cellCol, cellSquare } from './constants';
 
 function getCellLocal(ix) {
 	const getCell = cellStore.getState().actions.getCell;

@@ -66,13 +66,18 @@ export default function ManualGrid() {
 
 			console.log("key:", key);
 			switch (e.key) {
+				case " ":
+					if (sel >= 0) setManCellValue(sel, 0);
+					next = lrud[1];
+					//console.log("right", sel, next);
+					break;
+
 				case "ArrowLeft":
 					next = lrud[0];
 					//console.log("left", sel, next);
 					break;
 
 				case "ArrowRight":
-				case " ":
 					next = lrud[1];
 					//console.log("right", sel, next);
 					break;
@@ -93,6 +98,10 @@ export default function ManualGrid() {
 
 				case "End":
 					next = 80;
+					break;
+
+				case "Tab":
+					// ignore
 					break;
 
 				default:
@@ -147,6 +156,7 @@ export default function ManualGrid() {
 			<div className="mx-2 flex flex-row justify-between mt-4">
 				<button
 					type="button"
+					tabIndex={-1}
 					onClick={(e) => handleClear(e)}
 					className="px-4 py-2 text-xl font-bold bg-blue-300 rounded hover:cursor-pointer"
 					>
@@ -154,6 +164,7 @@ export default function ManualGrid() {
 				</button>
 				<button
 					type="button"
+					tabIndex={-1}
 					onClick={(e) => handlePlay(e)}
 					className="px-4 py-2 text-xl font-bold bg-blue-300 rounded hover:cursor-pointer"
 					>
@@ -163,6 +174,7 @@ export default function ManualGrid() {
 			<div className="mx-2 flex flex-row justify-between mt-4">
 				<button
 					type="button"
+					tabIndex={-1}
 					onClick={(e) => exit(e)}
 					className="px-4 py-2 text-xl font-bold bg-blue-300 rounded hover:cursor-pointer"
 					>

@@ -1,22 +1,25 @@
 import { useEffect } from "react";
 import { useNavigate } from  "react-router-dom";
-import { cellStore, useCellActions } from "./store/store";
+import { cellStore, useCellActions, useManCellsStore } from "./store/store";
 import GameGrid from "./components/GameGrid";
 import PlayMenu from "./components/PlayMenu";
 import Spinner from "./components/Spinner";
 
 export default function App() {
-  const { newGame, resetGame, initGame } = useCellActions();
+  const { newGame, resetGame, initGame, loadGame } = useCellActions();
   const { gameLoaded } = cellStore();
+  const { getManCells } = useManCellsStore();
   const navigate = useNavigate();
   //console.log("App");
 
   useEffect(() => {
     console.log("App UE");
     async function load_game() {
-      const { game, solution, difficulty } = await getGameDosuku();
+      //const { game, solution, difficulty } = await getGameDosuku();
       //console.log(game, solution, difficulty);
-      initGame(game, solution, difficulty);
+      //initGame(game, solution, difficulty);
+		var mc = getManCells();
+		loadGame(mc);
     }
 
     if (!gameLoaded) load_game();

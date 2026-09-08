@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import { cellStore, useHintStore, useCellActions } from "../store/store";
 import { validateMove } from "../utilities/utilities";
-import { RCS } from "../utilities/constants";
 import { runHints } from "../utilities/hints";
-import { Hint } from "../store/store";
+import { rows, cols, squares } from "../utilities/constants";
+//import { Hint } from "../store/store";
 //import Spinner from "./Spinner";
 
 export default function PlayMenu() {
 	const { selectedValue } = cellStore();
-	const { setCellValue, setSelectedValue, setCellSelected, clearSelected, getSelected } = useCellActions();
+	const { setCellValue, setSelectedValue, clearSelectedValue, clearSelected, getSelected } = useCellActions();
 	const { checkGameSolved, calcNumbersUsed } = useCellActions();
-	const { updateCandidates } = useCellActions();
+	const { updateCandidates, addNonCandidate } = useCellActions();
 	const { gameComplete, numbersUsed } = cellStore();
-	const { hint, setHint, setHintMsg, resetHint } = useHintStore();
+	const { hint, getHint, setHint, setHintMsg, resetHint } = useHintStore();
 	const [message, setMessage] = useState(gameComplete ? "Game Complete" : null);
 	const selection = [1,2,3,4,5,6,7,8,9];
 
@@ -34,15 +34,56 @@ export default function PlayMenu() {
 
 	function doHint(e) {
 		e.preventDefault();
-		var h = runHints();
+		var h = getHint();
 		if (!h) return;
 		console.log("doHint", h);
-		var cix = h.cell;
-		var v = h.value;
-		setCellValue(cix, v);
-		clearSelected();
+		switch (h.type) {
+			case "cell":
+				var cix = h.cells[0];
+				var v = h.value;
+				console.log("setCellValue", cix, v);
+				setCellValue(cix, v);
+				setSelectedValue(v);
+				clearSelected();
+				break;
+
+			case "pointingPair":
+				var cls = h.row !== null ? rows[h.row] : h.col != null ? cols[h.col] : [];
+				console.log(cls);
+				cls.forEach((cix) => {
+					if (!h.cells.includes(cix)) addNonCandidate(cix, h.value);
+				})
+				clearSelectedValue();
+				clearSelected();
+				break;
+
+			case "pointingPairs2":
+				var cls = h.row !== null ? rows[h.row] : h.col != null ? cols[h.col] : [];
+				console.log(cls);
+				cls.forEach((cix) => {
+					if (!h.cells.includes(cix)) {
+						addNonCandidate(cix, h.values[0]);
+						addNonCandidate(cix, h.values[1]);
+					}
+				})
+				clearSelectedValue();
+				clearSelected();
+				break;
+
+			case "pointingPairSquare":
+				clearSelectedValue();
+				var six = h.square;
+				var sq = squares[six];
+				sq.forEach((cix) => {
+					if (!h.cells.includes(cix))  addNonCandidate(cix, h.value);
+				})
+				clearSelected();
+				break
+
+			default:
+				break;
+		}
 		updateCandidates();
-		setSelectedValue(v);
 		resetHint();
 		checkGameSolved();
 	}
@@ -50,6 +91,7 @@ export default function PlayMenu() {
 	function showHint(e) {
 		e.preventDefault();
 		//console.log("showHint", hint);
+		clearSelectedValue();
 		var h = runHints();
 		if (!h) {
 			//resetHint();
@@ -57,34 +99,10 @@ export default function PlayMenu() {
 			setHintMsg("No Hints");
 			return;
 		}
-		var newHint = {...Hint}
-		newHint.type = h.type;
-		newHint.cell = h.cell;
-		var rcs = RCS[newHint.cell];
-		newHint.row = rcs[0];
-		newHint.col = rcs[1];
-		newHint.sq = rcs[2];
-
-		var type = h.type;
-		var hmsg;
-		switch (type) {
-			case 'row':
-				hmsg = `Row ${h.index}, cell ${h.cell}, value ${h.value}`;
-				break;
-			case 'col':
-				hmsg = `Column ${h.index}, cell ${h.cell}, value ${h.value}`;
-				break;
-			case 'square':
-				hmsg = `Square ${h.index}, cell ${h.cell}, value ${h.value}`;
-				break;
-			case 'cell':
-				hmsg = `Cell ${h.cell+1}, value ${h.value}`;
-				break;
-		}
-		newHint.msg = hmsg;
-		//console.log("hint:", h, newHint, rcs);
-		setHint(newHint);
-		setCellSelected(h.cell);
+		console.log("hint:", h, h.msg);
+		setHintMsg(h.msg);
+		setHint(h);
+		//setCellSelected(h.cell);
 	}
 
 	function select(e,s) {
@@ -113,12 +131,13 @@ export default function PlayMenu() {
 					setCellValue(sel, s);
 					clearSelected();
 				}
-			} else {
+			} else if (s === 0) {
 				setCellValue(sel, s);
 				clearSelected();
 			}
 		});
 		if (s > 0) setSelectedValue(s);
+		if (s < 0) clearSelected();
 		updateCandidates();
 		resetHint();
 		checkGameSolved();
@@ -145,6 +164,9 @@ export default function PlayMenu() {
 					</div>
 				)})
 			}
+				<div className="flex justify-center size-8 text-xl font-bold rounded-md hover:cursor-pointer bg-green-300" onClick={(e) => select(e,-1)} >
+					&nbsp;
+				</div>
 			</div>
 			<div className="flex flex-row mt-4">
 				<div className="flex justify-center mr-4 size-8 text-xl font-bold rounded-md bg-green-400 hover:cursor-pointer " onClick={(e) => select(e,0)} >
