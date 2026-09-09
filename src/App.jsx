@@ -4,34 +4,37 @@ import { cellStore, useCellActions, useManCellsStore } from "./store/store";
 import GameGrid from "./components/GameGrid";
 import PlayMenu from "./components/PlayMenu";
 import Spinner from "./components/Spinner";
+import { getSSGame, getSudokuSoluitons } from "./utilities/sudoku-solutions";
+import { getGameDosuku } from "./utilities/sudokuApi";
 
 export default function App() {
   const { newGame, resetGame, initGame, loadGame } = useCellActions();
-  const { gameLoaded } = cellStore();
+  const { gameLoaded, difficulty, gameId } = cellStore();
   const { getManCells } = useManCellsStore();
   const navigate = useNavigate();
-  //console.log("App");
+  console.log("App", gameLoaded);
 
   useEffect(() => {
     console.log("App UE");
     async function load_game() {
-      //const { game, solution, difficulty } = await getGameDosuku();
-      //console.log(game, solution, difficulty);
-      //initGame(game, solution, difficulty);
-		var mc = getManCells();
-		loadGame(mc);
+		//const { game, solution, difficulty } = await getSudokuSoluitons();
+		const g = getSSGame();
+		//const { game, solution, difficulty } = await getGameDosuku();
+		console.log("game:", g.gameid, g.difficulty)
+		//console.log(game, solution, difficulty);
+		initGame(g.values, g.solution, g.difficulty, g.gameid);
     }
 
     if (!gameLoaded) load_game();
-  }, []);
+  }, [gameLoaded]);
 
   function handleNewGame(e) {
     e.preventDefault();
-    newGame();
-	navigate("/");
+	newGame();
+    navigate("/");
   }
 
-  function handleResetGame(e) {
+  function handleRestartGame(e) {
     e.preventDefault();
     resetGame();
 	navigate("/");
@@ -47,6 +50,9 @@ export default function App() {
 
   return (
     <div className="max-w-[412px] mx-2 select-none">
+    {`Difficulty: ${difficulty} / Game: ${gameId}`}
+	<div>
+	</div>
       <div className="mt-4">
         <GameGrid />
       </div>
@@ -63,7 +69,7 @@ export default function App() {
         </button>
         <button
           type="button"
-          onClick={(e) => handleResetGame(e)}
+          onClick={(e) => handleRestartGame(e)}
           className="mx-4 px-4 py-2 text-xl font-bold bg-red-300 rounded hover:cursor-pointer"
         >
           Restart Game

@@ -173,18 +173,18 @@ function rowSingleCounts() {
 	for (var r=0; r<9; ++r) {
 		var counts = rowCounts(r);
 		var sv = hasSingleValue(counts);
-		var pos = findValueInRow(r, sv);
 		if (sv > 0) {
+			var pos = findValueInRow(r, sv);
 			//console.log("rsc:", r, sv, counts);
 			var rs = {
-				type: 'rowSingle',
+				type: 'cell',
 				row: r,
 				col: null,
 				square: null,
 				cells: [pos.cell],
 				offset: pos.offset,
 				value: sv,
-				msg: `Row Single: Row:  ${r}, Offset: ${pos.offset}, Cell:  ${pos.cell}, Value: ${sv}`
+				msg: `Single: Row: ${r+1}, Cell:  ${pos.cell}, Value: ${sv}`
 			}
 			rowSingles.push(rs);
 		}
@@ -200,11 +200,9 @@ function findValueInRow(rix, val) {
 		const cix = row[i];
 		const cell = cells[cix];
 		if (cell.value > 0) continue;
-		const candid = cell.candidates;
-		//console.log(cix, candid);
-		if (candid.includes(val)) return {cell: cix, offset: i};
+		if (cell.activecandidates.includes(val)) return {cell: cix, offset: i};
 	}
-	return -1;
+	return null;
 }
 
 function colSingleCounts() {
@@ -212,18 +210,18 @@ function colSingleCounts() {
 	for (var i=0; i<9; ++i) {
 		var counts = colCounts(i);
 		var sv = hasSingleValue(counts);
-		var pos = findValueInCol(i, sv);
 		if (sv > 0) {
+			var pos = findValueInCol(i, sv);
 			//console.log("csc:", i, sv, counts);
 			var s = {
-				type: 'colSingle',
+				type: 'cell',
 				row: null,
 				col: i,
 				square: null,
 				cells: [pos.cell],
 				offset: pos.offset,
 				value: sv,
-				msg: `Column Single: Column:  ${i}, Offset: ${pos.offset}, Cell:  ${h.cell}, Value: ${h.value}`
+				msg: `Single: Column: ${i+1}  Cell:  ${pos.cell}, Value: ${sv}`
 			}
 			colSingles.push(s);
 		}
@@ -239,11 +237,9 @@ function findValueInCol(cix, val) {
 		const cix = col[i];
 		const cell = cells[cix];
 		if (cell.value > 0) continue;
-		const candid = cell.candidates;
-		//console.log(cix, candid);
-		if (candid.includes(val)) return {cell: cix, offset: i+1};
+		if (cell.activecandidates.includes(val)) return {cell: cix, offset: i};
 	}
-	return -1;
+	return null;
 }
 
 function sqSingleCounts() {
@@ -251,18 +247,18 @@ function sqSingleCounts() {
 	for (var i=0; i<9; ++i) {
 		var counts = sqCounts(i);
 		var sv = hasSingleValue(counts);
-		var pos = findValueInSq(i, sv);
 		if (sv > 0) {
+			var pos = findValueInSq(i, sv);
 			//console.log("ssc:", i, sv, counts)
 			var s = {
-				type: 'squareSingle',
+				type: 'cell',
 				row: null,
 				col: null,
 				square: i,
 				cells: [pos.cell],
 				offset: pos.offset,
 				value: sv,
-				msg: `Square Single: Square:  ${i}, Offset: ${pos.offset}, Cell:  ${h.cell}, Value: ${h.value}`
+				msg: `Single: Square: ${i+1}, Cell:  ${pos.cell}, Value: ${sv}`
 			}
 			sqSingles.push(s);
 		}
@@ -278,11 +274,9 @@ function findValueInSq(six, val) {
 		const cix = sq[i];
 		const cell = cells[cix];
 		if (cell.value > 0) continue;
-		const candid = cell.candidates;
-		//console.log(cix, candid);
-		if (candid.includes(val)) return {cell: cix, offset: i};
+		if (cell.activecandidates.includes(val)) return {cell: cix, offset: i};
 	}
-	return -1;
+	return null;
 }
 
 // returns an array of cells which only have one candidate

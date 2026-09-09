@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { findCandidates } from "../utilities/utilities";
+import { RCS } from "../utilities/constants";
 
 // export const ManCell = {
 // 	value: 0,
@@ -90,6 +91,9 @@ export const useHintStore = create (
 
 
 export const Cell = {
+	row: 0,
+	col: 0,
+	square: 0,
 	value: 0,
 	originalValue: 0,
 	solutionValue: 0,
@@ -110,16 +114,20 @@ export const cellStore = create(
 			currentValue: -1,
 			editCandidates: -1,
 			difficulty: "",
+			gameId: "",
 			numbersUsed: [0,0,0,0,0,0,0,0,0,0],
 			gameComplete: false,
 			gameLoaded: false,
 
 			actions: {
-				initGame: (values, solutionValues, difficulty) => {
+				initGame: (values, solutionValues, difficulty, gameid) => {
 					const initcells = [];
 					//console.log("values:", values);
 					for (var i = 0; i < 81; ++i) initcells.push(
 						{
+						row: RCS[i][0],
+						col: RCS[i][1],
+						square: RCS[i][2],
 						value: values[i],
 						originalValue: values[i],
 						solutionValue: solutionValues[i],
@@ -138,6 +146,7 @@ export const cellStore = create(
 						currentValue: -1,
 						editCandidates: -1,
 						difficulty: difficulty,
+						gameId: gameid,
 						gameComplete: false,
 						numbersUsed: [0,0,0,0,0,0,0,0,0,0],
 						gameLoaded: true
@@ -145,24 +154,14 @@ export const cellStore = create(
 					//console.log("cells:", get().cells);
 				},
 
-				newGame: () => {
-					set({
-						cells: [],
-						selectedCell: -1,
-						selectedValue: -1,
-						currentValue: -1,
-						difficulty: "",
-						gameComplete: false,
-						gameLoaded: false,
-						hint: {...Hint}
-					})
-				},
-
 				loadGame: (values) => {
 					const initcells = [];
 					//console.log("values:", values);
 					for (var i = 0; i < 81; ++i) initcells.push(
 					{
+						row: RCS[i][0],
+						col: RCS[i][1],
+						square: RCS[i][2],
 						value: values[i],
 						originalValue: values[i],
 						solutionValue: 0,
@@ -189,6 +188,17 @@ export const cellStore = create(
 					})
 				},
 
+				newGame: () => {
+					set((state) => ({
+						cells: [],
+						selectedCell: -1,
+						selectedValue: -1,
+						currentValue: -1,
+						gameComplete: false,
+						gameLoaded: false
+					}))
+				},
+
 				resetGame: () => {
 					set((state) => ({
 						cells: state.cells.map((c,ix) =>
@@ -199,7 +209,8 @@ export const cellStore = create(
 						currentValue: -1,
 						gameComplete: false,
 						gameLoaded: true
-					}))
+					})),
+					get().actions.resetCandidates()
 				},
 
 				calcNumbersUsed: () => {
@@ -222,6 +233,19 @@ export const cellStore = create(
 						numbersUsed: used,
 						gameComplete: complete,
 						selectedValue: selVal
+					})
+				},
+
+				resetCandidates: () => {
+					set((state) => {
+						const noncandidates = [];
+						const cells = [...state.cells]
+						for (var ix = 0; ix < 81; ++ix) {
+							const candidates = findCandidates(ix, cells);
+							const activecandidates = candidates.filter(c => cells[ix].noncandidates.indexOf(c) < 0);
+							cells[ix] = { ...cells[ix], candidates, activecandidates, noncandidates }
+						}
+						return { cells }
 					})
 				},
 
@@ -398,7 +422,24 @@ export const cellStore = create(
 						})),
 						gameLoaded: true
 					}))
-				}
+				},
+
+				setDifficulty: (d) => {
+					set({ difficulty: d})
+				},
+
+				getDifficulty: () => {
+					return get().difficulty
+				},
+
+				setGameId: (d) => {
+					set({ gameId: d})
+				},
+
+				getGameId: () => {
+					return get().gameId
+				},
+
 			}
 		}),
 		{

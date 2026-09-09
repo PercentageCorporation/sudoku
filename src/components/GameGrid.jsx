@@ -76,6 +76,8 @@ function Cell({ix}) {
 		calcNumbersUsed();
 		resetHint();
 	}
+
+	// set highlighting
 	var rcs = RCS[ix];
 	var selMode = 0;
 	if (cell.value > 0 ) {
@@ -88,31 +90,47 @@ function Cell({ix}) {
 		if (cell.value > 0 && cell.solutionValue > 0 && cell.value !== cell.solutionValue) selMode = 4;
 	}
 	else if (hint.type) {
-		if (hint.type === "pointingPair") {
-			if (hint.cells.includes(ix))
-				selMode = 3;
-			else if (hint.row === rcs[0] || hint.col === rcs[1]) {
-				if (cell.activecandidates.includes(hint.value)) selMode = 2;
-			}
+		switch (hint.type) {
+			case "pointingPair":
+				if (hint.cells.includes(ix))
+					selMode = 3;
+				else if (hint.row === rcs[0] || hint.col === rcs[1]) {
+					if (cell.activecandidates.includes(hint.value)) selMode = 2;
+				}
+				break;
+
+			case "pointingPairs2":
+				if (hint.cells.includes(ix))
+					selMode = 3;
+				else if (hint.row === rcs[0] || hint.col === rcs[1]) {
+					if (cell.activecandidates.includes(hint.values[0])
+						|| cell.activecandidates.includes(hint.values[1])) selMode = 2;
+				}
+				break;
+
+			case "pointingPairSquare":
+				if (hint.cells.includes(ix))
+					selMode = 3;
+				else if (hint.square === rcs[2]) {
+					if (cell.activecandidates.includes(hint.value)) selMode = 2;
+				}
+				break;
+
+			case 'row':
+				if (hint.row >= 0 && hint.row === rcs[0]) selMode = 5;
+				break;
+
+			case 'col':
+				if (hint.col >= 0 && hint.col === rcs[1]) selMode = 5;
+				break;
+
+			default:
+				if (hint.cells[0] === ix) {
+					console.log(hint);
+					selMode = 6;
+				}
+				break;
 		}
-		else if (hint.type === "pointingPairs2") {
-			if (hint.cells.includes(ix))
-				selMode = 3;
-			else if (hint.row === rcs[0] || hint.col === rcs[1]) {
-				if (cell.activecandidates.includes(hint.values[0])
-					|| cell.activecandidates.includes(hint.values[1])) selMode = 2;
-			}
-		}
-		else if (hint.type === "pointingPairSquare") {
-			if (hint.cells.includes(ix))
-				selMode = 3;
-			else if (hint.square === rcs[2]) {
-				if (cell.activecandidates.includes(hint.value)) selMode = 2;
-			}
-		}
-		else if (hint.type === 'row' && hint.row >= 0 && hint.row === rcs[0]) selMode = 5;
-		else if (hint.type === 'col' && hint.col >= 0 && hint.col === rcs[1]) selMode = 5;
-		else if (hint.type && hint.cell === ix) selMode = 6;
 	} else {
 		if (cell.selected) selMode = 2;
 	}
