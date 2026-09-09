@@ -6,6 +6,24 @@ function getCellLocal(ix) {
 	return getCell(ix);
 }
 
+export function linearToGrid(values) {
+	var vix = 0;
+	var grid = [];
+
+	// for each row
+	for (let r = 0; r < 9; r++) {
+		// for each cell in the row
+		var row = rows[r];
+		for (let rc = 0; rc < 9; rc++) {
+			var cix = row[rc];
+			grid[cix] = values[vix++]
+		}
+	}
+	//console.log(values);
+	//console.log(grid);
+	return grid;
+}
+
 // array of squares to linear - keep if needed later
 export function getNewGame(dif) {
 	var board;

@@ -12,7 +12,7 @@ export default function App() {
   const { gameLoaded, difficulty, gameId } = cellStore();
   const { getManCells } = useManCellsStore();
   const navigate = useNavigate();
-  console.log("App", gameLoaded);
+  console.log("App", gameLoaded, difficulty, gameId);
 
   useEffect(() => {
     console.log("App UE");
@@ -20,8 +20,8 @@ export default function App() {
 		//const { game, solution, difficulty } = await getSudokuSoluitons();
 		const g = getSSGame();
 		//const { game, solution, difficulty } = await getGameDosuku();
-		console.log("game:", g.gameid, g.difficulty)
-		//console.log(game, solution, difficulty);
+		//console.log("game:", g.gameid, g.difficulty)
+		console.log(g.values, g.solution, g.difficulty, g.gameid);
 		initGame(g.values, g.solution, g.difficulty, g.gameid);
     }
 

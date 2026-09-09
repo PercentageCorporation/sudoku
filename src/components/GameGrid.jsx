@@ -35,9 +35,9 @@ function Candidates({ix}) {
 }
 
 function Cell({ix}) {
-	const { getCell, setCellValue, setSelectedValue, setCellSelected, clearSelected } = useCellActions();
+	const { getCell, setCellValue, setSelectedValue, clearSelectedValue, setSelectedCell, clearSelectedCell } = useCellActions();
 	const { setEditCandidates, updateCandidates, calcNumbersUsed } = useCellActions();
-	const { selectedValue } = cellStore();
+	const { selectedValue, selectedCell } = cellStore();
 
 	const { hint, resetHint } = useHintStore();
 	const cell = cellStore.getState().cells[ix];
@@ -46,14 +46,12 @@ function Cell({ix}) {
 	function selectCell(e, ix) {
 		e.preventDefault();
 		const cs = getCell(ix);
-		//console.log("selectCell:", ix, cs);
-		clearSelected();
+		console.log("selectCell:", ix, cs);
+		setSelectedCell(ix);
 		if (cs.value > 0) {
 			setSelectedValue(cs.value);
-			setCellSelected(ix);
 		} else {
-			setSelectedValue(-1);
-			setCellSelected(ix);
+			clearSelectedValue();
 		}
 		calcNumbersUsed();
 	}
@@ -81,7 +79,7 @@ function Cell({ix}) {
 	var rcs = RCS[ix];
 	var selMode = 0;
 	if (cell.value > 0 ) {
-		if (cell.selected)
+		if (selectedCell === ix)
 			selMode = 2;
 		else if (cell.value === selectedValue)
 			selMode = 1;
@@ -132,8 +130,9 @@ function Cell({ix}) {
 				break;
 		}
 	} else {
-		if (cell.selected) selMode = 2;
+		if (selectedCell === ix) selMode = 2;
 	}
+
 	var cn = "bg-white";
 	switch (selMode) {
 		case 1:

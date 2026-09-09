@@ -7,8 +7,8 @@ import { rows, cols, squares } from "../utilities/constants";
 //import Spinner from "./Spinner";
 
 export default function PlayMenu() {
-	const { selectedValue } = cellStore();
-	const { setCellValue, setSelectedValue, clearSelectedValue, clearSelected, getSelected } = useCellActions();
+	const { selectedValue, selectedCell } = cellStore();
+	const { setCellValue, clearCellValue, setSelectedValue, clearSelectedValue, clearSelectedCell } = useCellActions();
 	const { checkGameSolved, calcNumbersUsed } = useCellActions();
 	const { updateCandidates, addNonCandidate } = useCellActions();
 	const { gameComplete, numbersUsed } = cellStore();
@@ -44,7 +44,7 @@ export default function PlayMenu() {
 				console.log("setCellValue", cix, v);
 				setCellValue(cix, v);
 				setSelectedValue(v);
-				clearSelected();
+				clearSelectedCell();
 				break;
 
 			case "pointingPair":
@@ -54,7 +54,7 @@ export default function PlayMenu() {
 					if (!h.cells.includes(cix)) addNonCandidate(cix, h.value);
 				})
 				clearSelectedValue();
-				clearSelected();
+				clearSelectedCell();
 				break;
 
 			case "pointingPairs2":
@@ -67,7 +67,7 @@ export default function PlayMenu() {
 					}
 				})
 				clearSelectedValue();
-				clearSelected();
+				clearSelectedCell();
 				break;
 
 			case "pointingPairSquare":
@@ -77,7 +77,7 @@ export default function PlayMenu() {
 				sq.forEach((cix) => {
 					if (!h.cells.includes(cix))  addNonCandidate(cix, h.value);
 				})
-				clearSelected();
+				clearSelectedCell();
 				break
 
 			default:
@@ -102,7 +102,6 @@ export default function PlayMenu() {
 		console.log("hint:", h, h.msg);
 		setHintMsg(h.msg);
 		setHint(h);
-		//setCellSelected(h.cell);
 	}
 
 	function select(e,s) {
@@ -112,32 +111,50 @@ export default function PlayMenu() {
 	}
 
 	function doSelect(s) {
-		const selected = getSelected();
-		console.log("select:", s, selected, selected.length);
-		selected.forEach((sel) => {
+		// s: -1 - clear selected value
+		// s:  0 - if selectedCell
+		console.log("PMselect:", s, selectedCell);
 			//console.log("forEach:", sel, s)
-			if (s > 0) {
-				const val = validateMove(sel, s);
-				//console.log("val:", val);
-				if (val < 0) {
-					setMessage("Invalid Move");
-				} else if (val > 0) {
-					setMessage("Bad Move");
-					//console.log("Bad Move:", s);
-					setCellValue(sel, s);
-				} else {
-					//console.log("Set:", sel, s)
-					setMessage(null);
-					setCellValue(sel, s);
-					clearSelected();
-				}
-			} else if (s === 0) {
-				setCellValue(sel, s);
-				clearSelected();
+			var msg = null;
+			if (s < 0) {
+				// clear all selctions
+				clearSelectedCell();
+				clearSelectedValue();
 			}
-		});
-		if (s > 0) setSelectedValue(s);
-		if (s < 0) clearSelected();
+			else if (s > 0) {
+				if (selectedCell < 0) {
+					// set cell value selection
+					setSelectedValue(s);
+				} else {
+					// set cell value
+					const val = validateMove(selectedCell, s);
+					console.log("val:", val);
+					if (val < 0) {
+						msg = "Invalid Move";
+					} else if (val > 0) {
+						msg = "Bad Move";
+						//console.log("Bad Move:", selectedCell);
+						setCellValue(selectedCell, s);
+						clearSelectedCell();
+					} else {
+						//console.log("Set:", sel, selectedCell)
+						setCellValue(selectedCell, s);
+						clearSelectedCell();
+					}
+				}
+			} else { // s === 0
+				if (selectedCell < 0) {
+					//
+					clearSelectedValue();
+					clearSelectedCell();
+				} else {
+					// clear selected cell value
+					clearCellValue(selectedCell);
+					clearSelectedValue();
+					clearSelectedCell();
+				}
+			}
+		setMessage(msg);
 		updateCandidates();
 		resetHint();
 		checkGameSolved();

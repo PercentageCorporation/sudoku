@@ -100,7 +100,6 @@ export const Cell = {
 	candidates: [],
 	noncandidates: [],
 	activecandidates: [],
-	selected: false,
 };
 
 export const useCells = () => cellStore((state) => state.cells);
@@ -110,6 +109,7 @@ export const cellStore = create(
 	persist(
 		(set, get) => ({
 			cells: [],
+			selectedCell: -1,
 			selectedValue: -1,
 			currentValue: -1,
 			editCandidates: -1,
@@ -134,15 +134,17 @@ export const cellStore = create(
 						candidates: [],
 						noncandidates: [],
 						activecandidates: [],
-						selected: false
 						});
 					for (i = 0; i < 81; ++i) {
-						initcells[i].candidates = findCandidates(i, initcells);
+						const c = findCandidates(i, initcells);
+						initcells[i].candidates = c;
+						initcells[i].activecandidates = c;
 						};
 					//console.log("initcells:", initcells);
 					set({
 						cells: initcells,
 						selectedValue: -1,
+						selectedCell: -1,
 						currentValue: -1,
 						editCandidates: -1,
 						difficulty: difficulty,
@@ -355,24 +357,6 @@ export const cellStore = create(
 					set({ editCandidates: cix})
 				},
 
-				clearSelected: () => {
-					set((state) => ({
-						cells: state.cells.map((c) => ({
-							...c, selected: false
-						}))
-					}))
-				},
-
-				getSelected: () => {
-					var selected = [];
-					const { cells } = get();
-					for (var i=0; i<81; ++i) {
-						const c = cells[i];
-						if (c.selected) selected.push(i);
-					}
-					return selected;
-				},
-
 				setSelectedValue: (sel) => {
 					set({ selectedValue: sel})
 				},
@@ -381,18 +365,18 @@ export const cellStore = create(
 					set({ selectedValue: -1})
 				},
 
+				setSelectedCell: (sel) => {
+					set({ selectedCell: sel})
+				},
+
+				clearSelectedCell: () => {
+					set({ selectedCell: -1})
+				},
+
 				setCellCandidates: (ix, candidates) => {
 					set((state) => {
 						const cells = [...state.cells]
 						cells[ix] = { ...cells[ix], candidates }
-						return { cells }
-					})
-				},
-
-				setCellSelected: (ix) => {
-					set((state) => {
-						const cells = [...state.cells]
-						cells[ix] = { ...cells[ix], selected: true }
 						return { cells }
 					})
 				},
@@ -409,6 +393,14 @@ export const cellStore = create(
 					set((state) => {
 						const cells = [...state.cells]
 						cells[ix] = { ...cells[ix], value }
+						return { cells }
+					})
+				},
+
+				clearCellValue: (ix) => {
+					set((state) => {
+						const cells = [...state.cells]
+						cells[ix] = { ...cells[ix], value: 0 }
 						return { cells }
 					})
 				},
