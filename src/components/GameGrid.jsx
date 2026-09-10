@@ -9,6 +9,7 @@ function Candidates({ix}) {
 	const selectedValue = cellStore.getState().selectedValue;
 	const can = cellStore.getState().cells[ix].candidates;
 	const noncan = cellStore.getState().cells[ix].noncandidates;
+	//console.log(ix, can, noncan);
 	const clist = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 	return (
@@ -89,6 +90,13 @@ function Cell({ix}) {
 	}
 	else if (hint.type) {
 		switch (hint.type) {
+			case "nakedPair":
+				if (hint.cells.includes(ix))
+					selMode = 3;
+				else if (hint.targets.includes(ix))
+					selMode = 2;
+			break;
+
 			case "pointingPair":
 				if (hint.cells.includes(ix))
 					selMode = 3;

@@ -59,7 +59,7 @@ export const cellSquare = [
 ];
 
 // list of rows for each square
-export const sqRows = [
+export const sqRowCells = [
 [[ 0, 1, 2],
  [ 3, 4, 5],
  [ 6, 7, 8]],
@@ -89,8 +89,32 @@ export const sqRows = [
  [78,79,80]]
 ];
 
+export const sqRows012 = [
+[0,1,2],
+[0,1,2],
+[0,1,2],
+[3,4,5],
+[3,4,5],
+[3,4,5],
+[6,7,8],
+[6,7,8],
+[6,7,8],
+];
+
+export const sqCols012 = [
+[0,1,2],
+[4,5,6],
+[7,8,9],
+[0,1,2],
+[4,5,6],
+[7,8,9],
+[0,1,2],
+[4,5,6],
+[7,8,9],
+];
+
 // list of cols for each square
-export const sqCols = [
+export const sqColCells = [
 [[ 0, 3, 6],
  [ 1, 4, 7],
  [ 2, 5, 8]],

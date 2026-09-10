@@ -256,8 +256,9 @@ export const cellStore = create(
 						const cells = [...state.cells]
 						for (var ix = 0; ix < 81; ++ix) {
 							const candidates = findCandidates(ix, cells);
-							const activecandidates = candidates.filter(c => cells[ix].noncandidates.indexOf(c) < 0);
-							cells[ix] = { ...cells[ix], candidates, activecandidates }
+							const noncandidates = [];
+							const activecandidates = candidates;
+							cells[ix] = { ...cells[ix], candidates, activecandidates, noncandidates }
 						}
 						return { cells }
 					})
@@ -345,8 +346,12 @@ export const cellStore = create(
 				},
 
 				getCell: (ix) => {
-					//console.log("getCell:", ix);
 					return get().cells[ix]
+				},
+
+				showCell: (ix) => {
+					const c = get().cells[ix];
+					console.log("showCell:", ix, c);
 				},
 
 				setGameSolved: (tf) => {

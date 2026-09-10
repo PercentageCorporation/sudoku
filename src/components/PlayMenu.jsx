@@ -8,7 +8,7 @@ import { rows, cols, squares } from "../utilities/constants";
 
 export default function PlayMenu() {
 	const { selectedValue, selectedCell } = cellStore();
-	const { setCellValue, clearCellValue, setSelectedValue, clearSelectedValue, clearSelectedCell } = useCellActions();
+	const { setCellValue, clearCellValue, setSelectedValue, clearSelectedValue, clearSelectedCell, showCell } = useCellActions();
 	const { checkGameSolved, calcNumbersUsed } = useCellActions();
 	const { updateCandidates, addNonCandidate } = useCellActions();
 	const { gameComplete, numbersUsed } = cellStore();
@@ -47,6 +47,17 @@ export default function PlayMenu() {
 				clearSelectedCell();
 				break;
 
+			case "nakedPair":
+				var cls = h.targets;
+				console.log(cls);
+				cls.forEach((cix) => {
+					addNonCandidate(cix, h.values[0]);
+					addNonCandidate(cix, h.values[1]);
+				})
+				clearSelectedValue();
+				clearSelectedCell();
+				break;
+
 			case "pointingPair":
 				var cls = h.row !== null ? rows[h.row] : h.col != null ? cols[h.col] : [];
 				console.log(cls);
@@ -58,13 +69,30 @@ export default function PlayMenu() {
 				break;
 
 			case "pointingPairs2":
-				var cls = h.row !== null ? rows[h.row] : h.col != null ? cols[h.col] : [];
+				clearSelectedValue();
+				var cls = [];
+				switch (h.direction) {
+					case "row":
+						cls = rows[h.row];
+						break;
+					case "col":
+						cls = cols[h.col];
+						break;
+					case "sq":
+						cls = squares[h.square];
+						break;
+					default:
+						return;
+				}
+
 				console.log(cls);
 				cls.forEach((cix) => {
+					console.log("addC", cix, h.cells, h.values);
 					if (!h.cells.includes(cix)) {
 						addNonCandidate(cix, h.values[0]);
 						addNonCandidate(cix, h.values[1]);
 					}
+					showCell(cix);
 				})
 				clearSelectedValue();
 				clearSelectedCell();
@@ -83,7 +111,7 @@ export default function PlayMenu() {
 			default:
 				break;
 		}
-		updateCandidates();
+		//updateCandidates();
 		resetHint();
 		checkGameSolved();
 	}
@@ -155,7 +183,7 @@ export default function PlayMenu() {
 				}
 			}
 		setMessage(msg);
-		updateCandidates();
+		//updateCandidates();
 		resetHint();
 		checkGameSolved();
 	}
@@ -197,7 +225,7 @@ export default function PlayMenu() {
 					</div>
 					{ hint.msg &&
 					<div
-						className="ml-4 px-2 bg-green-300 rounded-md"
+						className="ml-4 px-2 flex items-center bg-green-300 rounded-md text-sm"
 						onClick={(e)=>doHint(e)}
 						>
 						{hint.msg}

@@ -8,7 +8,7 @@ import { getSSGame, getSudokuSoluitons } from "./utilities/sudoku-solutions";
 import { getGameDosuku } from "./utilities/sudokuApi";
 
 export default function App() {
-  const { newGame, resetGame, initGame, loadGame } = useCellActions();
+  const { newGame, resetGame, initGame, loadGame, updateCandidates } = useCellActions();
   const { gameLoaded, difficulty, gameId } = cellStore();
   const { getManCells } = useManCellsStore();
   const navigate = useNavigate();
@@ -38,6 +38,12 @@ export default function App() {
     e.preventDefault();
     resetGame();
 	navigate("/");
+  }
+
+  function handleRefreshCandidates(e) {
+	  e.preventDefault();
+	  updateCandidates();
+	  navigate("/", {replace: true});
   }
 
   function handleManualGame(e) {
@@ -79,11 +85,18 @@ export default function App() {
         <button
           type="button"
           onClick={(e) => handleManualGame(e)}
-          className="px-4 py-2 text-xl font-bold bg-blue-300 rounded hover:cursor-pointer"
+          className="px-4 py-2 mr-4 text-xl font-bold bg-blue-300 rounded hover:cursor-pointer"
         >
           Manual Game
         </button>
-      </div>
+        <button
+			type="button"
+			onClick={(e) => handleRefreshCandidates(e)}
+			className="px-4 py-2 text-xl font-bold bg-blue-300 rounded hover:cursor-pointer"
+			>
+			Refresh Candidates
+		</button>
+		</div>
     </div>
   );
 }
