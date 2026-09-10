@@ -38,6 +38,25 @@ export default function PlayMenu() {
 		if (!h) return;
 		console.log("doHint", h);
 		switch (h.type) {
+			// hints with targets
+			case "xWing":
+			case "nakedPair":
+				var cls = h.targets;
+				console.log(cls);
+				cls.forEach((cix) => {
+					if (h.values) {
+						h.values.forEach((value) => {
+							addNonCandidate(cix, value);
+						})
+					}
+					else if (h.value) {
+						addNonCandidate(cix, h.value);
+					}
+				})
+				clearSelectedValue();
+				clearSelectedCell();
+				break;
+
 			case "cell":
 				var cix = h.cells[0];
 				var v = h.value;
@@ -47,7 +66,7 @@ export default function PlayMenu() {
 				clearSelectedCell();
 				break;
 
-			case "nakedPair":
+			case "nakedPairXXX":
 				var cls = h.targets;
 				console.log(cls);
 				cls.forEach((cix) => {
@@ -142,51 +161,54 @@ export default function PlayMenu() {
 		// s: -1 - clear selected value
 		// s:  0 - if selectedCell
 		console.log("PMselect:", s, selectedCell);
-			//console.log("forEach:", sel, s)
-			var msg = null;
-			if (s < 0) {
-				// clear all selctions
-				clearSelectedCell();
+		//console.log("forEach:", sel, s)
+		var msg = null;
+		if (s < 0) {
+			// clear all selctions
+			clearSelectedCell();
+			clearSelectedValue();
+		}
+		else if (s > 0) {
+			if (selectedCell < 0) {
+				// set cell value selection
+				setSelectedValue(s);
+			} else {
+				// set cell value
+				const val = validateMove(selectedCell, s);
+				console.log("val:", val);
+				if (val < 0) {
+					msg = "Invalid Move";
+				} else if (val > 0) {
+					msg = "Bad Move";
+					//console.log("Bad Move:", selectedCell);
+					setCellValue(selectedCell, s);
+					clearSelectedCell();
+					updateCandidates();
+				} else {
+					//console.log("Set:", sel, selectedCell)
+					setCellValue(selectedCell, s);
+					clearSelectedCell();
+					updateCandidates();
+				}
+			}
+		} else { // s === 0
+			if (selectedCell < 0) {
+				//
 				clearSelectedValue();
+				clearSelectedCell();
+			} else {
+				// clear selected cell value
+				clearCellValue(selectedCell);
+				updateCandidates(selectedCell);
+				clearSelectedValue();
+				clearSelectedCell();
 			}
-			else if (s > 0) {
-				if (selectedCell < 0) {
-					// set cell value selection
-					setSelectedValue(s);
-				} else {
-					// set cell value
-					const val = validateMove(selectedCell, s);
-					console.log("val:", val);
-					if (val < 0) {
-						msg = "Invalid Move";
-					} else if (val > 0) {
-						msg = "Bad Move";
-						//console.log("Bad Move:", selectedCell);
-						setCellValue(selectedCell, s);
-						clearSelectedCell();
-					} else {
-						//console.log("Set:", sel, selectedCell)
-						setCellValue(selectedCell, s);
-						clearSelectedCell();
-					}
-				}
-			} else { // s === 0
-				if (selectedCell < 0) {
-					//
-					clearSelectedValue();
-					clearSelectedCell();
-				} else {
-					// clear selected cell value
-					clearCellValue(selectedCell);
-					clearSelectedValue();
-					clearSelectedCell();
-				}
-			}
-		setMessage(msg);
-		//updateCandidates();
-		resetHint();
-		checkGameSolved();
-	}
+		}
+	setMessage(msg);
+	//updateCandidates();
+	resetHint();
+	checkGameSolved();
+}
 
 	//if (!used.current) return <Spinner />;
 	//console.log("used:", numbersUsed)

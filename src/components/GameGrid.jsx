@@ -71,7 +71,7 @@ function Cell({ix}) {
 		setCellValue(ix, val);
 		updateCandidates();
 		setSelectedValue(val);
-		clearSelected();
+		clearSelectedCell();
 		calcNumbersUsed();
 		resetHint();
 	}
@@ -122,6 +122,13 @@ function Cell({ix}) {
 				}
 				break;
 
+			case 'xWing':
+				if (hint.cells.includes(ix))
+					selMode = 3;
+			else if (hint.targets.includes(ix))
+				selMode = 2;
+			break;
+
 			case 'row':
 				if (hint.row >= 0 && hint.row === rcs[0]) selMode = 5;
 				break;
@@ -132,7 +139,7 @@ function Cell({ix}) {
 
 			default:
 				if (hint.cells[0] === ix) {
-					console.log(hint);
+					//console.log(hint);
 					selMode = 6;
 				}
 				break;
@@ -206,13 +213,13 @@ function Grid9({y}) {
 }
 
 export default function GameGrid() {
-	const { clearSelected } = useCellActions();
+	const { clearSelectedCell } = useCellActions();
 	//console.log("GameGrid");
 	const index = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
 	function modalConfirm() {
 		console.log("modalConfirm");
-		clearSelected();
+		clearSelectedCell();
 	}
 
 	return (

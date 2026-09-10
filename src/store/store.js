@@ -212,6 +212,8 @@ export const cellStore = create(
 						gameComplete: false,
 						gameLoaded: true
 					})),
+					get().actions.clearSelectedCell()
+					get().actions.clearCellValue()
 					get().actions.resetCandidates()
 				},
 
@@ -244,7 +246,7 @@ export const cellStore = create(
 						const cells = [...state.cells]
 						for (var ix = 0; ix < 81; ++ix) {
 							const candidates = findCandidates(ix, cells);
-							const activecandidates = candidates.filter(c => cells[ix].noncandidates.indexOf(c) < 0);
+							const activecandidates = candidates;
 							cells[ix] = { ...cells[ix], candidates, activecandidates, noncandidates }
 						}
 						return { cells }
@@ -256,10 +258,21 @@ export const cellStore = create(
 						const cells = [...state.cells]
 						for (var ix = 0; ix < 81; ++ix) {
 							const candidates = findCandidates(ix, cells);
-							const noncandidates = [];
-							const activecandidates = candidates;
+							const noncandidates = cells[ix].noncandidates.filter(c => candidates.indexOf(c) < 0);
+							const activecandidates = candidates.filter(c => noncandidates.indexOf(c) < 0);
 							cells[ix] = { ...cells[ix], candidates, activecandidates, noncandidates }
 						}
+						return { cells }
+					})
+				},
+
+				updateCellCandidates: (ix) => {
+					set((state) => {
+						const cells = [...state.cells]
+						const candidates = findCandidates(ix, cells);
+						const noncandidates = [];
+						const activecandidates = candidates;
+						cells[ix] = { ...cells[ix], candidates, activecandidates, noncandidates }
 						return { cells }
 					})
 				},
@@ -399,13 +412,15 @@ export const cellStore = create(
 						const cells = [...state.cells]
 						cells[ix] = { ...cells[ix], value }
 						return { cells }
-					})
+					}),
+					get().actions.updateCandidates()
 				},
 
 				clearCellValue: (ix) => {
 					set((state) => {
 						const cells = [...state.cells]
 						cells[ix] = { ...cells[ix], value: 0 }
+						get().actions.updateCandidates()
 						return { cells }
 					})
 				},
