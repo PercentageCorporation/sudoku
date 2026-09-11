@@ -4,6 +4,8 @@ import {rows, cols, squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCell
 export function runHints() {
 	var result;
 
+	result = XYZWing();
+	if (result) return result[0];
 	result = singletons();
 	if (result) return result[0];
 	result = rowSingleCounts();
@@ -11,6 +13,8 @@ export function runHints() {
 	result = colSingleCounts();
 	if (result) return result[0];
 	result = sqSingleCounts();
+	if (result) return result[0];
+	result = XWing();
 	if (result) return result[0];
 	result = findNakedPairs();
 	if (result) return result[0];
@@ -979,11 +983,11 @@ function XWing() {
 					colCells.push(cellCol[cix]);
 				}
 			}
-			if (count == 2) {
+			if (count === 2) {
 				rowPairs.push( [r, colCells]);
 			}
 		}
-		//console.log(value, rowPairs.length, rowPairs);
+		//console.log("xw", value, rowPairs.length, rowPairs);
 
 		if (rowPairs.length > 1) {
 			for (var i=0; i<rowPairs.length; ++i) {
@@ -996,7 +1000,7 @@ function XWing() {
 						var r1 = pj[0];
 						var c0 = pi[1][0];
 						var c1 = pj[1][1];
-						console.log("xw", value, r0, r1, c0, c1);
+						//console.log("xw", value, r0, r1, c0, c1);
 
 						// check for candidates for elimination
 						var hasCandidates = false;
@@ -1080,3 +1084,188 @@ function XWing() {
 	return xwings;
 
 }
+
+function findPairs(p0, p1, cells) {
+	var pairs = [];
+	for (var cix=0; cix<81; ++cix) {
+		var c = cells[cix];
+		var ac = c.activecandidates;
+		if (c.value == 0 && ac.length === 2) {
+			if (ac.includes(p0) && ac.includes(p1)) {
+				var rcs = [cellRow[cix],cellCol[cix],cellSquare[cix]];
+				pairs.push([cix,ac,rcs]);
+			}
+		}
+	}
+	return pairs;
+}
+
+function findPairInRow(rix, p, cells) {
+	//console.log("inRow", rixin, p);
+	var rp = [];
+	var row = rows[rix];
+	for (var r=0; r<9; ++r) {
+		var cix = row[r];
+		var cel = cells[cix];
+		//console.log("inRow", cix);
+		var ac = cel.activecandidates;
+		if (cel.value === 0 && ac.length === 2) {
+			if (ac.includes(p[0]) && ac.includes(p[1])) {
+				rp.push(cix);
+			}
+		}
+	}
+	return rp;
+}
+
+function findPairInCol(cixin, p, cells) {
+	var cp = [];
+	//console.log("inCol", cixin, p);
+	var col = cols[cixin];
+	for (var c=0; c<9; ++c) {
+		var cix = col[c];
+		//console.log("inCol", cix);
+		var cel = cells[cix];
+		var ac = cel.activecandidates;
+		if (cel.value === 0 && ac.length === 2) {
+			if (ac.includes(p[0]) && ac.includes(p[1])) {
+				cp.push(cix);
+			}
+		}
+	}
+	return cp;
+}
+
+// X-Wing
+function XYZWing() {
+	const cells = cellStore.getState().cells;
+	var pivots = [];
+	var xyzwings = [];
+
+	// find pivot cells
+	for (var cix=0; cix<81; ++cix) {
+		var c = cells[cix];
+		var ac = c.activecandidates;
+		if ( c.value === 0 && ac.length === 3) {
+			pivots.push([cix, ac]);
+		}
+	}
+	console.log("xwz", pivots);
+
+	var xyPairs = [];
+	var xzPairs = [];
+	var yzPairs = [];
+	pivots.forEach((piv) => {
+		// find candidate pairs
+		var pix = piv[0];
+		var pac = cells[pix].activecandidates;
+		var xy = [pac[0],pac[1]];
+		var xz = [pac[0],pac[2]];
+		var yz = [pac[1],pac[2]];
+		var xyz = [pac[0],pac[1],pac[2]];
+		xyPairs = findPairs(pac[0],pac[1],cells);
+		xzPairs = findPairs(pac[0],pac[2],cells);
+		yzPairs = findPairs(pac[1],pac[2],cells);
+
+		var count = 0;
+		if (xyPairs.length > 0) ++count;
+		if (xzPairs.length > 0) ++count;
+		if (yzPairs.length > 0) ++count;
+
+		if (count >= 2) {
+			console.log(piv[0], piv[1])
+			console.log(xyPairs,xzPairs,yzPairs);
+		}
+		// are any of the pairs in the same row/col/square as the pivot
+		var pr = cellRow[pix];
+		var pc = cellCol[pix];
+		var ps = cellSquare[pix];
+
+		// find pairs in same row
+		var xyRow = [];
+		var xzRow = [];
+		var yzRow = [];
+		xyPairs.forEach((p) => {if (cellRow[p[0]] === pr) xyRow.push(p);})
+		xzPairs.forEach((p) => {if (cellRow[p[0]] === pr) xzRow.push(p);})
+		yzPairs.forEach((p) => {if (cellRow[p[0]] === pr) yzRow.push(p);})
+
+		// find pairs in same col
+		var xyCol = [];
+		var xzCol = [];
+		var yzCol = [];
+		xyPairs.forEach((p) => {if (cellCol[p[0]] === pc) xyCol.push(p);})
+		xzPairs.forEach((p) => {if (cellCol[p[0]] === pc) xzCol.push(p);})
+		yzPairs.forEach((p) => {if (cellCol[p[0]] === pc) yzCol.push(p);})
+
+		// find pairs in same square
+		var xySquare = [];
+		var xzSquare = [];
+		var yzSquare = [];
+		xyPairs.forEach((p) => {if (cellSquare[p[0]] === ps) xySquare.push(p);})
+		xzPairs.forEach((p) => {if (cellSquare[p[0]] === ps) xzSquare.push(p);})
+		yzPairs.forEach((p) => {if (cellSquare[p[0]] === ps) yzSquare.push(p);})
+
+		var count = 0;
+		var havexyRow = (xyRow.length > 0);
+		var havexzRow = (xzRow.length > 0);
+		var haveyzRow = (yzRow.length > 0);
+		//console.log("Rows");
+		//console.log(xyRow,xzRow,yzRow);
+
+		var havexyCol = (xyCol.length > 0);
+		var havexzCol = (xzCol.length > 0);
+		var haveyzCol = (yzCol.length > 0);
+		//console.log("Cols");
+		//console.log(xyCol,xzCol,yzCol);
+
+		var havexySquare = (xySquare.length > 0);
+		var havexzSquare = (xzSquare.length > 0);
+		var haveyzSquare = (yzSquare.length > 0);
+		//console.log("Squares");
+		//console.log(xySquare,xzSquare,yzSquare);
+
+		// check for a candidate from a row and a col
+		if (havexyCol && havexzRow) {
+			console.log("Combo 1");
+		}
+		if (havexyCol && haveyzRow) {
+			console.log("Combo 2");
+
+		}
+		if (havexzCol && havexyRow) {
+			console.log("Combo 3");
+			console.log(xyRow,xzCol);
+			var xyRowMates = findPairInRow(pr, xy, cells);
+			var xzColMates = findPairInCol(pc, xz, cells);
+			console.log("matesX", xyRowMates, xzColMates);
+
+		}
+		if (havexzCol && haveyzRow) {
+			console.log("Combo 4");
+			console.log(yzRow,xzCol);
+			var yzRowMates = findPairInRow(pr, yz, cells);
+			var xzColMates = findPairInCol(pc, xz, cells);
+			console.log("matesZ", yzRowMates, xzColMates);
+
+		}
+		if (haveyzCol && havexyRow) {
+			console.log("Combo 5");
+			console.log(xyRow,yzCol);
+
+			var xyRowMates = findPairInRow(pr, xy, cells);
+			var yzColMates = findPairInCol(pc, yz, cells);
+			console.log("matesY", xyRowMates, yzColMates);
+		}
+		if (haveyzCol && havexzRow) {
+			console.log("Combo 6");
+
+		}
+
+	})
+
+
+
+	return null;
+}
+
+
