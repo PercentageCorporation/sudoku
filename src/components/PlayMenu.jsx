@@ -40,7 +40,9 @@ export default function PlayMenu() {
 		switch (h.type) {
 			// hints with targets
 			case "xWing":
+			case "xyzWing":
 			case "nakedPair":
+			case "pointingPair":
 				var cls = h.targets;
 				console.log(cls);
 				cls.forEach((cix) => {
@@ -77,7 +79,7 @@ export default function PlayMenu() {
 				clearSelectedCell();
 				break;
 
-			case "pointingPair":
+			case "pointingPairXXX":
 				var cls = h.row !== null ? rows[h.row] : h.col != null ? cols[h.col] : [];
 				console.log(cls);
 				cls.forEach((cix) => {

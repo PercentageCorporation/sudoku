@@ -1150,14 +1150,14 @@ function XYZWing() {
 			pivots.push([cix, ac]);
 		}
 	}
-	console.log("xwz", pivots);
+	//console.log("xwz", pivots);
 
 	var xyPairs = [];
 	var xzPairs = [];
 	var yzPairs = [];
 	pivots.forEach((piv) => {
 		// find candidate pairs
-		var pix = piv[0];
+		var pix = piv[0];	// pivot cell id
 		var pac = cells[pix].activecandidates;
 		var xy = [pac[0],pac[1]];
 		var xz = [pac[0],pac[2]];
@@ -1173,17 +1173,17 @@ function XYZWing() {
 		if (yzPairs.length > 0) ++count;
 
 		if (count >= 2) {
-			console.log(piv[0], piv[1])
-			console.log(xyPairs,xzPairs,yzPairs);
+			//console.log("candidate", pix, xyz)
+			//console.log(xyPairs,xzPairs,yzPairs);
 		} else {
 			return null;	// nothing to do here
 		}
 
-		console.log("pivot", piv)
 		// are any of the pairs in the same row/col/square as the pivot
 		var pr = cellRow[pix];
 		var pc = cellCol[pix];
 		var ps = cellSquare[pix];
+		//console.log("rcs", pr, pc, ps);
 
 		// find pairs in same row
 		var xyRow = [];
@@ -1210,73 +1210,103 @@ function XYZWing() {
 		yzPairs.forEach((p) => {if (cellSquare[p[0]] === ps) yzSquare.push(p);})
 
 		var count = 0;
-		var havexyRow = (xyRow.length > 0);
-		var havexzRow = (xzRow.length > 0);
-		var haveyzRow = (yzRow.length > 0);
+		var xyHaveRow = (xyRow.length > 0);
+		var xzHaveRow = (xzRow.length > 0);
+		var yzHaveRow = (yzRow.length > 0);
 		//console.log("Rows");
 		//console.log(xyRow,xzRow,yzRow);
 
-		var havexyCol = (xyCol.length > 0);
-		var havexzCol = (xzCol.length > 0);
-		var haveyzCol = (yzCol.length > 0);
+		var xyHaveCol = (xyCol.length > 0);
+		var xzHaveCol = (xzCol.length > 0);
+		var yzHaveCol = (yzCol.length > 0);
 		//console.log("Cols");
 		//console.log(xyCol,xzCol,yzCol);
 
-		var havexySquare = (xySquare.length > 0);
-		var havexzSquare = (xzSquare.length > 0);
-		var haveyzSquare = (yzSquare.length > 0);
+		var xyHaveSquare = (xySquare.length > 0);
+		var xzHaveSquare = (xzSquare.length > 0);
+		var yzHaveSquare = (yzSquare.length > 0);
 		//console.log("Squares");
 		//console.log(xySquare,xzSquare,yzSquare);
 
+		//console.log(xyHaveRow,xzHaveRow,yzHaveRow,xyHaveCol,xzHaveCol,yzHaveCol);
+		//console.log(xyRow,xzRow,yzRow,xyCol,xzCol,yzCol);
 		// check for a candidate from a row and a col
-		if (havexzCol && havexyRow) {
-			console.log("Combo 1");
-			console.log(xyRow,xzCol);
+		if (xzHaveCol && xyHaveRow) {
+			//console.log("Combo 1");
+			//console.log(xyRow,xzCol);
 			var xyRowMates = findPairInRow(pr, xy, cells);
 			var xzColMates = findPairInCol(pc, xz, cells);
-			console.log("matesX", xyRowMates, xzColMates);
+			//console.log("pivot", piv)
+			//console.log("matesX", xyRowMates, );
+			xyzwings.push(xyzHint(pix, xyz[0], pr, pc, ps, xyRowMates,xzColMates));
 		}
-		if (haveyzCol && havexyRow) {
-			console.log("Combo 2");
-			console.log(xyRow,yzCol);
+		if (yzHaveCol && xyHaveRow) {
+			//console.log("Combo 2");
+			//console.log(xyRow,yzCol);
 			var xyRowMates = findPairInRow(pr, xy, cells);
 			var yzColMates = findPairInCol(pc, yz, cells);
-			console.log("matesY", xyRowMates, yzColMates);
+			//console.log("pivot", piv)
+			//console.log("matesY", xyRowMates, yzColMates);
+			xyzwings.push(xyzHint(pix, xyz[1], pr, pc, ps, xyRowMates,yzColMates));
 		}
-		if (havexyCol && havexzRow) {
-			console.log("Combo 3");
-			console.log(xzRow,xyCol);
+		if (xyHaveCol && xzHaveRow) {
+			//console.log("Combo 3");
+			//console.log(xzRow,xyCol);
 			var xzRowMates = findPairInRow(pr, xz, cells);
 			var xyColMates = findPairInCol(pc, xy, cells);
-			console.log("matesX", xzRowMates, xyColMates);
+			//console.log("pivot", piv)
+			//console.log("matesX", xzRowMates, xyColMates);
+			xyzwings.push(xyzHint(pix, xyz[0], pr, pc, ps, xzRowMates,xyColMates));
 		}
-		if (haveyzCol && havexzRow) {
-			console.log("Combo 4");
-			console.log(xzRow,yzCol);
+		if (yzHaveCol && xzHaveRow) {
+			//console.log("Combo 4");
+			//console.log(xzRow,yzCol);
 			var xzRowMates = findPairInRow(pr, xz, cells);
 			var yzColMates = findPairInCol(pc, yz, cells);
-			console.log("matesZ", xzRowMates, yzColMates);
+			//console.log("pivot", piv)
+			//console.log("matesZ", xzRowMates, yzColMates);
+			xyzwings.push(xyzHint(pix, xyz[2], pr, pc, ps, xzRowMates,yzColMates));
 		}
-		if (havexyCol && haveyzRow) {
-			console.log("Combo 5");
-			console.log(yzRow,xyCol);
+		if (xyHaveCol && yzHaveRow) {
+			//console.log("Combo 5");
+			//console.log(yzRow,xyCol);
 			var yzRowMates = findPairInRow(pr, yz, cells);
 			var xyColMates = findPairInCol(pc, xy, cells);
-			console.log("matesY", yzRowMates, xyColMates);
+			//console.log("pivot", piv)
+			//console.log("matesY", yzRowMates, xyColMates);
+			xyzwings.push(xyzHint(pix, xyz[1], pr, pc, ps, yzRowMates,xyColMates));
 		}
-		if (havexzCol && haveyzRow) {
-			console.log("Combo 6");
-			console.log(yzRow,xzCol);
+		if (xzHaveCol && yzHaveRow) {
+			//console.log("Combo 6");
+			//console.log(yzRow,xzCol);
 			var yzRowMates = findPairInRow(pr, yz, cells);
 			var xzColMates = findPairInCol(pc, xz, cells);
-			console.log("matesZ", yzRowMates, xzColMates);
+			//console.log("pivot", piv)
+			//console.log("matesZ", yzRowMates, xzColMates);
+			xyzwings.push(xyzHint(pix, xyz[2], pr, pc, ps, yzRowMates,xzColMates));
 		}
 
 	})
 
+	if (xyzwings.length === 0) return null;
+	console.log("xyzHints", xyzwings);
+	return xyzwings;
+}
 
+function xyzHint(pix, pval, pr, pc, ps, rowMates,colMates) {
 
-	return null;
+	var h = {
+		type: 'xyzWing',
+		row: pr,
+		col: pc,
+		square: ps,
+		cells: [rowMates[0],colMates[0]],
+		offset: null,
+		value: pval,
+		targets: [pix],
+		msg: `XYZ-Wing: Cell: ${pix}, Value: ${pval}`
+	}
+	return h;
 }
 
 

@@ -124,9 +124,16 @@ function Cell({ix}) {
 
 			case 'xWing':
 				if (hint.cells.includes(ix))
-					selMode = 3;
+					selMode = 2;
 			else if (hint.targets.includes(ix))
-				selMode = 2;
+				selMode = 3;
+			break;
+
+			case 'xyzWing':
+				if (hint.cells.includes(ix))
+					selMode = 2;
+			else if (hint.targets.includes(ix))
+				selMode = 3;
 			break;
 
 			case 'row':
