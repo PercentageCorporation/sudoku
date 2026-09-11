@@ -4,8 +4,6 @@ import {rows, cols, squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCell
 export function runHints() {
 	var result;
 
-	result = XYZWing();
-	if (result) return result[0];
 	result = singletons();
 	if (result) return result[0];
 	result = rowSingleCounts();
@@ -16,13 +14,15 @@ export function runHints() {
 	if (result) return result[0];
 	result = XWing();
 	if (result) return result[0];
+	result = XYWing();
+	if (result) return result[0];
+	result = XYZWing();
+	if (result) return result[0];
 	result = findNakedPairs();
 	if (result) return result[0];
 	result = findPointingPairs2();
 	if (result) return result[0];
 	result = pointingPairsRowCol();
-	if (result) return result[0];
-	result = XWing();
 	if (result) return result[0];
 
 	return null;
@@ -1150,7 +1150,7 @@ function XYZWing() {
 			pivots.push([cix, ac]);
 		}
 	}
-	//console.log("xwz", pivots);
+	//console.log("xyz", pivots);
 
 	var xyPairs = [];
 	var xzPairs = [];
@@ -1309,4 +1309,122 @@ function xyzHint(pix, pval, pr, pc, ps, rowMates,colMates) {
 	return h;
 }
 
+function findXYPairs(ppiv, pivots) {
+	var pairs = [];
 
+	var ppix = ppiv[0];	// pivot cell id
+	var prow = ppiv[1];
+	var pcol = ppiv[2];
+	var pac = ppiv[3];
+
+	// find pair cells containing XY
+	var r
+	for (var p=0; p<pivots.length; ++p) {
+		var piv = pivots[p];
+		var pix = piv[0];
+
+		if (pix === ppix) continue;	// skip ourselves
+		if (prow !== piv[1] && pcol !== piv[2]) continue;	// skip if not same row/col
+		if (!piv[3].includes(pac[0]) && !piv[3].includes(pac[1])) continue;	// skip if x or y value not in cell
+
+		var ac = piv[3];
+		pairs.push([pix, cellRow[pix], cellCol[pix], ac]);
+	}
+	return pairs;
+}
+
+function XYWing() {
+	const cells = cellStore.getState().cells;
+	var pivots = [];
+	var xywings = [];
+
+	// find pivot cells
+	for (var cix=0; cix<81; ++cix) {
+		var c = cells[cix];
+		var ac = c.activecandidates;
+		if ( c.value === 0 && ac.length === 2) {
+			pivots.push([cix, cellRow[cix], cellCol[cix],  ac]);
+		}
+	}
+	console.log("xy", pivots);
+
+	var xyPairs = [];
+	for (var px=0; px<pivots.length; ++px) {
+		// find candidate pairs
+		// piv: [ix, row, col, ac]
+		var piv = pivots[px];
+		var pix = piv[0];	// pivot cell id
+		var prow = piv[1];
+		var pcol = piv[2];
+		var pac = piv[3];
+		var x = pac[0];
+		var y = pac[1];
+
+		xyPairs = findXYPairs(piv, pivots);
+		if (xyPairs.length === 0) continue;
+
+		//console.log("xy candidates", pix, x, y);
+		//console.log(xyPairs);
+
+		// are any of the pairs in the same row/col/square as the pivot
+
+		// find pairs in same row
+		// xpairs : [pix, row, col, ac]
+		var xyRow = [];
+		xyPairs.forEach((p) => {if (p[1] === prow) xyRow.push(p);})
+
+		// find pairs in same col
+		var xyCol = [];
+		xyPairs.forEach((p) => {if (p[2] === pcol) xyCol.push(p);})
+
+		var xyHaveRow = (xyRow.length > 0);
+		var xyHaveCol = (xyCol.length > 0);
+
+		//console.log(xyHaveRow,xyHaveCol);
+		if (!xyHaveRow || !xyHaveCol) continue;		// no candidates
+
+		//console.log("xy candidates", piv, x, y);
+		//console.log(xyRow,xyCol);
+
+		// examine each wing combination
+		for (var r=0; r<xyRow.length; ++r) {
+			for (var c=0; c<xyCol.length; ++c) {
+				var rp = xyRow[r];
+				var cp = xyCol[c];
+				// the wings must have a value in common that is not in the pivot
+				var rac = rp[3];
+				var cac = cp[3];
+
+				var wval = null;
+				if (cac.includes(rac[0]) && !pac.includes(rac[0]))
+					wval = rac[0];
+				else if (cac.includes(rac[1]) && !pac.includes(rac[1]))
+					wval = rac[1];
+
+				if (wval) {
+					console.log("found XY", wval, piv, rp, cp);
+
+					var h = {
+						type: 'xyWing',
+						row: piv[1],
+						col: piv[2],
+						square: null,
+						cells: [piv[0]],
+						offset: null,
+						value: wval,
+						targets: [rp[0],cp[0]],
+						msg: `XY-Wing: Cell: ${piv[0]}, Value: ${wval}`
+					}
+
+					//console.log("hint", h);
+					xywings.push(h);
+				}
+			}
+		}
+
+	}
+
+	if (xywings.length === 0) return null;
+	console.log("xyHints", xywings);
+	return xywings;
+}

@@ -40,6 +40,7 @@ export default function PlayMenu() {
 		switch (h.type) {
 			// hints with targets
 			case "xWing":
+			case "xyWing":
 			case "xyzWing":
 			case "nakedPair":
 			case "pointingPair":

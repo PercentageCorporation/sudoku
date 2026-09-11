@@ -213,7 +213,7 @@ export const cellStore = create(
 						gameLoaded: true
 					})),
 					get().actions.clearSelectedCell()
-					get().actions.clearCellValue()
+					get().actions.clearSelectedValue()
 					get().actions.resetCandidates()
 				},
 
