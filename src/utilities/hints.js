@@ -1175,7 +1175,11 @@ function XYZWing() {
 		if (count >= 2) {
 			console.log(piv[0], piv[1])
 			console.log(xyPairs,xzPairs,yzPairs);
+		} else {
+			return null;	// nothing to do here
 		}
+
+		console.log("pivot", piv)
 		// are any of the pairs in the same row/col/square as the pivot
 		var pr = cellRow[pix];
 		var pc = cellCol[pix];
@@ -1225,40 +1229,47 @@ function XYZWing() {
 		//console.log(xySquare,xzSquare,yzSquare);
 
 		// check for a candidate from a row and a col
-		if (havexyCol && havexzRow) {
-			console.log("Combo 1");
-		}
-		if (havexyCol && haveyzRow) {
-			console.log("Combo 2");
-
-		}
 		if (havexzCol && havexyRow) {
-			console.log("Combo 3");
+			console.log("Combo 1");
 			console.log(xyRow,xzCol);
 			var xyRowMates = findPairInRow(pr, xy, cells);
 			var xzColMates = findPairInCol(pc, xz, cells);
 			console.log("matesX", xyRowMates, xzColMates);
-
-		}
-		if (havexzCol && haveyzRow) {
-			console.log("Combo 4");
-			console.log(yzRow,xzCol);
-			var yzRowMates = findPairInRow(pr, yz, cells);
-			var xzColMates = findPairInCol(pc, xz, cells);
-			console.log("matesZ", yzRowMates, xzColMates);
-
 		}
 		if (haveyzCol && havexyRow) {
-			console.log("Combo 5");
+			console.log("Combo 2");
 			console.log(xyRow,yzCol);
-
 			var xyRowMates = findPairInRow(pr, xy, cells);
 			var yzColMates = findPairInCol(pc, yz, cells);
 			console.log("matesY", xyRowMates, yzColMates);
 		}
+		if (havexyCol && havexzRow) {
+			console.log("Combo 3");
+			console.log(xzRow,xyCol);
+			var xzRowMates = findPairInRow(pr, xz, cells);
+			var xyColMates = findPairInCol(pc, xy, cells);
+			console.log("matesX", xzRowMates, xyColMates);
+		}
 		if (haveyzCol && havexzRow) {
+			console.log("Combo 4");
+			console.log(xzRow,yzCol);
+			var xzRowMates = findPairInRow(pr, xz, cells);
+			var yzColMates = findPairInCol(pc, yz, cells);
+			console.log("matesZ", xzRowMates, yzColMates);
+		}
+		if (havexyCol && haveyzRow) {
+			console.log("Combo 5");
+			console.log(yzRow,xyCol);
+			var yzRowMates = findPairInRow(pr, yz, cells);
+			var xyColMates = findPairInCol(pc, xy, cells);
+			console.log("matesY", yzRowMates, xyColMates);
+		}
+		if (havexzCol && haveyzRow) {
 			console.log("Combo 6");
-
+			console.log(yzRow,xzCol);
+			var yzRowMates = findPairInRow(pr, yz, cells);
+			var xzColMates = findPairInCol(pc, xz, cells);
+			console.log("matesZ", yzRowMates, xzColMates);
 		}
 
 	})
