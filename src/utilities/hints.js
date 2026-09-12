@@ -12,13 +12,13 @@ export function runHints() {
 	if (result) return result[0];
 	result = sqSingleCounts();
 	if (result) return result[0];
-	result = findNakedPairs();
-	if (result) return result[0];
-	result = findNakedTriples();
-	if (result) return result[0];
 	result = findPointingPairsSquare();
 	if (result) return result[0];
 	result = pointingPairsRowCol();
+	if (result) return result[0];
+	result = findNakedPairs();
+	if (result) return result[0];
+	result = findNakedTriples();
 	if (result) return result[0];
 	result = XWing();
 	if (result) return result[0];
@@ -39,12 +39,15 @@ function includesPair(arr, v0, v1) {
 
 function hasSingleOccurance(arr) {
 	var single = null;
+	var singleCount = 0;
 	for (var i=0; i<arr.length; ++i) {
 		if (arr[i] > 0 ) {
 			if (single != null) return null;
 			single = i;
+			singleCount = arr[i];
 		}
 	}
+	if (single != null && singleCount < 2) return null;
 	return single;
 }
 
@@ -87,6 +90,8 @@ function findPointingPairsSquare() {
 			}
 			var sqix = hasSingleOccurance(sqCounts);
 			if (sqix != null) {
+				console.log(value, r, sqix, sqCounts);
+
 				var vc = sqCounts[sqix];
 				var targets = getSquareValueCells(value, sqix, cells);
 				var vscount = targets.length;
@@ -96,7 +101,7 @@ function findPointingPairsSquare() {
 					targets = targets.filter((v) => !cels.includes(v));
 
 					//console.log("ppsr", value, r, sqix, vc, vscount, targets, sqCounts);
-					var msg = `Pointing Pairs: Cells: ${targets}, Value: ${value}`;
+					var msg = `Pointing Pair: Cells: ${targets}, Value: ${value}`;
 					var ppsh = {
 						type: "pointingPairSquare",
 						direction: "row",
@@ -128,6 +133,7 @@ function findPointingPairsSquare() {
 				}
 			}
 			var sqix = hasSingleOccurance(sqCounts);
+			//console.log(sqix, sqCounts);
 			if (sqix != null) {
 				var vc = sqCounts[sqix];
 				var targets = getSquareValueCells(value, sqix, cells);
@@ -137,13 +143,13 @@ function findPointingPairsSquare() {
 					var cels = sqCells[sqix];
 					targets = targets.filter((v) => !cels.includes(v));
 
-					//console.log("ppsc", value, c, sqix, vc, vscount, targets, sqCounts);
+					//console.log("ppsc", value, cx, sqix, vc, vscount, targets, sqCounts);
 					var msg = `Pointing Pairs: Cells: ${targets}, Value: ${value}`;
 					var ppsh = {
 						type: "pointingPairSquare",
-						direction: "row",
+						direction: "col",
 						row: null,
-						col: c,
+						col: cx,
 						square: sqix,
 						cells: cels,
 						offset: null,
