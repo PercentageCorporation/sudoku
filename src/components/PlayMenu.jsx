@@ -41,9 +41,11 @@ export default function PlayMenu() {
 			// hints with targets
 			case "xWing":
 			case "xyWing":
+			case "xyTriple":
 			case "xyzWing":
 			case "nakedPair":
 			case "pointingPair":
+			case "pointingPairSquare":
 				var cls = h.targets;
 				console.log(cls);
 				cls.forEach((cix) => {
@@ -69,68 +71,9 @@ export default function PlayMenu() {
 				clearSelectedCell();
 				break;
 
-			case "nakedPairXXX":
-				var cls = h.targets;
-				console.log(cls);
-				cls.forEach((cix) => {
-					addNonCandidate(cix, h.values[0]);
-					addNonCandidate(cix, h.values[1]);
-				})
-				clearSelectedValue();
-				clearSelectedCell();
-				break;
-
-			case "pointingPairXXX":
-				var cls = h.row !== null ? rows[h.row] : h.col != null ? cols[h.col] : [];
-				console.log(cls);
-				cls.forEach((cix) => {
-					if (!h.cells.includes(cix)) addNonCandidate(cix, h.value);
-				})
-				clearSelectedValue();
-				clearSelectedCell();
-				break;
-
-			case "pointingPairs2":
-				clearSelectedValue();
-				var cls = [];
-				switch (h.direction) {
-					case "row":
-						cls = rows[h.row];
-						break;
-					case "col":
-						cls = cols[h.col];
-						break;
-					case "sq":
-						cls = squares[h.square];
-						break;
-					default:
-						return;
-				}
-
-				console.log(cls);
-				cls.forEach((cix) => {
-					console.log("addC", cix, h.cells, h.values);
-					if (!h.cells.includes(cix)) {
-						addNonCandidate(cix, h.values[0]);
-						addNonCandidate(cix, h.values[1]);
-					}
-					showCell(cix);
-				})
-				clearSelectedValue();
-				clearSelectedCell();
-				break;
-
-			case "pointingPairSquare":
-				clearSelectedValue();
-				var six = h.square;
-				var sq = squares[six];
-				sq.forEach((cix) => {
-					if (!h.cells.includes(cix))  addNonCandidate(cix, h.value);
-				})
-				clearSelectedCell();
-				break
-
 			default:
+				console.log("Unknown Hint Type:", h.type);
+				return;
 				break;
 		}
 		//updateCandidates();

@@ -91,6 +91,7 @@ function Cell({ix}) {
 	else if (hint.type) {
 		switch (hint.type) {
 			case "nakedPair":
+			case "pointingPairSquare":
 				if (hint.cells.includes(ix))
 					selMode = 3;
 				else if (hint.targets.includes(ix))
@@ -105,28 +106,12 @@ function Cell({ix}) {
 				}
 				break;
 
-			case "pointingPairs2":
-				if (hint.cells.includes(ix))
-					selMode = 3;
-				else if (hint.row === rcs[0] || hint.col === rcs[1]) {
-					if (cell.activecandidates.includes(hint.values[0])
-						|| cell.activecandidates.includes(hint.values[1])) selMode = 2;
-				}
-				break;
-
-			case "pointingPairSquare":
-				if (hint.cells.includes(ix))
-					selMode = 3;
-				else if (hint.square === rcs[2]) {
-					if (cell.activecandidates.includes(hint.value)) selMode = 2;
-				}
-				break;
-
 			case 'xWing':
+			case 'xyTriple':
 				if (hint.cells.includes(ix))
 					selMode = 2;
-			else if (hint.targets.includes(ix))
-				selMode = 3;
+				else if (hint.targets.includes(ix))
+					selMode = 3;
 			break;
 
 			case 'xyWing':
@@ -144,11 +129,15 @@ function Cell({ix}) {
 			break;
 
 			case 'row':
-				if (hint.row >= 0 && hint.row === rcs[0]) selMode = 5;
+				if (hint.row >= 0 && hint.row === rcs[0]) selMode = 3;
 				break;
 
 			case 'col':
-				if (hint.col >= 0 && hint.col === rcs[1]) selMode = 5;
+				if (hint.col >= 0 && hint.col === rcs[1]) selMode = 3;
+				break;
+
+			case 'cell':
+				if (hint.cells[0] === ix) selMode = 3;
 				break;
 
 			default:
