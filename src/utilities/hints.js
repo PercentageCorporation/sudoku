@@ -90,7 +90,7 @@ function findPointingPairsSquare() {
 			}
 			var sqix = hasSingleOccurance(sqCounts);
 			if (sqix != null) {
-				console.log(value, r, sqix, sqCounts);
+				//console.log(value, r, sqix, sqCounts);
 
 				var vc = sqCounts[sqix];
 				var targets = getSquareValueCells(value, sqix, cells);
@@ -1035,20 +1035,6 @@ function XWing() {
 
 }
 
-function findPairs(p0, p1, cells) {
-	var pairs = [];
-	for (var cix=0; cix<81; ++cix) {
-		var c = cells[cix];
-		var ac = c.activecandidates;
-		if (c.value == 0 && ac.length === 2) {
-			if (ac.includes(p0) && ac.includes(p1)) {
-				var rcs = [cellRow[cix],cellCol[cix],cellSquare[cix]];
-				pairs.push([cix,ac,rcs]);
-			}
-		}
-	}
-	return pairs;
-}
 
 function findPairInRow(rix, p, cells) {
 	//console.log("inRow", rixin, p);
@@ -1086,6 +1072,27 @@ function findPairInCol(cixin, p, cells) {
 	return cp;
 }
 
+function candidatePairsMatch(c0, c1) {
+	if (c0[0] !== c1[0] && c0[0] !== c1[1]) return false;
+	if (c0[1] !== c1[0] && c0[1] !== c1[1]) return false;
+	return true;
+}
+
+function findPairs(p, cells) {
+	var pairs = [];
+	for (var cix=0; cix<81; ++cix) {
+		var c = cells[cix];
+		var ac = c.activecandidates;
+		if (c.value == 0 && ac.length === 2) {
+			if (ac.includes(p[0]) && ac.includes(p[1])) {
+				var rcs = [cellRow[cix],cellCol[cix],cellSquare[cix]];
+				pairs.push([cix,ac,rcs]);
+			}
+		}
+	}
+	return pairs;
+}
+
 // X-Wing
 function XYZWing() {
 	const cells = cellStore.getState().cells;
@@ -1097,15 +1104,20 @@ function XYZWing() {
 		var c = cells[cix];
 		var ac = c.activecandidates;
 		if ( c.value === 0 && ac.length === 3) {
-			pivots.push([cix, ac]);
+			var rcs = [cellRow[cix],cellCol[cix],cellSquare[cix]];
+			pivots.push([cix, ac, rcs]);
 		}
 	}
 	//console.log("xyz", pivots);
 
+	// find pincer cells
 	var xyPairs = [];
 	var xzPairs = [];
 	var yzPairs = [];
-	pivots.forEach((piv) => {
+	var xyzCandidates = [];
+
+	for (var px=0; px<pivots.length; ++px) {
+		var piv = pivots[px];
 		// find candidate pairs
 		var pix = piv[0];	// pivot cell id
 		var pac = cells[pix].activecandidates;
@@ -1113,134 +1125,133 @@ function XYZWing() {
 		var xz = [pac[0],pac[2]];
 		var yz = [pac[1],pac[2]];
 		var xyz = [pac[0],pac[1],pac[2]];
-		xyPairs = findPairs(pac[0],pac[1],cells);
-		xzPairs = findPairs(pac[0],pac[2],cells);
-		yzPairs = findPairs(pac[1],pac[2],cells);
+
+		xyPairs = findPairs(xy, cells);
+		xzPairs = findPairs(xz, cells);
+		yzPairs = findPairs(yz, cells);
+
+		var haveXY = (xyPairs.length > 0);
+		var haveXZ = (xzPairs.length > 0);
+		var haveYZ = (yzPairs.length > 0);
 
 		var count = 0;
-		if (xyPairs.length > 0) ++count;
-		if (xzPairs.length > 0) ++count;
-		if (yzPairs.length > 0) ++count;
+		if (haveXY) ++count;
+		if (haveXZ) ++count;
+		if (haveYZ) ++count;
+		if (count < 2)  continue;	// nothing to do
 
-		if (count >= 2) {
-			//console.log("candidate", pix, xyz)
-			//console.log(xyPairs,xzPairs,yzPairs);
-		} else {
-			return null;	// nothing to do here
+		//console.log("candidate", pix, xyz)
+		//console.log("xyzp",piv, xyPairs,xzPairs,yzPairs);
+
+		// pincers can be anywhere apparently
+		// pincer: cix, ac, rcs
+
+		// pair xyz with xy and xz
+		xyPairs.forEach((xy) => {
+			xzPairs.forEach((xz) => {
+				xyzCandidates.push([piv,xy,xz,xyz[0]]);
+			})
+		})
+
+		// pair xyz with xy and yz
+		xyPairs.forEach((xy) => {
+			yzPairs.forEach((yz) => {
+				xyzCandidates.push([piv,xy,yz,xyz[1]]);
+			})
+		})
+
+		// pair xyz with xz and yz
+		xzPairs.forEach((xz) => {
+			yzPairs.forEach((yz) => {
+				xyzCandidates.push([piv,xz,yz,xyz[2]]);
+			})
+		})
+	}
+
+	//console.log("xyzCandidates",xyzCandidates)
+
+
+	for (var x=0; x<xyzCandidates.length; ++x) {
+	//for (var x=0; x<1; ++x) {
+		var can = xyzCandidates[x];
+		//console.log(x, can);
+		// pivot/pincer: cix, ac, rcs, value
+		var piv = can[0];	// pivot
+		var pin1 = can[1];	// pincer 1
+		var pin2 = can[2];	// pincer 2
+		var pval = can[3];
+
+		for (var cix=0; cix<81; ++cix) {
+			if (cix === piv[0]) continue;	// skip ourselves
+			if (cix === pin1[0]) continue;	// skip ourselves
+			if (cix === pin2[0]) continue;	// skip ourselves
+
+			var cel = cells[cix];
+			if (cel.value > 0) continue;
+			var ac = cel.activecandidates;
+			if (ac.length != 2) continue;
+
+			var crcs = [cellRow[cix],cellCol[cix],cellSquare[cix]];
+			//console.log("chek", x, cix, crcs, piv, pin1, pin2, pval);
+
+			// is the cell in the same row/col/square  the pincers
+			if (crcs[0] == pin1[2][0] && crcs[0] == pin2[2][0] ) {
+				//console.log("same row", x, cix, crcs, piv, pin1, pin2, pval);
+				// same row
+				var row = rows[crcs[0]];
+				for (var i=0; i<9; ++i) {
+					var ix = row[i];	// cell in row
+					// if cell is same as pincers, skip it
+					if (ix === pin1[0] || ix === pin2[0]) continue;
+					if (!ac.includes(pval)) continue;
+
+					console.log("acr",ix, crcs, pin1, pin2, pval, ac);
+					xyzwings.push(piv, pin1, pin2, pval);
+				}
+
+			}
+			// column
+			if (crcs[1] == pin1[2][1] && crcs[1] == pin2[2][1] ) {
+				//console.log("same col", x, cix, crcs, piv, pin1, pin2, pval);
+				// same row
+				var col = cols[crcs[0]];
+				for (var i=0; i<9; ++i) {
+					var ix = col[i];	// cell in row
+					// if cell is same as pincers, skip it
+					if (ix === pin1[0] || ix === pin2[0]) continue;
+					if (!ac.includes(pval)) continue;
+
+					console.log("acc",ix, crcs, pin1, pin2, pval, ac);
+					xyzwings.push(piv, pin1, pin2, pval);
+				}
+
+			}
+			// square
+			if (crcs[2] == pin1[2][2] && crcs[2] == pin2[2][2] ) {
+				//console.log("same sq", x, cix, crcs, piv, pin1, pin2, pval);
+				// same row
+				var sq = squares[crcs[0]];
+				for (var i=0; i<9; ++i) {
+					var ix = sq[i];	// cell in row
+					// if cell is same as pincers, skip it
+					if (ix === pin1[0] || ix === pin2[0]) continue;
+					if (!ac.includes(pval)) continue;
+
+					console.log("acs",ix, crcs, pin1, pin2, pval, ac);
+					xyzwings.push(piv, pin1, pin2, pval);
+				}
+
+			}
 		}
-
-		// are any of the pairs in the same row/col/square as the pivot
-		var pr = cellRow[pix];
-		var pc = cellCol[pix];
-		var ps = cellSquare[pix];
-		//console.log("rcs", pr, pc, ps);
-
-		// find pairs in same row
-		var xyRow = [];
-		var xzRow = [];
-		var yzRow = [];
-		xyPairs.forEach((p) => {if (cellRow[p[0]] === pr) xyRow.push(p);})
-		xzPairs.forEach((p) => {if (cellRow[p[0]] === pr) xzRow.push(p);})
-		yzPairs.forEach((p) => {if (cellRow[p[0]] === pr) yzRow.push(p);})
-
-		// find pairs in same col
-		var xyCol = [];
-		var xzCol = [];
-		var yzCol = [];
-		xyPairs.forEach((p) => {if (cellCol[p[0]] === pc) xyCol.push(p);})
-		xzPairs.forEach((p) => {if (cellCol[p[0]] === pc) xzCol.push(p);})
-		yzPairs.forEach((p) => {if (cellCol[p[0]] === pc) yzCol.push(p);})
-
-		// find pairs in same square
-		var xySquare = [];
-		var xzSquare = [];
-		var yzSquare = [];
-		xyPairs.forEach((p) => {if (cellSquare[p[0]] === ps) xySquare.push(p);})
-		xzPairs.forEach((p) => {if (cellSquare[p[0]] === ps) xzSquare.push(p);})
-		yzPairs.forEach((p) => {if (cellSquare[p[0]] === ps) yzSquare.push(p);})
-
-		var count = 0;
-		var xyHaveRow = (xyRow.length > 0);
-		var xzHaveRow = (xzRow.length > 0);
-		var yzHaveRow = (yzRow.length > 0);
-		//console.log("Rows");
-		//console.log(xyRow,xzRow,yzRow);
-
-		var xyHaveCol = (xyCol.length > 0);
-		var xzHaveCol = (xzCol.length > 0);
-		var yzHaveCol = (yzCol.length > 0);
-		//console.log("Cols");
-		//console.log(xyCol,xzCol,yzCol);
-
-		var xyHaveSquare = (xySquare.length > 0);
-		var xzHaveSquare = (xzSquare.length > 0);
-		var yzHaveSquare = (yzSquare.length > 0);
-		//console.log("Squares");
-		//console.log(xySquare,xzSquare,yzSquare);
-
-		//console.log(xyHaveRow,xzHaveRow,yzHaveRow,xyHaveCol,xzHaveCol,yzHaveCol);
-		//console.log(xyRow,xzRow,yzRow,xyCol,xzCol,yzCol);
-		// check for a candidate from a row and a col
-		if (xzHaveCol && xyHaveRow) {
-			//console.log("Combo 1");
-			//console.log(xyRow,xzCol);
-			var xyRowMates = findPairInRow(pr, xy, cells);
-			var xzColMates = findPairInCol(pc, xz, cells);
-			//console.log("pivot", piv)
-			//console.log("matesX", xyRowMates, );
-			xyzwings.push(xyzHint(pix, xyz[0], pr, pc, ps, xyRowMates,xzColMates));
-		}
-		if (yzHaveCol && xyHaveRow) {
-			//console.log("Combo 2");
-			//console.log(xyRow,yzCol);
-			var xyRowMates = findPairInRow(pr, xy, cells);
-			var yzColMates = findPairInCol(pc, yz, cells);
-			//console.log("pivot", piv)
-			//console.log("matesY", xyRowMates, yzColMates);
-			xyzwings.push(xyzHint(pix, xyz[1], pr, pc, ps, xyRowMates,yzColMates));
-		}
-		if (xyHaveCol && xzHaveRow) {
-			//console.log("Combo 3");
-			//console.log(xzRow,xyCol);
-			var xzRowMates = findPairInRow(pr, xz, cells);
-			var xyColMates = findPairInCol(pc, xy, cells);
-			//console.log("pivot", piv)
-			//console.log("matesX", xzRowMates, xyColMates);
-			xyzwings.push(xyzHint(pix, xyz[0], pr, pc, ps, xzRowMates,xyColMates));
-		}
-		if (yzHaveCol && xzHaveRow) {
-			//console.log("Combo 4");
-			//console.log(xzRow,yzCol);
-			var xzRowMates = findPairInRow(pr, xz, cells);
-			var yzColMates = findPairInCol(pc, yz, cells);
-			//console.log("pivot", piv)
-			//console.log("matesZ", xzRowMates, yzColMates);
-			xyzwings.push(xyzHint(pix, xyz[2], pr, pc, ps, xzRowMates,yzColMates));
-		}
-		if (xyHaveCol && yzHaveRow) {
-			//console.log("Combo 5");
-			//console.log(yzRow,xyCol);
-			var yzRowMates = findPairInRow(pr, yz, cells);
-			var xyColMates = findPairInCol(pc, xy, cells);
-			//console.log("pivot", piv)
-			//console.log("matesY", yzRowMates, xyColMates);
-			xyzwings.push(xyzHint(pix, xyz[1], pr, pc, ps, yzRowMates,xyColMates));
-		}
-		if (xzHaveCol && yzHaveRow) {
-			//console.log("Combo 6");
-			//console.log(yzRow,xzCol);
-			var yzRowMates = findPairInRow(pr, yz, cells);
-			var xzColMates = findPairInCol(pc, xz, cells);
-			//console.log("pivot", piv)
-			//console.log("matesZ", yzRowMates, xzColMates);
-			xyzwings.push(xyzHint(pix, xyz[2], pr, pc, ps, yzRowMates,xzColMates));
-		}
-
-	})
+	}
 
 	if (xyzwings.length === 0) return null;
-	console.log("xyzHints", xyzwings);
-	return xyzwings;
+
+	var xyzHints = [];
+
+	console.log("xyzHints", xyzHints);
+	if (xyzHints.length === 0) return null;
+	return xyzHints;
 }
 
 function xyzHint(pix, pval, pr, pc, ps, rowMates,colMates) {
@@ -1339,6 +1350,8 @@ function XYWing() {
 		// examine each wing combination
 		for (var r=0; r<xyRow.length; ++r) {
 			for (var c=0; c<xyCol.length; ++c) {
+				// xy row/col : [pix, row, col, ac]
+
 				var rp = xyRow[r];
 				var cp = xyCol[c];
 				// the wings must have a value in common that is not in the pivot
@@ -1352,22 +1365,30 @@ function XYWing() {
 					wval = rac[1];
 
 				if (wval) {
-					console.log("found XY", wval, piv, rp, cp);
+					// the value wval can be eliminated from the intersecting cell
+					//console.log("found XY", wval, piv, rp, cp);
 
-					var h = {
-						type: 'xyWing',
-						row: piv[1],
-						col: piv[2],
-						square: null,
-						cells: [piv[0]],
-						offset: null,
-						value: wval,
-						targets: [rp[0],cp[0]],
-						msg: `XY-Wing: Cell: ${piv[0]}, Value: ${wval}`
+					var ir = cp[1];	// wing column
+					var ic = rp[2];	// wing row
+					var target = rows[ir][ic];
+					//console.log("xy target", ir, ic, target);
+					var tc = cells[target];
+					if (tc.value === 0 && tc.activecandidates.includes(value)) {
+						var h = {
+							type: 'xyWing',
+							row: piv[1],
+							col: piv[2],
+							square: null,
+							cells: [piv[0],rp[0],cp[0]],
+							offset: null,
+							value: wval,
+							targets: [target],		//	 [rp[0],cp[0]],
+							msg: `XY-Wing: Cell: ${piv[0]}, Value: ${wval}`
+						}
+
+						//console.log("hint", h);
+						xywings.push(h);
 					}
-
-					//console.log("hint", h);
-					xywings.push(h);
 				}
 			}
 		}
@@ -1377,64 +1398,6 @@ function XYWing() {
 	if (xywings.length === 0) return null;
 	console.log("xyHints", xywings);
 	return xywings;
-}
-
-function uniquePairsx(pairs) {
-	var unique = [];
-	for (var i=0; i<9; ++i) {
-		var p0 = pairs[i];
-		var pix = p0[0]
-		var p0v0 = p0[1][0];
-		var p0v1 = p0[1][1];
-		// check the rest for a match
-		var match = null;
-		for (var j=0; j<9; ++j) {
-			if (i === j) continue;
-			var p1 = pairs[j];
-			var p1v0 = p1[1][0];
-			var p1v1 = p1[1][1];
-			if ((p0v0 !== p1v0 && p0v0 !== p1v1) || (p0v1 !== p1v0 && p0v1 !== p1v1)) {
-				// unique pair, so far
-				if (match) {
-					// not unique
-					match = null;
-					break;
-				}
-				match = p0;
-			}
-		}
-		if (match) unique.push(match);
-	}
-}
-
-function uniquePairsy(pairs) {
-	const seen = new Set();
-
-	return pairs.filter(([a, b]) => {
-		const key = Math.min(a, b) * 10 + Math.max(a, b);
-
-		if (seen.has(key)) return false;
-		seen.add(key);
-		return true;
-	});
-}
-
-function uniquePairs(pairs) {
-
-	const seen = new Set();
-
-	return pairs.filter((p) => {
-		var a = p[1][0];
-		var b = p[1][1];
-		//const key = Math.min(a, b) * 10 + Math.max(a, b);
-		const key = Math.min(a, b) * 10 + Math.max(a, b);
-		console.log(a,b,key);
-
-		if (seen.has(key)) return false;
-		seen.add(key);
-		return true;
-	});
-
 }
 
 function findPairTriples(pairs) {
@@ -1581,7 +1544,7 @@ function findNakedTriples() {
 		var cls = [trip[0][0],trip[1][0],trip[2][0]];
 		var vals = tripleValues(trip);
 		var tgts = tripleTargets(row, col, sq, cls, vals, cells);
-		console.log(trip, row, col, sq, cls, vals, tgts);
+		//console.log(trip, row, col, sq, cls, vals, tgts);
 		if (tgts) {
 			var msg = "XY-Triple: ";
 			if (row) msg += `Row: ${row}`;
