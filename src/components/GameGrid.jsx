@@ -92,6 +92,7 @@ function Cell({ix}) {
 		switch (hint.type) {
 			case "nakedPair":
 			case "pointingPairSquare":
+			case "swordfish":
 				if (hint.cells.includes(ix))
 					selMode = 3;
 				else if (hint.targets.includes(ix))

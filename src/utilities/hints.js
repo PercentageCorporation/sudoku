@@ -26,6 +26,8 @@ export function runHints() {
 	if (result) return result[0];
 	result = XYZWing();
 	if (result) return result[0];
+	result = swordfish();
+	if (result) return result[0];
 
 	return null;
 }
@@ -176,6 +178,7 @@ function hasSingleValue(ar) {
 	return 0;
 }
 
+// get the activecandidate counts for the row/col/square
 function rowCounts(r) {
 	const cells = cellStore.getState().cells;
 	var counts = [0,0,0,0,0,0,0,0,0,0];
@@ -185,7 +188,7 @@ function rowCounts(r) {
 		const cix = row[i];
 		const cell = cells[cix];
 		if (cell.value > 0) continue;
-		const candid = cell.candidates.filter(function (x) {return cell.noncandidates.indexOf(x) < 0;});
+		const candid = cell.activecandidates;
 		//console.log(cix, candid);
 		candid.map((c) => {
 			counts[c] += 1;
@@ -202,7 +205,7 @@ function colCounts(c) {
 		const cix = col[j];
 		const cell = cells[cix];
 		if (cell.value > 0) continue;
-		const candid = cell.candidates;
+		const candid = cell.activecandidates;
 		candid.map((c) => {
 			counts[c] += 1;
 		});
@@ -218,7 +221,7 @@ function sqCounts(s) {
 		const cix = csq[j];
 		const cell = cells[cix];
 		if (cell.value > 0) continue;
-		const candid = cell.candidates;
+		const candid = cell.activecandidates;
 		candid.map((c) => {
 			counts[c] += 1;
 		});
@@ -1572,4 +1575,345 @@ function findNakedTriples() {
 	return nakedtriples;
 }
 
+// record the index of the occurance of each value with the number of counts in the row/col
+function valCounts(rowcol, count) {
+	var counts = [0,0,0,0,0,0,0,0,0,0];
+	var vrc = [[],[],[],[],[],[],[],[],[],[]];
+	var countsix = [];
+	//console.log(row);
+	for (var i=1; i<10; ++i) {
+		const val = rowcol[i];
+		if (val === count) {
+			counts[i] = 1;
+			countsix.push(i);
+			vrc[val].push(i);
+		};
+	}
+	return vrc;
+}
+
+function cellHasValue(r,c,v,cells) {
+	var cix = rows[r][c];
+	var cel = cells[cix];
+	//console.log(r,c,v,cix,cel);
+	if (cel.value === 0 && cel.activecandidates.includes(v)) return ([cix,[r,c]]);
+	return null;
+}
+
+function findTriplesByRow(rows) {
+	const triples = [];
+
+	for (let r1 = 0; r1 < rows.length - 2; r1++) {
+		const [row1, cols1] = rows[r1];
+
+		for (let r2 = r1 + 1; r2 < rows.length - 1; r2++) {
+			const [row2, cols2] = rows[r2];
+
+			for (let r3 = r2 + 1; r3 < rows.length; r3++) {
+				const [row3, cols3] = rows[r3];
+
+				// Generate one pair from row 1
+				for (let a = 0; a < cols1.length - 1; a++) {
+					for (let b = a + 1; b < cols1.length; b++) {
+						const p1 = [cols1[a], cols1[b]];
+
+						// Generate one pair from row 2
+						for (let c = 0; c < cols2.length - 1; c++) {
+							for (let d = c + 1; d < cols2.length; d++) {
+								const p2 = [cols2[c], cols2[d]];
+
+								if (!oneInCommon(p1, p2)) continue;
+
+								// Generate one pair from row 3
+								for (let e = 0; e < cols3.length - 1; e++) {
+									for (let f = e + 1; f < cols3.length; f++) {
+										const p3 = [cols3[e], cols3[f]];
+
+										if (
+											oneInCommon(p1, p3) &&
+											oneInCommon(p2, p3) &&
+											validTriple(p1, p2, p3)
+										) {
+											triples.push([
+												[row1, p1],
+												[row2, p2],
+												[row3, p3]
+											]);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return triples;
+}
+
+function oneInCommon(a, b) {
+	return (
+		Number(b.includes(a[0])) +
+		Number(b.includes(a[1]))
+	) === 1;
+}
+
+function validTriple(p1, p2, p3) {
+	return new Set([
+		...p1,
+		...p2,
+		...p3
+	]).size === 3;
+}
+
+function columnsInRow(r, c, v,cells) {
+	var cir = [];
+	var cxx = [];
+	var row = rows[r];
+	for (var i=0; i<9; i++) {
+		var cix = row[i];
+		var col = cellCol[cix];
+		var cel = cells[cix];
+		if (cel.value === 0 && cel.activecandidates.includes(v)) {
+			if (c.includes(col))
+				cir.push(i)
+			else
+				cxx.push(i)
+		}
+	}
+	if (cir.length === 0 || cir.length < 2) return null;
+	return [r,cir,cxx];
+}
+
+function rowsInColumn(c, r, v,cells) {
+	var rir = [];
+	var rxx = [];	// rows we do not want
+	var col = cols[c];
+	for (var i=0; i<9; i++) {
+		var cix = col[i];
+		var row = cellRow[cix];
+		var cel = cells[cix];
+		if (cel.value === 0 && cel.activecandidates.includes(v)) {
+			if (r.includes(row))
+				rir.push(i);
+			else
+				rxx.push(i);
+		}
+	}
+	if (rir.length === 0 || rir.length < 2) return null;
+	return [c,rir,rxx];
+}
+
+function swordfish() {
+	const cells = cellStore.getState().cells;
+
+	var sfcandidates = [];
+
+	var vRows = [];
+	var vCols = [];
+	for (var i=0; i<9; i++) {
+		var rc = rowCounts(i);
+		var cc = colCounts(i);
+		vRows.push(rc);
+		vCols.push(cc);
+	}
+	console.log(vRows, vCols);
+
+	// count the instances of each value in each row/col
+	// we need columns[rows] containing exactly 2, and rows[columns] of 2 or more
+	// we need columns[rows] containing exactly 3, and rows[columns] of 3 or more
+	var rCounts2 = [[],[],[],[],[],[],[],[],[],[]];
+	var cCounts2 = [[],[],[],[],[],[],[],[],[],[]];
+	var rCounts3 = [[],[],[],[],[],[],[],[],[],[]];
+	var cCounts3 = [[],[],[],[],[],[],[],[],[],[]];
+	var rCounts23 = [[],[],[],[],[],[],[],[],[],[]];
+	var cCounts23 = [[],[],[],[],[],[],[],[],[],[]];
+	//var rCounts3p = [[],[],[],[],[],[],[],[],[],[]];
+	//var cCounts3p = [[],[],[],[],[],[],[],[],[],[]];
+
+	for (var v=1; v<10; v++) {
+		for (var i=0; i<9; i++) {
+			var rc = vRows[i][v];
+			var cc = vCols[i][v];
+			if (rc === 2) rCounts2[v].push(i);
+			if (rc === 3) rCounts3[v].push(i);
+			if (cc === 2) cCounts2[v].push(i);
+			if (cc === 3) cCounts3[v].push(i);
+			if (rc === 2 || rc === 3) rCounts23[v].push(i);
+			if (cc === 2 || cc === 3) cCounts23[v].push(i);
+			//if (cc >= 2) cCounts2p[v].push(i);
+			//if (cc >= 3) cCounts3p[v].push(i);
+		}
+	}
+	console.log(rCounts2,cCounts3);
+	console.log(cCounts3,rCounts2);
+	//console.log(rCounts3,cCounts3p);
+	//console.log(cCounts3,rCounts3p);
+
+	// first we need to find any rows/colums with exacty three rows of three values (if any)
+	// for each value in rCounts3 count the rows of three
+
+
+
+	// now we need to find any rows/colums with at least one row/col of two values and the remaing rows of three values
+	// for each row of two, find other rows of two
+	for (var v=1; v<10; v++) {
+		if (v != 2) continue;	// TESTING
+
+		var r2 = rCounts2[v];	// each row of 2
+		if (r2.length === 0) continue;
+
+		for (var ip=0; ip<r2.length; ip++) {
+			// c2: 0 2 3 6
+			var row0 = r2[ip];		// row of 2
+			var r2a = rCounts2[v];	// each row of 2
+			for (var ip0=0; ip0<r2a.length; ip0++) {
+				// c2p0: 0 2 3 5 6 7
+				var row1 = r2a[ip0];	// first row of 2
+				if (row1 <= row0) continue;
+				for (var ip1=ip0+1; ip1<r2a.length; ip1++) {
+					// c2p0: 0 2 3 5 6 7
+					var row2 = r2a[ip1];	// second row of 2+
+					if (row2 <= row1) continue;
+
+					// find cols in common, the cols must have at least two of the value
+					var vc = cCounts23[v];	// cols that contain value
+					var vrc = [];
+					var rowx = [row0, row1, row2];
+					//console.log("ckr", v, row0, row1, row2);
+					for (var r=0; r<vc.length; ++r) {
+						// 0 2 3 4 6 8
+						var colx = vc[r];	// row to check
+						var v0 = rowsInColumn(colx, rowx, v, cells);
+						//console.log(colx, rowx, v0);
+						if (v0) vrc.push(v0);
+					}
+
+					if (vrc.length > 2) {
+						//console.log("rows", v, row0, row1, row2);
+						//console.log("vrc", vrc);
+						var pt = findTriplesByRow(vrc);
+						if (pt.length > 0) {
+							var tgts = [];
+							vrc.forEach((v) => {
+								v[2].forEach((v2) => {
+									var cx = cols[v[0]][v2];
+									//console.log("v2", v[0], v2, cx)
+									tgts.push(cx);
+								});
+							})
+							//console.log("pt",pt);
+							sfcandidates.push(["row", v, [row0,row1,row2], tgts, pt[0]])
+						}
+					}
+				}
+			}
+		}
+	}
+
+
+	// for each column of two, find other columns of two
+	for (var v=1; v<10; v++) {
+		if (v != 2) continue;	// TESTING
+		var c2 = cCounts2[v];	// each column of 2
+		if (c2.length === 0) continue;
+
+		for (var ip=0; ip<c2.length; ip++) {
+			// c2: 0 2 3 6
+			var col0 = c2[ip];		// column of 2
+			var c2a = cCounts2[v];	// each column of 2
+			for (var ip0=0; ip0<c2a.length; ip0++) {
+				// c2p0: 0 2 3 5 6 7
+				var col1 = c2a[ip0];	// first column of 2
+				if (col1 <= col0) continue;
+				for (var ip1=ip0+1; ip1<c2a.length; ip1++) {
+					// c2p0: 0 2 3 5 6 7
+					var col2 = c2a[ip1];	// second column of 2+
+					if (col2 <= col1) continue;
+
+					// find rows in common, the rows must have at least two of the value
+					var vr = rCounts23[v];	// rows that contain value
+					var vrc = [];
+					var colx = [col0, col1, col2];
+					//console.log("ckc", col0, col1, col2, vr);
+					for (var r=0; r<vr.length; ++r) {
+						// 0 2 3 4 6 8
+						var rowx = vr[r];	// row to check
+						var v0 = columnsInRow(rowx, colx, v, cells);
+						//console.log(rowx, colx, v0);
+						if (v0) vrc.push(v0);
+					}
+					//console.log(vrc)
+
+					if (vrc.length > 2) {
+						//console.log("vrc", vrc);
+						var pt = findTriplesByRow(vrc);
+						if (pt.length > 0) {
+							var tgts = [];
+							vrc.forEach((v) => {
+								v[2].forEach((v2) => {
+									var cx = rows[v[0]][v2];
+									//console.log("v2", v[0], v2, cx)
+									tgts.push(cx);
+								});
+							})
+							//console.log("pt",pt);
+							sfcandidates.push(["col", v, [col0,col1,col2], tgts, pt[0]])
+						}
+					}
+				}
+			}
+		}
+	}
+
+	console.log("sfcandidates",sfcandidates);
+	var swordfish = [];
+
+	sfcandidates.forEach((sfc) => {
+		//console.log("sfc", sfc)
+		var dir = sfc[0];
+		var val = sfc[1];
+		var trc0 = sfc[2];
+		var tgts = sfc[3]
+		var trips = sfc[4];
+		var cls = [];
+		var cix;
+		//console.log(dir,trc0,trips)
+		for (var i=0; i<3; ++i) {
+			var t = trips[i];
+			//console.log("trip", t)
+			if (dir === "row") {
+				cix = cols[t[0]][t[1][0]];
+				cls.push(cix);
+				cix = cols[t[0]][t[1][1]];
+				cls.push(cix);
+			} else {
+				cix = rows[t[0]][t[1][0]];
+				cls.push(cix);
+				cix = rows[t[0]][t[1][1]];
+				cls.push(cix);
+			}
+		}
+
+
+		var h = {
+			type: 'swordfish',
+			rows: null,
+			cols: null,
+			square: null,
+			cells: cls,
+			offset: null,
+			value: val,
+			targets: tgts,
+			msg: `Swordfish: Cells: ${tgts}, Value: ${val}`
+		}
+		swordfish.push(h);
+	})
+
+	if (swordfish.length === 0) return null;
+	console.log("swordfish", swordfish);
+	return swordfish;
+}
 
