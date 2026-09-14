@@ -91,6 +91,7 @@ function Cell({ix}) {
 	else if (hint.type) {
 		switch (hint.type) {
 			case "nakedPair":
+			case "pointingPair":
 			case "pointingPairSquare":
 			case "swordfish":
 				if (hint.cells.includes(ix))
@@ -99,7 +100,7 @@ function Cell({ix}) {
 					selMode = 2;
 			break;
 
-			case "pointingPair":
+			case "pointingPairXX":
 				if (hint.cells.includes(ix))
 					selMode = 3;
 				else if (hint.row === rcs[0] || hint.col === rcs[1]) {
