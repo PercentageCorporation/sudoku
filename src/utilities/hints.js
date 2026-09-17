@@ -191,10 +191,6 @@ function sqPairsTriples(s) {
 	return pt;
 }
 
-function countValues(ar) {
-
-}
-
 function removeSingles(ap) {
 	for (var value=1; value<10; ++value) {
 		if (vc[value] > 3 || vc[value] < 2) {
@@ -203,7 +199,81 @@ function removeSingles(ap) {
 			}
 		}
 	}
+}
 
+function countTheHouse(house) {
+	var vc = [0,0,0,0,0,0,0,0,0,0];
+	// count the values in each cell
+	var hlen = house.length;
+	// count the candidate values
+	for (var i=0; i<hlen; i++) {
+		house[i][1].map((v) => {vc[v] += 1});
+	}
+	return vc;
+}
+
+// house[]: [row/col/sq, [candidates]]
+function collectHouseValues(house) {
+	var hv = new Set();
+	house.forEach((h) => {
+		h[1].forEach(hv.add, hv)
+	})
+	return Array.from(hv).sort();
+}
+
+function packTheHouse(house) {
+	var inHouse = structuredClone(house);
+	//var inHouse = house;
+	var updated = false;
+
+	var hlen = inHouse.length;
+	// count candidates in the house
+	var vc = countTheHouse(inHouse);
+	// eliminate any values with a count less than two
+	//console.log(vc);
+	for (var value=1; value<10; ++value) {
+		if (vc[value] === 1) {
+			//console.log("value removed",value, vc[value])
+			for (var i=0; i<hlen; i++) {
+				inHouse[i][1] = inHouse[i][1].filter(v => v != value);
+			}
+			updated = true;
+		}
+	}
+
+	// remove any cells with one (or less) candidates
+	var hx = [];
+	for (var i=0; i<hlen; i++) {
+		if (inHouse[i][1].length >= 2)
+			hx.push([inHouse[i][0],inHouse[i][1]]);
+		else
+			updated = true;	// we skipped one
+	}
+	inHouse = hx;
+	return {updated: updated, house:inHouse};
+}
+
+function checkForTripleCounts(cnts) {
+	var c2 = 0;
+	var c3 = 0;
+	var vals = [];
+	for (var value=1; value<10; ++value) {
+		if (cnts[value] === 2) {
+			++c2;
+			vals.push(value);
+		}
+		else if (cnts[value] === 3) {
+			++c3;
+			vals.push(value);
+		}
+	}
+
+	if ((c2 + c3) !== 3) return null;
+	return {
+		twos: c2,
+		threes: c3,
+		values: vals
+	};
 }
 
 // for the cells in a row/col/square find any triples
@@ -224,32 +294,61 @@ function findHiddenTriple(pt) {
 			}
 		}
 	}
-	// remove any cells with one (or less) candidates
-	var ptx = [];
-	for (var i=0; i<ptlen; i++) {
-		if (pt[i][1].length >= 2) ptx.push([pt[i][0],pt[i][1]]);
-	}
-	pt = ptx;
+	//console.log("pt",pt);
 
-	// count candidates again
-	vc = [0,0,0,0,0,0,0,0,0,0];
-	// count the values in each cell
-	ptlen = pt.length;
-	for (var i=0; i<ptlen; i++) {
-		pt[i][1].map((v) => {vc[v] += 1});
-	}
+	var updated = false;
+	var hx;
+	do {
+		var pack = packTheHouse(pt);
+		updated = pack.updated;
+		hx = pack.house;
+		//console.log(updated, pt, hx);
+		pt = hx;
+		//console.log("pack", count, updated, pack);
+	} while (updated === true);
 
-	// eliminate any values with a count less than two
-	for (var value=1; value<10; ++value) {
-		if (vc[value] < 2) {
-			for (var i=0; i<ptlen; i++) {
-				pt[i][1] = pt[i][1].filter(v => v != value);
+	var ptlen = pt.length;
+	if (ptlen < 3) return [];	// not enough cells
+
+	var hv = collectHouseValues(pt);
+	var hc = countTheHouse(pt);
+	//console.log("hv", hc, hv, pt);
+
+	// if there are just three counts of two or three in [hc] we have a triple
+
+	if (ptlen > 3) {
+		// count the values for each group of three
+		for (var i=0; i<ptlen; i++) {
+			for (var j=i+1; j<ptlen; j++) {
+				for (var k=j+1; k<ptlen; k++) {
+					// count the values in each cell
+					var tc = [0,0,0,0,0,0,0,0,0,0];
+					pt[i][1].map((v) => {tc[v] += 1});
+					pt[j][1].map((v) => {tc[v] += 1});
+					pt[k][1].map((v) => {tc[v] += 1});
+					//console.log("tc", i, j, k, tc);
+					var tcc = checkForTripleCounts(tc);
+					if (tcc) {
+						//console.log("tcc", i, j, k, pt[i][0], pt[j][0], pt[k][0], tcc, pt);
+						// now if any of the tcc.values are in cells outside of [i,j,k] then this is not a valid triple
+						var trip = [i,j,k];
+						var valid = true;
+						for (var l=0; l<ptlen; l++) {
+							if (trip.includes(l)) continue;
+							var has = tcc.values.some(r=> pt[l][1].includes(r));
+							if (has) valid = false;
+						}
+
+						if (valid) {
+							console.log("valid");
+							console.log("tcc", i, j, k, pt[i][0], pt[j][0], pt[k][0], tcc, pt);
+						}
+					}
+				}
 			}
 		}
 	}
 
-
-	console.log(vc, pt, ptx);
 
 
 	return [];
@@ -290,7 +389,7 @@ function hiddenTriples() {
 			if (ht) sqC.push([i,ht]);
 		}
 }
-	console.log(rowC, colC, sqC);
+	//console.log(rowC, colC, sqC);
 
 	return null;
 }
