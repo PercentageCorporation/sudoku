@@ -10,11 +10,7 @@ export function runHints() {
 
 	result = singletons();
 	if (result) return result[0];
-	result = rowSingleCounts();
-	if (result) return result[0];
-	result = colSingleCounts();
-	if (result) return result[0];
-	result = sqSingleCounts();
+	result = singleCounts();
 	if (result) return result[0];
 	result = findNakedPairs();
 	if (result) return result[0];
@@ -90,9 +86,9 @@ function initCounts() {
 
 	// get the value counts for all rows/columns/squares
 	for (var i=0; i<9; i++) {
-		var rc = rowCounts(i);
-		var cc = colCounts(i);
-		var sc = sqCounts(i);
+		var rc = rcsCounts(rows[i]);
+		var cc = rcsCounts(cols[i]);
+		var sc = rcsCounts(squares[i]);
 		vRows.push(rc);
 		vCols.push(cc);
 		vSqs.push(sc);
@@ -116,6 +112,74 @@ function initCounts() {
 	//console.log(rCounts3,cCounts3);
 	//console.log(rCounts23,cCounts23);
 }
+
+// count the occurances of the active candidates in a row/col/sq
+function rcsCounts(arr) {
+	var counts = [0,0,0,0,0,0,0,0,0,0];
+	//console.log(row);
+	for (var i=0; i<9; ++i) {
+		const cix = arr[i];
+		const cell = cells[cix];
+		if (cell.value > 0) continue;
+		const candid = cell.activecandidates;
+		//console.log(cix, candid);
+		candid.map((c) => {
+			counts[c] += 1;
+		});
+	}
+	return counts;
+}
+
+// get the activecandidate counts for the row/col/square
+function rowCounts(r) {
+	var counts = [0,0,0,0,0,0,0,0,0,0];
+	var row = rows[r];
+	//console.log(row);
+	for (var i=0; i<9; ++i) {
+		const cix = row[i];
+		const cell = cells[cix];
+		if (cell.value > 0) continue;
+		const candid = cell.activecandidates;
+		//console.log(cix, candid);
+		candid.map((c) => {
+			counts[c] += 1;
+		});
+	}
+	return counts;
+}
+
+function colCounts(c) {
+	var counts = [0,0,0,0,0,0,0,0,0,0];
+	var col = cols[c];
+	for (var j=0; j<9; ++j) {
+		const cix = col[j];
+		const cell = cells[cix];
+		if (cell.value > 0) continue;
+		const candid = cell.activecandidates;
+		candid.map((c) => {
+			counts[c] += 1;
+		});
+	}
+	return counts;
+}
+
+function sqCounts(s) {
+	var counts = [0,0,0,0,0,0,0,0,0,0];
+	var csq = squares[s];
+	for (var j=0; j<9; ++j) {
+		const cix = csq[j];
+		const cell = cells[cix];
+		if (cell.value > 0) continue;
+		const candid = cell.activecandidates;
+		candid.map((c) => {
+			counts[c] += 1;
+		});
+	}
+
+	return counts;
+}
+
+//*****************************************************************************
 
 // get the indices of the row/col/sq that have values with a count of two
 // this uses the xCounts2 arrays
@@ -247,6 +311,8 @@ function hiddenPairs() {
 	console.log("hiddenPairs",hiddenPairs)
 	return hiddenPairs;
 }
+
+//*****************************************************************************
 
 // compare two arrays to see if they contain exactly the same values
 function compareArrays(a,b) {
@@ -660,6 +726,8 @@ function hiddenTriples() {
 	return triples;
 }
 
+//*****************************************************************************
+
 function includesPair(arr, v0, v1) {
 	 for (var i=0; i<arr.length; ++i) {
 		 if (arr[i] === v0 || arr[i] === v1) return true;
@@ -802,92 +870,11 @@ function findPointingPairsSquare() {
 	return ppsHints;
 }
 
-function hasSingleValue(ar) {
-	for (var i=1; i<10; ++i)
-		if (ar[i] == 1)
-			return i;
-	return 0;
-}
+//*****************************************************************************
 
-// get the activecandidate counts for the row/col/square
-function rowCounts(r) {
-	var counts = [0,0,0,0,0,0,0,0,0,0];
-	var row = rows[r];
-	//console.log(row);
+function findValueInRCS(arr, val) {
 	for (var i=0; i<9; ++i) {
-		const cix = row[i];
-		const cell = cells[cix];
-		if (cell.value > 0) continue;
-		const candid = cell.activecandidates;
-		//console.log(cix, candid);
-		candid.map((c) => {
-			counts[c] += 1;
-		});
-	}
-	return counts;
-}
-
-function colCounts(c) {
-	var counts = [0,0,0,0,0,0,0,0,0,0];
-	var col = cols[c];
-	for (var j=0; j<9; ++j) {
-		const cix = col[j];
-		const cell = cells[cix];
-		if (cell.value > 0) continue;
-		const candid = cell.activecandidates;
-		candid.map((c) => {
-			counts[c] += 1;
-		});
-	}
-	return counts;
-}
-
-function sqCounts(s) {
-	var counts = [0,0,0,0,0,0,0,0,0,0];
-	var csq = squares[s];
-	for (var j=0; j<9; ++j) {
-		const cix = csq[j];
-		const cell = cells[cix];
-		if (cell.value > 0) continue;
-		const candid = cell.activecandidates;
-		candid.map((c) => {
-			counts[c] += 1;
-		});
-	}
-
-	return counts;
-}
-
-// count occurances of canditates in cell row
-function rowSingleCounts() {
-	var rowSingles = [];
-	for (var r=0; r<9; ++r) {
-		var counts = rowCounts(r);
-		var sv = hasSingleValue(counts);
-		if (sv > 0) {
-			var pos = findValueInRow(r, sv);
-			//console.log("rsc:", r, sv, pos, counts);
-			var rs = {
-				type: 'cell',
-				row: r,
-				col: null,
-				square: null,
-				cells: [pos.cell],
-				offset: pos.offset,
-				value: sv,
-				msg: `Single: Row: ${r+1}, Cell:  ${pos.cell}, Value: ${sv}`
-			}
-			rowSingles.push(rs);
-		}
-	}
-	if (rowSingles.length === 0) return null;
-	return rowSingles;
-}
-
-function findValueInRow(rix, val) {
-	var row = rows[rix];
-	for (var i=0; i<9; ++i) {
-		const cix = row[i];
+		const cix = arr[i];
 		const cell = cells[cix];
 		//console.log("fvir", rix, val, cix, cell);
 		if (cell.value > 0) continue;
@@ -896,77 +883,77 @@ function findValueInRow(rix, val) {
 	return null;
 }
 
-function colSingleCounts() {
-	var colSingles = [];
-	for (var i=0; i<9; ++i) {
-		var counts = colCounts(i);
-		var sv = hasSingleValue(counts);
-		if (sv > 0) {
-			var pos = findValueInCol(i, sv);
-			//console.log("csc:", i, sv, counts);
-			var s = {
-				type: 'cell',
-				row: null,
-				col: i,
-				square: null,
-				cells: [pos.cell],
-				offset: pos.offset,
-				value: sv,
-				msg: `Single: Column: ${i+1}  Cell:  ${pos.cell}, Value: ${sv}`
-			}
-			colSingles.push(s);
-		}
-	}
-	if (colSingles.length === 0) return null;
-	return colSingles;
+
+function firstSingleValue(arr) {
+	for (var i=1; i<10; ++i)
+		if (arr[i] == 1)
+			return i;
+	return 0;
 }
 
-function findValueInCol(cix, val) {
-	var col = cols[cix];
+function hasSingleValueRC(ar) {
+	//console.log(ar);
+	// check that row only has a single value
+	var single = -1;
 	for (var i=0; i<9; ++i) {
-		const cix = col[i];
-		const cell = cells[cix];
-		if (cell.value > 0) continue;
-		if (cell.activecandidates.includes(val)) return {cell: cix, offset: i};
+		if (ar[i] > 0) {
+			if (single > -1) return -1
+				single = i;
+			//console.log("single:", i, ar[i], single);
+		}
+	}
+	return single;
+}
+
+function hasSingleValueHint(arr) {
+	var counts = rcsCounts(arr);
+	var sv = firstSingleValue(counts);	// sv only occurs once in the rcs
+	if (sv > 0) {
+		var pos = findValueInRCS(arr, sv);	// find the candidate in the rcs
+		//console.log("rsc:", r, sv, pos, counts);
+		var rs = {
+			type: 'cell',
+			row: null,
+			col: null,
+			square: null,
+			cells: [pos.cell],
+			offset: pos.offset,
+			value: sv,
+			msg: ""
+		}
+		return rs;
 	}
 	return null;
 }
 
-function sqSingleCounts() {
-	var sqSingles = [];
+function singleCounts() {
+	var singleCounts = [];
 	for (var i=0; i<9; ++i) {
-		var counts = sqCounts(i);
-		var sv = hasSingleValue(counts);
-		if (sv > 0) {
-			var pos = findValueInSq(i, sv);
-			//console.log("ssc:", i, sv, counts)
-			var s = {
-				type: 'cell',
-				row: null,
-				col: null,
-				square: i,
-				cells: [pos.cell],
-				offset: pos.offset,
-				value: sv,
-				msg: `Single: Square: ${i+1}, Cell:  ${pos.cell}, Value: ${sv}`
-			}
-			sqSingles.push(s);
+		var hassv = hasSingleValueHint(rows[i])
+		if (hassv) {
+			hassv.row = i;
+			hassv.msg = `Single: Row: ${i+1}, Cell:  ${hassv.cells}, Value: ${hassv.value}`
+			singleCounts.push(hassv)
+		}
+		var hassv = hasSingleValueHint(cols[i])
+		if (hassv) {
+			hassv.col = i;
+			hassv.msg = `Single: Column: ${i+1}, Cell:  ${hassv.cells}, Value: ${hassv.value}`
+			singleCounts.push(hassv)
+		}
+		var hassv = hasSingleValueHint(squares[i])
+		if (hassv) {
+			hassv.square = i;
+			hassv.msg = `Single: Square: ${i+1}, Cell:  ${hassv.cells}, Value: ${hassv.value}`
+			singleCounts.push(hassv)
 		}
 	}
-	if (sqSingles.length === 0) return null;
-	return sqSingles;
+
+	if (singleCounts.length === 0) return null;
+	console.log("singleCounts",singleCounts);
+	return singleCounts;
 }
 
-function findValueInSq(six, val) {
-	var sq = squares[six];
-	for (var i=0; i<9; ++i) {
-		const cix = sq[i];
-		const cell = cells[cix];
-		if (cell.value > 0) continue;
-		if (cell.activecandidates.includes(val)) return {cell: cix, offset: i};
-	}
-	return null;
-}
 
 // returns an array of cells which only have one candidate
 function singletons() {
@@ -995,20 +982,6 @@ function singletons() {
 }
 
 // find pairs in the row/col/sq array and record the index of where they were found;
-function findPairsInRCS(arr, pair) {
-	var px = [];
-	for (var i=0; i<9; ++i) {
-		var cix = arr[i];
-		var cell = cells[cix];
-		var ac = cell.activecandidates;
-		if (cell.value === 0 && ac.length === 2) {
-			// same pair ??
-			if ((ac[0] === pair[0] && ac[1] === pair[1]) || (ac[0] === pair[1] && ac[1] === pair[0])) px.push(i);
-		}
-	}
-	return px;
-}
-
 function findPairs(arr) {
 	var px = [];
 	outer: for (var i=0; i<9; ++i) {
@@ -1121,20 +1094,6 @@ function findNakedPairs() {
 	console.log("nakedPairs", nakedPairs);
 	if (nakedPairs.length === 0) return null;
 	return nakedPairs;
-}
-
-function hasSingleValueRC(ar) {
-	//console.log(ar);
-	// check that row only has a single value
-	var single = -1;
-	for (var i=0; i<9; ++i) {
-		if (ar[i] > 0) {
-			if (single > -1) return -1
-			single = i;
-			//console.log("single:", i, ar[i], single);
-		}
-	}
-	return single;
 }
 
 // if a value only appears in the same row or column of a square

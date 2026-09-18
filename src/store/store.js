@@ -256,11 +256,12 @@ export const cellStore = create(
 
 				resetCandidates: () => {
 					set((state) => {
-						const noncandidates = [];
 						const cells = [...state.cells]
 						for (var ix = 0; ix < 81; ++ix) {
 							const candidates = findCandidates(ix, cells);
-							const activecandidates = candidates;
+							// remove any noncandidates not in the actual candidates list
+							const noncandidates = cells[ix].noncandidates.filter(c => candidates.includes(c));
+							const activecandidates = candidates.filter(c => noncandidates.indexOf(c) < 0);
 							cells[ix] = { ...cells[ix], candidates, activecandidates, noncandidates }
 						}
 						return { cells }
@@ -272,7 +273,8 @@ export const cellStore = create(
 						const cells = [...state.cells]
 						for (var ix = 0; ix < 81; ++ix) {
 							const candidates = findCandidates(ix, cells);
-							const noncandidates = cells[ix].noncandidates.filter(c => candidates.indexOf(c) < 0);
+							// remove from noncandidates any value not in the actual candidates list
+							const noncandidates = cells[ix].noncandidates.filter(c => candidates.includes(c));
 							const activecandidates = candidates.filter(c => noncandidates.indexOf(c) < 0);
 							cells[ix] = { ...cells[ix], candidates, activecandidates, noncandidates }
 						}
@@ -284,8 +286,9 @@ export const cellStore = create(
 					set((state) => {
 						const cells = [...state.cells]
 						const candidates = findCandidates(ix, cells);
-						const noncandidates = [];
-						const activecandidates = candidates;
+						// remove any noncandidates not in the actual candidates list
+						const noncandidates = cells[ix].noncandidates.filter(c => candidates.includes(c));
+						const activecandidates = candidates.filter(c => noncandidates.indexOf(c) < 0);
 						cells[ix] = { ...cells[ix], candidates, activecandidates, noncandidates }
 						return { cells }
 					})

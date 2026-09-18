@@ -8,7 +8,7 @@ import { rows, cols, squares } from "../utilities/constants";
 
 export default function PlayMenu() {
 	const { selectedValue, selectedCell } = cellStore();
-	const { setCellValue, clearCellValue, setSelectedValue, clearSelectedValue, clearSelectedCell, showCell } = useCellActions();
+	const { setCellValue, clearCellValue, setSelectedValue, clearSelectedValue, clearSelectedCell, getCell } = useCellActions();
 	const { checkGameSolved, calcNumbersUsed } = useCellActions();
 	const { updateCandidates, addNonCandidate } = useCellActions();
 	const { gameComplete, numbersUsed } = cellStore();
@@ -68,7 +68,6 @@ export default function PlayMenu() {
 			case "cell":
 				var cix = h.cells[0];
 				var v = h.value;
-				//console.log("setCellValue", cix, v);
 				setCellValue(cix, v);
 				setSelectedValue(v);
 				clearSelectedCell();
