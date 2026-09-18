@@ -93,6 +93,7 @@ function Cell({ix}) {
 			case "nakedPair":
 			case "pointingPair":
 			case "pointingPairSquare":
+			case "hiddenPair":
 			case "hiddenTriple":
 			case "swordfish":
 				if (hint.cells.includes(ix))

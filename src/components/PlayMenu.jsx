@@ -46,6 +46,7 @@ export default function PlayMenu() {
 			case "nakedPair":
 			case "pointingPair":
 			case "pointingPairSquare":
+			case "hiddenPair":
 			case "hiddenTriple":
 			case "swordfish":
 				var cls = h.targets;

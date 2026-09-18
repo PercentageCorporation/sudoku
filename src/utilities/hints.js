@@ -24,6 +24,8 @@ export function runHints() {
 	if (result) return result[0];
 	//result = findNakedTriples();
 	//if (result) return result[0];
+	result = hiddenPairs();
+	if (result) return result[0];
 	result = hiddenTriples();
 	if (result) return result[0];
 	result = XWing();
@@ -115,10 +117,143 @@ function initCounts() {
 	//console.log(rCounts23,cCounts23);
 }
 
+// get the indices of the row/col/sq that have values with a count of two
+// this uses the xCounts2 arrays
+function pairIndices(arr) {
+	var pairs = [];
+	for (var i=1; i<10; i++) if (arr[i] === 2) pairs.push(i);
+	if (pairs.length < 2) return null;
+	return pairs;
+}
+
+function hasPairs(arr, vals) {
+	var indices = [];
+	for (var i=0; i<9; i++) {
+		var cix = arr[i];
+		var c = cells[cix];
+		if (c.value > 0) continue;
+		var ac = c.activecandidates;
+		if (includesAll(ac, vals)) indices.push([i,cix]);
+	}
+	if (indices.length === 2) return indices;
+	return null;
+}
+
+// determine all the possible pairs from the values in[pp]
+function possiblePairs(pp) {
+	var pplen = pp.length;
+	if (pplen < 2) return [];
+	if (pplen === 2) return [pp];
+	var ppp = [];
+	for (var i=0; i<pp.length; i++) {
+		for (var j=i+1; j<pp.length; j++) {
+			ppp.push([pp[i],pp[j]]);
+		}
+	}
+	return ppp;
+}
+
+// are all values in [b] included in [a]
+function includesAll(a,b) {
+	return b.every(v => a.includes(v));
+}
+
+function hiddenPairs() {
+
+	// for each row/col/sq find those with at least two values of count two
+	var rpc = [];	// two value candidates
+	var cpc = [];	// two value candidates
+	var spc = [];	// two value candidates
+	for (var i=0; i<9; i++) {
+		var rvc = pairIndices(vRows[i]);
+		if (rvc) rpc.push([i,rvc])
+		var cvc = pairIndices(vCols[i]);
+		if (cvc) cpc.push([i,cvc])
+		var svc = pairIndices(vSqs[i]);
+		if (svc) spc.push([i,svc])
+	}
+	console.log(rpc,cpc,spc);
+
+	// for each pair candidate, see if the pairs line upin the row/col/square
+
+	var hpc = [];
+	rpc.forEach((rp) => {
+		var r = rp[0];
+		var rpp = possiblePairs(rp[1]);
+		rpp.forEach((rpx) => {
+			var hp = hasPairs(rows[r], rpx);
+			if (hp) {
+				hpc.push(['r', r, rpx, hp]);
+			}
+		})
+	})
+	cpc.forEach((cp) => {
+		var c = cp[0];
+		var cpp = possiblePairs(cp[1]);
+		cpp.forEach((cpx) => {
+			var hp = hasPairs(cols[c], cpx);
+			if (hp) {
+				hpc.push(['c', c, cpx, hp]);
+			}
+		})
+	})
+	spc.forEach((sp) => {
+		var s = sp[0];
+		var spp = possiblePairs(sp[1]);
+		spp.forEach((spx) => {
+			var hp = hasPairs(squares[s], spx);
+			if (hp) {
+				hpc.push(['s', s, spx, hp]);
+			}
+		})
+	})
+
+	var hpTargets = [];
+	hpc.forEach((hp) => {
+		var rcs = hp[0];		// house type rcs
+		var ix = hp[1];		// house rcs index
+		var vals = hp[2];
+		var cls = [hp[3][0][1],hp[3][1][1]];	// pair cells
+		var tgts = findInternalTargets(cls,vals);
+		if (tgts) {
+			hpTargets.push([rcs,ix,cls,tgts[1],tgts[0]]);
+		}
+	})
+	console.log("hpc", hpc);
+
+	var hiddenPairs = [];
+	hpTargets.forEach((hp) => {
+		var rcs = hp[0];
+		var cls = hp[2];
+		var vals = hp[3];
+		var tgts = hp[4]
+		//console.log(dir,trc0,cls)
+
+		var h = {
+			type: 'hiddenPair',
+			rows: rcs === 'r' ? rcs : null,
+			cols: rcs === 'c' ? rcs : null,
+			square: rcs === 's' ? rcs : null,
+			cells: cls,
+			offset: null,
+			values: vals,
+			targets: tgts,
+			msg: `Hidden Pair: Cells: ${tgts}, Values: ${vals}`
+		}
+		hiddenPairs.push(h);
+	})
+
+	if (hiddenPairs.length === 0) return null;
+	console.log("hiddenPairs",hiddenPairs)
+	return hiddenPairs;
+}
+
+// compare two arrays to see if they contain exactly the same values
 function compareArrays(a,b) {
 	return(a.length === b.length && a.every((element, index) => element === b[index]));
 }
 
+// create a unique indes for the triple value a,b,c
 function arrindex(a,b,c) {return ((c*100) + (a*10) + b)};
 
 
