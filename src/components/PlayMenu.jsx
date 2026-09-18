@@ -36,7 +36,7 @@ export default function PlayMenu() {
 		e.preventDefault();
 		var h = getHint();
 		if (!h) return;
-		console.log("doHint", h);
+		//console.log("doHint", h);
 		switch (h.type) {
 			// hints with targets
 			case "xWing":
@@ -46,9 +46,10 @@ export default function PlayMenu() {
 			case "nakedPair":
 			case "pointingPair":
 			case "pointingPairSquare":
+			case "hiddenTriple":
 			case "swordfish":
 				var cls = h.targets;
-				console.log(cls);
+				//console.log(cls);
 				cls.forEach((cix) => {
 					if (h.values) {
 						h.values.forEach((value) => {
@@ -66,20 +67,27 @@ export default function PlayMenu() {
 			case "cell":
 				var cix = h.cells[0];
 				var v = h.value;
-				console.log("setCellValue", cix, v);
+				//console.log("setCellValue", cix, v);
 				setCellValue(cix, v);
 				setSelectedValue(v);
 				clearSelectedCell();
 				break;
 
 			default:
-				console.log("Unknown Hint Type:", h.type);
+				//console.log("Unknown Hint Type:", h.type);
 				return;
-				break;
 		}
-		//updateCandidates();
-		resetHint();
-		checkGameSolved();
+
+		clearSelectedValue();
+		var h = runHints();
+		if (h) {
+			console.log("hint:", h, h.msg);
+			setHintMsg(h.msg);
+			setHint(h);
+		} else {
+			resetHint();
+			checkGameSolved();
+		}
 	}
 
 	function showHint(e) {

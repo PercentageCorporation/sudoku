@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { findCandidates } from "../utilities/utilities";
-import { RCS } from "../utilities/constants";
+import { RCS, ninetolinear } from "../utilities/constants";
 
 // export const ManCell = {
 // 	value: 0,
@@ -27,8 +27,22 @@ export const useManCellsStore = create (
 				})
 			},
 
+			loadManCells: (cls) => {
+				set({
+					cells: cls,
+					selectedCell: -1,
+					initialized: true
+				})
+			},
+
 			getManCells: () => {
 				return get().cells
+			},
+
+			getManCellsLinear: () => {
+				var linear = ""
+				for (var i = 0; i < 81; ++i) linear += Number(get().cells[ninetolinear[i]])
+				return linear
 			},
 
 			getManCell: (ix) => {
@@ -458,9 +472,12 @@ export const cellStore = create(
 			name: "sudoku-pc", // Use a unique name for each person
 			partialize: (state) => ({ 
 				cells: state.cells,
+				selectedCell: state.selectedCell,
 				selectedValue: state.selectedValue,
 				currentValue: state.currentValue,
 				editCandidates: state.editCandidates,
+				difficulty: state.difficulty,
+				gameId: state.gameId,
 				numbersUsed: state.numbersUsed,
 				gameComplete: state.gameComplete,
 				gameLoaded: state.gameLoaded

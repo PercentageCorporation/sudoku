@@ -1,16 +1,15 @@
 import { useEffect } from "react";
 import { useNavigate } from  "react-router-dom";
-import { cellStore, useCellActions, useManCellsStore } from "./store/store";
+import { cellStore, useCellActions, useHintStore } from "./store/store";
 import GameGrid from "./components/GameGrid";
 import PlayMenu from "./components/PlayMenu";
 import Spinner from "./components/Spinner";
-import { getSSGame, getSudokuSoluitons } from "./utilities/sudoku-solutions";
-import { getGameDosuku } from "./utilities/sudokuApi";
+import { getSSGame } from "./utilities/sudoku-solutions";
 
 export default function App() {
-  const { newGame, resetGame, initGame, loadGame, updateCandidates } = useCellActions();
+  const { newGame, resetGame, initGame, updateCandidates } = useCellActions();
   const { gameLoaded, difficulty, gameId } = cellStore();
-  const { getManCells } = useManCellsStore();
+  const { resetHint } = useHintStore();
   const navigate = useNavigate();
   console.log("App", gameLoaded, difficulty, gameId);
 
@@ -36,6 +35,7 @@ export default function App() {
 
   function handleRestartGame(e) {
     e.preventDefault();
+	resetHint();
     resetGame();
 	navigate("/");
   }

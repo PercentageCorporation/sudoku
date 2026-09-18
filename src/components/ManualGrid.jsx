@@ -49,7 +49,7 @@ function ManualGrid9({y}) {
 
 export default function ManualGrid() {
 	const navigate = useNavigate();
-	const { setManSelectedCell, setManCellValue, getManCells, initialized, initialize} = useManCellsStore();
+	const { setManSelectedCell, setManCellValue, getManCells, initialized, initialize, loadManCells, getManCellsLinear} = useManCellsStore();
 	const { loadGame } = useCellActions();
 	//console.log("ManGrid", selectedCell);
 
@@ -127,8 +127,47 @@ export default function ManualGrid() {
 		};
 	}, []);
 
-	function exit() {
+	function returnToGame(e) {
+		e.preventDefault();
 		navigate('/');
+	}
+
+	function lcLoadGame(e) {
+		e.preventDefault();
+		var lcgames = localStorage.getItem('sudoku-games');
+		if (!lcgames) return;
+		var games = JSON.parse(lcgames);
+		var ngames =  games.games.length;
+		if (ngames === 0) return;
+
+		var game = games.games[ngames-1];
+		console.log("loading game", ngames, game);
+		loadManCells(game.game);
+		console.log(getManCellsLinear());
+
+	}
+
+	function lcSaveGame(e) {
+		e.preventDefault();
+
+		var lcgames = localStorage.getItem('sudoku-games');
+		if (!lcgames) {lcgames = `{"games": []}`;};
+		var games = JSON.parse(lcgames);
+
+		var ngames =  games["games"].length;
+		console.log("saved games", ngames);
+		var newgame = {
+			number: ngames + 1,
+			description: "saved game",
+			game: getManCells()
+		}
+		games["games"].push(newgame);
+		//console.log(games);
+		var sgames = JSON.stringify(games);
+		console.log(sgames);
+
+		localStorage.setItem('sudoku-games', sgames);
+		console.log("game saved")
 	}
 
 	function handleClear(e) {
@@ -170,15 +209,33 @@ export default function ManualGrid() {
 					>
 					Play Game
 				</button>
-				</div>
+			</div>
 			<div className="mx-2 flex flex-row justify-between mt-4">
 				<button
 					type="button"
 					tabIndex={-1}
-					onClick={(e) => exit(e)}
+					onClick={(e) => returnToGame(e)}
 					className="px-4 py-2 text-xl font-bold bg-blue-300 rounded hover:cursor-pointer"
 					>
-				Return to Game
+					Return to Game
+				</button>
+			</div>
+			<div className="mx-2 flex flex-row justify-between mt-4">
+				<button
+					type="button"
+					tabIndex={-1}
+					onClick={(e) => lcLoadGame(e)}
+					className="px-4 py-2 text-xl font-bold bg-blue-300 rounded hover:cursor-pointer"
+					>
+					Load Game
+				</button>
+				<button
+					type="button"
+					tabIndex={-1}
+					onClick={(e) => lcSaveGame(e)}
+					className="px-4 py-2 text-xl font-bold bg-blue-300 rounded hover:cursor-pointer"
+					>
+					Save Game
 				</button>
 			</div>
 
