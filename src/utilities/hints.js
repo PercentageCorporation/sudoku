@@ -8,13 +8,15 @@ export function runHints() {
 	cells = cellStore.getState().cells;
 	initCounts();
 
-	result = nakedTriples();
+	result = lockedCandidatesType1();
 	if (result) return result[0];
 	result = singletons();
 	if (result) return result[0];
 	result = singleCounts();
 	if (result) return result[0];
 	result = nakedPairs();
+	if (result) return result[0];
+	result = nakedTriples();
 	if (result) return result[0];
 	result = findPointingPairsSquare();
 	if (result) return result[0];
@@ -25,6 +27,8 @@ export function runHints() {
 	result = hiddenTriples();
 	if (result) return result[0];
 	result = XWing();
+	if (result) return result[0];
+	result = XYWing();
 	if (result) return result[0];
 	result = XYZWing();
 	if (result) return result[0];
@@ -50,6 +54,7 @@ var rCounts3 = [[],[],[],[],[],[],[],[],[],[]];
 var cCounts3 = [[],[],[],[],[],[],[],[],[],[]];
 var rCounts23 = [[],[],[],[],[],[],[],[],[],[]];
 var cCounts23 = [[],[],[],[],[],[],[],[],[],[]];
+var sCounts23 = [[],[],[],[],[],[],[],[],[],[]];
 var rCounts3cols = [[],[],[],[],[],[],[],[],[],[]];
 
 var vRowPT = [];
@@ -68,14 +73,16 @@ function initCounts() {
 	vSqs = [];
 
 	// count the instances of each value in each row/col
-	// we need columns[rows] containing exactly 2, and rows[columns] of 2 or more
-	// we need columns[rows] containing exactly 3, and rows[columns] of 3 or more
+	// we need columns[rows] containing exactly 2, and rows[columns]
+	// we need columns[rows] containing exactly 3, and rows[columns]
+	// we need rows/cols/sqs containing 2 or 3 of the value
 	rCounts2 = [[],[],[],[],[],[],[],[],[],[]];
 	cCounts2 = [[],[],[],[],[],[],[],[],[],[]];
 	rCounts3 = [[],[],[],[],[],[],[],[],[],[]];
 	cCounts3 = [[],[],[],[],[],[],[],[],[],[]];
 	rCounts23 = [[],[],[],[],[],[],[],[],[],[]];
 	cCounts23 = [[],[],[],[],[],[],[],[],[],[]];
+	sCounts23 = [[],[],[],[],[],[],[],[],[],[]];
 	rCounts3cols = [[],[],[],[],[],[],[],[],[],[]];
 
 	vRowPT = [];
@@ -99,6 +106,7 @@ function initCounts() {
 		for (var i=0; i<9; i++) {
 			var rc = vRows[i][v];
 			var cc = vCols[i][v];
+			var sc = vSqs[i][v];
 			if (rc === 2) rCounts2[v].push(i);
 			if (rc === 3) rCounts3[v].push(i);
 			if (rc === 3) rCounts3cols[v].push(i);
@@ -106,11 +114,13 @@ function initCounts() {
 			if (cc === 3) cCounts3[v].push(i);
 			if (rc === 2 || rc === 3) rCounts23[v].push(i);
 			if (cc === 2 || cc === 3) cCounts23[v].push(i);
+			if (sc === 2 || sc === 3) sCounts23[v].push(i);
 		}
 	}
 	//console.log(rCounts2,cCounts2);
 	//console.log(rCounts3,cCounts3);
 	//console.log(rCounts23,cCounts23);
+	//console.log(sCounts23, vSqs);
 }
 
 // count the occurances of the active candidates in a row/col/sq
@@ -157,6 +167,102 @@ function includesAny(a,b) {
 	// if a includes any of b
 	return b.some(r => a.includes(r))
 }
+
+//*****************************************************************************
+// lockedCandidates
+
+function getSameRowCol(v, s) {
+	var svc = [];
+	var sq = squares[s]; // get the square cells
+	var sr = [];
+	var sc = [];
+	var srx = [];
+	var scx = [];
+	for (var i=0; i<9; ++i) {
+		var cix = sq[i];	// cell index in square
+		var c = cells[cix];
+		if (c.value === 0 && c.activecandidates.includes(v)) {
+			sr.push(cellRow[cix]);
+			srx.push(cix);
+			sc.push(cellCol[cix]);
+			scx.push(cix);
+		}
+	}
+
+	// rcs, value, square, row/col, count, cells
+	if (sr.length > 1 && sr.every(rc => rc === sr[0])) {   // true if all equal
+		svc.push(['r', v, s, sr[0], sr.length, srx]);
+		return svc;
+	} else if (sc.length > 1 && sc.every(rc => rc === sc[0])) {
+		svc.push(['c', v, s, sc[0], sc.length, scx]);
+		return svc;
+	}
+
+	return null;
+}
+
+function lockedCandidatesType1() {
+
+	// find values that occur 2 or three times in a square
+	var v23 = [];
+	for (var s=0; s<9; ++s) {
+		for (var v=1; v<10; ++v) {
+			var vcnt = vSqs[s][v]
+			if (vcnt === 2 || vcnt === 3) {
+				var svc = getSameRowCol(v, s);
+				// rcs, value, square, row/col, count, cells
+				if (svc) v23.push(svc);
+			}
+		}
+	}
+	console.log("v23",v23);
+
+	var lh = [];
+	// for all the candidates check if there are any targets
+	v23.forEach((vxx) => {
+		var vx = vxx[0];
+		// rcs, value, square, row/col, count, cells
+		var rc = vx[3];	// get the row/col
+		var arr = vx[0] === 'r' ? rows[rc] : cols[rc];
+		//console.log("vx", rc, arr, vx);
+		var tgts = findTargets(arr,[vx[1]],vx[5]);
+		if (tgts.length > 0) {
+			// rcs, row/col,  value
+			lh.push([vx[0], vx[3], vx[5], [vx[1]], tgts, vx[2]]);
+		}
+	})
+	console.log("lh",lh);
+
+
+	var locked = [];
+	lh.forEach((lhh) => {
+		var rcs = lhh[0];
+		var rcsix = lhh[1];
+		var cls = lhh[2];
+		var vals = lhh[3];
+		var tgts = lhh[4];
+		var sq = lhh[5];
+		//console.log(dir,trc0,cls)
+
+		var h = {
+			type: 'locked',
+			row: rcs === 'r' ? rcsix : null,
+			col: rcs === 'c' ? rcsix : null,
+			square: sq,
+			cells: cls,
+			offset: null,
+			values: vals,
+			targets: tgts,
+			msg: `Locked: Cells: ${tgts}, Values: ${vals}`
+		}
+		locked.push(h);
+	})
+
+	if (locked.length === 0) return null;
+	console.log("locked",locked);
+	return locked;
+}
+
 
 //*****************************************************************************
 // nakedTriples
@@ -835,10 +941,9 @@ function findPointingPairsSquare() {
 			var sqix = hasSingleOccurance(sqCounts);
 			// sqix only occurs in one square, therefore it is a candidate for a pointing pair
 			if (sqix != null) {
-				//console.log(value, r, sqix, sqCounts);
-
 				var vc = sqCounts[sqix];	// number of times value occurs in the row
 				var targets = getSquareValueCells(value, sqix);	// number of times the value occurs in the square
+				console.log("sqix",value, r, sqix, vc, targets, sqCounts);
 
 				var vscount = targets.length;
 				if (vscount > vc) {
@@ -935,20 +1040,6 @@ function firstSingleValue(arr) {
 		if (arr[i] == 1)
 			return i;
 	return 0;
-}
-
-function hasSingleValueRC(ar) {
-	//console.log(ar);
-	// check that row only has a single value
-	var single = -1;
-	for (var i=0; i<9; ++i) {
-		if (ar[i] > 0) {
-			if (single > -1) return -1
-				single = i;
-			//console.log("single:", i, ar[i], single);
-		}
-	}
-	return single;
 }
 
 function hasSingleValueHint(arr) {
@@ -1134,6 +1225,20 @@ function nakedPairs() {
 
 //*****************************************************************************
 // pointingPairsRowCol
+
+function hasSingleValueRC(ar) {
+	//console.log(ar);
+	// check that row only has a single value
+	var single = -1;
+	for (var i=0; i<9; ++i) {
+		if (ar[i] > 0) {
+			if (single > -1) return -1
+				single = i;
+			//console.log("single:", i, ar[i], single);
+		}
+	}
+	return single;
+}
 
 // if a value only appears in the same row or column of a square
 // then that value can be eliminated from the remaining row or column cells outside the square

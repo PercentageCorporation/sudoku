@@ -90,6 +90,7 @@ function Cell({ix}) {
 	}
 	else if (hint.type) {
 		switch (hint.type) {
+			case "locked":
 			case "nakedPair":
 			case "nakedTriple":
 			case "pointingPair":

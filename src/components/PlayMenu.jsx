@@ -39,16 +39,17 @@ export default function PlayMenu() {
 		//console.log("doHint", h);
 		switch (h.type) {
 			// hints with targets
-			case "xWing":
-			case "xyWing":
-			case "xyTriple":
-			case "xyzWing":
+			case "locked":
 			case "nakedPair":
 			case "nakedTriple":
 			case "pointingPair":
 			case "pointingPairSquare":
 			case "hiddenPair":
 			case "hiddenTriple":
+			case "xWing":
+			case "xyWing":
+			case "xyTriple":
+			case "xyzWing":
 			case "swordfish":
 				var cls = h.targets;
 				//console.log(cls);
