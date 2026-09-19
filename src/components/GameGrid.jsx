@@ -91,6 +91,7 @@ function Cell({ix}) {
 	else if (hint.type) {
 		switch (hint.type) {
 			case "nakedPair":
+			case "nakedTriple":
 			case "pointingPair":
 			case "pointingPairSquare":
 			case "hiddenPair":

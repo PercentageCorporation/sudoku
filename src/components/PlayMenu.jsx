@@ -44,6 +44,7 @@ export default function PlayMenu() {
 			case "xyTriple":
 			case "xyzWing":
 			case "nakedPair":
+			case "nakedTriple":
 			case "pointingPair":
 			case "pointingPairSquare":
 			case "hiddenPair":

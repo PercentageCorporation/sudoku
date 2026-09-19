@@ -8,18 +8,18 @@ export function runHints() {
 	cells = cellStore.getState().cells;
 	initCounts();
 
+	result = nakedTriples();
+	if (result) return result[0];
 	result = singletons();
 	if (result) return result[0];
 	result = singleCounts();
 	if (result) return result[0];
-	result = findNakedPairs();
+	result = nakedPairs();
 	if (result) return result[0];
 	result = findPointingPairsSquare();
 	if (result) return result[0];
 	result = pointingPairsRowCol();
 	if (result) return result[0];
-	//result = findNakedTriples();
-	//if (result) return result[0];
 	result = hiddenPairs();
 	if (result) return result[0];
 	result = hiddenTriples();
@@ -130,56 +130,192 @@ function rcsCounts(arr) {
 	return counts;
 }
 
-// get the activecandidate counts for the row/col/square
-function rowCounts(r) {
-	var counts = [0,0,0,0,0,0,0,0,0,0];
-	var row = rows[r];
-	//console.log(row);
+// find cells in the array which contain any of vals, excluding cells in ex
+function findTargets(arr,vals,ex) {
+	var targets = [];
+
 	for (var i=0; i<9; ++i) {
-		const cix = row[i];
-		const cell = cells[cix];
-		if (cell.value > 0) continue;
-		const candid = cell.activecandidates;
-		//console.log(cix, candid);
-		candid.map((c) => {
-			counts[c] += 1;
-		});
+		var cix = arr[i];
+		var cel = cells[cix];
+		if (!ex.includes(cix)) {
+			if (cel.value === 0 && includesAny(cel.activecandidates, vals)) {
+				targets.push(cix);
+			}
+		}
 	}
-	return counts;
+	return targets;
+
 }
 
-function colCounts(c) {
-	var counts = [0,0,0,0,0,0,0,0,0,0];
-	var col = cols[c];
-	for (var j=0; j<9; ++j) {
-		const cix = col[j];
-		const cell = cells[cix];
-		if (cell.value > 0) continue;
-		const candid = cell.activecandidates;
-		candid.map((c) => {
-			counts[c] += 1;
-		});
-	}
-	return counts;
+// are all values in [b] included in [a]
+function includesAll(a,b) {
+	return b.every(v => a.includes(v));
 }
 
-function sqCounts(s) {
-	var counts = [0,0,0,0,0,0,0,0,0,0];
-	var csq = squares[s];
-	for (var j=0; j<9; ++j) {
-		const cix = csq[j];
-		const cell = cells[cix];
-		if (cell.value > 0) continue;
-		const candid = cell.activecandidates;
-		candid.map((c) => {
-			counts[c] += 1;
-		});
-	}
-
-	return counts;
+// are any of the values in [b] included in [a]
+function includesAny(a,b) {
+	// if a includes any of b
+	return b.some(r => a.includes(r))
 }
 
 //*****************************************************************************
+// nakedTriples
+
+
+function findTriplesxxx(rows) {
+	const triples = [];
+
+	for (let r1 = 0; r1 < rows.length - 2; r1++) {
+		const [row1, cols1] = rows[r1];
+
+		for (let r2 = r1 + 1; r2 < rows.length - 1; r2++) {
+			const [row2, cols2] = rows[r2];
+
+			for (let r3 = r2 + 1; r3 < rows.length; r3++) {
+				const [row3, cols3] = rows[r3];
+
+				// Generate one pair from row 1
+				for (let a = 0; a < cols1.length - 1; a++) {
+					for (let b = a + 1; b < cols1.length; b++) {
+						const p1 = [cols1[a], cols1[b]];
+
+						// Generate one pair from row 2
+						for (let c = 0; c < cols2.length - 1; c++) {
+							for (let d = c + 1; d < cols2.length; d++) {
+								const p2 = [cols2[c], cols2[d]];
+
+								if (!oneInCommon(p1, p2)) continue;
+
+								// Generate one pair from row 3
+								for (let e = 0; e < cols3.length - 1; e++) {
+									for (let f = e + 1; f < cols3.length; f++) {
+										const p3 = [cols3[e], cols3[f]];
+
+										if (
+											oneInCommon(p1, p3) &&
+											oneInCommon(p2, p3) &&
+											validTriple(p1, p2, p3)
+										) {
+											triples.push([
+												[row1, p1],
+												[row2, p2],
+												[row3, p3]
+											]);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return triples;
+}
+
+function findAllTargets(rcs,vals) {
+	var targets = [];
+	for (var i=0; i<9; i++) {
+		var cix = rcs[i];
+		var c = cells[cix];
+		if (c.value === 0 && includesAny(c.activecandidates, vals)) targets.push(cix);
+	}
+	return targets;
+}
+
+function nakedTriples() {
+
+	var triples = [];
+	for (var r=0; r<9; r++) {
+		var row = rows[r];
+		var ijk = [];
+		for (var i=0; i<9; i++) {
+			var cixi = row[i];
+			var ci = cells[cixi];
+			if (ci.value > 0) continue;
+
+			var aci = ci.activecandidates;
+			if (aci.length === 3) {
+				for (var j=0; j<9; j++) {
+					if (i === j) continue;
+					var cixj = row[j];
+					var cj = cells[cixj];
+					if (cj.value > 0) continue;
+					var acj = cj.activecandidates;
+					if (acj.length !== 2 && acj.length !== 3) continue
+
+					// are all of the acj values included in aci
+					var inc = includesAll(aci, acj);
+					if (!inc) continue;
+
+					// found two candidates, look for a third
+					for (var k=0; k<9; k++) {
+						if (i === k || j === k) continue;
+						var cixk = row[k];
+						var ck = cells[cixk];
+						if (ck.value > 0) continue;
+						var ack = ck.activecandidates;
+						if (ack.length !== 2 && ack.length !== 3) continue;
+
+						// are all of the ack values included in aci
+						var inc = includesAll(aci, ack);
+						if (!inc) continue;
+
+						// we might have a triple, but I do not yet know what to check for
+						var ijkkey = [i,j,k].sort().join('');
+						if (ijk.includes(ijkkey)) continue;
+						console.log("nt", r, ijkkey, [cixi,aci], [cixj,acj], [cixk,ack])
+						ijk.push(ijkkey);
+
+						var cls = [cixi, cixj, cixk];
+						var vs = new Set();
+						aci.forEach(vs.add, vs)
+						acj.forEach(vs.add, vs)
+						ack.forEach(vs.add, vs)
+						var vals = Array.from(vs).sort();
+						var tgts = findTargets(row, vals, cls);
+						if (tgts.length > 0) triples.push(['r', r, cls, vals, tgts]);
+
+					}
+				}
+			}
+		}
+	}
+	console.log("np triples",triples)
+	var nakedTriples = [];
+	triples.forEach((npt) => {
+		var rcs = npt[0];
+		var rcsix = npt[1];
+		var cls = npt[2];
+		var vals = npt[3];
+		var tgts = npt[4]
+		//console.log(dir,trc0,cls)
+
+		var h = {
+			type: 'nakedTriple',
+			row: rcs === 'r' ? rcsix : null,
+			col: rcs === 'c' ? rcsix : null,
+			square: rcs === 's' ? rcsix : null,
+			cells: cls,
+			offset: null,
+			values: vals,
+			targets: tgts,
+			msg: `Naked Triple: Cells: ${tgts}, Values: ${vals}`
+		}
+		nakedTriples.push(h);
+	})
+
+
+	if (nakedTriples.length === 0) return null;
+	console.log("nakedTriples",nakedTriples)
+	return nakedTriples;
+}
+
+
+//*****************************************************************************
+// hiddenPairs
 
 // get the indices of the row/col/sq that have values with a count of two
 // this uses the xCounts2 arrays
@@ -215,11 +351,6 @@ function possiblePairs(pp) {
 		}
 	}
 	return ppp;
-}
-
-// are all values in [b] included in [a]
-function includesAll(a,b) {
-	return b.every(v => a.includes(v));
 }
 
 function hiddenPairs() {
@@ -313,6 +444,7 @@ function hiddenPairs() {
 }
 
 //*****************************************************************************
+// hiddenTriples
 
 // compare two arrays to see if they contain exactly the same values
 function compareArrays(a,b) {
@@ -346,11 +478,10 @@ function makePairsTriples(ac) {
 	return pt;
 }
 
-function rowPairsTriples(r) {
+function rcsPairsTriples(arr) {
 	var pt = [];
-	var row = rows[r];
 	for (var j=0; j<9; j++) {
-		var cix = row[j];
+		var cix = arr[j];
 		var cell = cells[cix];
 		var ac = cell.activecandidates;
 		if (cell.value > 0 || ac.length === 0) continue;
@@ -358,44 +489,6 @@ function rowPairsTriples(r) {
 		pt.push([j,ac]);
 	}
 	return Array.from(pt).sort();;
-}
-
-function colPairsTriples(c) {
-	var pt = [];
-	var col = cols[c];
-	for (var j=0; j<9; j++) {
-		var cix = col[j];
-		var cell = cells[cix];
-		var ac = cell.activecandidates;
-		if (cell.value > 0 || ac.length === 0) continue;
-		//var pandt = findPairsTriples(ac);
-		pt.push([j,ac]);
-	}
-	return pt;
-}
-
-function sqPairsTriples(s) {
-	var pt = [];
-	var sq = squares[s];
-	for (var j=0; j<9; j++) {
-		var cix = sq[j];
-		var cell = cells[cix];
-		var ac = cell.activecandidates;
-		if (cell.value > 0 || ac.length === 0) continue;
-		//var pandt = findPairsTriples(ac);
-		pt.push([j,ac]);
-	}
-	return pt;
-}
-
-function removeSingles(ap) {
-	for (var value=1; value<10; ++value) {
-		if (vc[value] > 3 || vc[value] < 2) {
-			for (var i=0; i<ptlen; i++) {
-				pt[i][1] = pt[i][1].filter(v => v != value);
-			}
-		}
-	}
 }
 
 function countTheHouse(house) {
@@ -578,20 +671,6 @@ function findHiddenTriple(ptIn) {
 	return triples;
 }
 
-function includesAny(a,b) {
-	// if a includes any of b
-	return b.some(r => a.includes(r))
-}
-
-function findAllTargets(rcs,vals) {
-	var targets = [];
-	for (var i=0; i<9; i++) {
-		var cix = rcs[i];
-		var c = cells[cix];
-		if (c.value === 0 && includesAny(c.activecandidates, vals)) targets.push(cix);
-	}
-	return targets;
-}
 
 
 // find any values in the cells that are not in the vals list
@@ -618,9 +697,9 @@ function hiddenTriples() {
 
 	// for each row/col/square calculate the possible triples/pairs for each cell;
 	for (var i=0; i<9; i++) {
-		var rc = rowPairsTriples(i);
-		var cc = colPairsTriples(i);
-		var sc = sqPairsTriples(i);
+		var rc = rcsPairsTriples(rows[i]);
+		var cc = rcsPairsTriples(cols[i]);
+		var sc = rcsPairsTriples(squares[i]);
 		vRowPT.push([i, rc]);
 		vColPT.push([i, cc]);
 		vSqPT.push([i, sc]);
@@ -727,6 +806,7 @@ function hiddenTriples() {
 }
 
 //*****************************************************************************
+// pointingPairsSquare
 
 function includesPair(arr, v0, v1) {
 	 for (var i=0; i<arr.length; ++i) {
@@ -871,6 +951,7 @@ function findPointingPairsSquare() {
 }
 
 //*****************************************************************************
+// singleCounts
 
 function findValueInRCS(arr, val) {
 	for (var i=0; i<9; ++i) {
@@ -954,6 +1035,8 @@ function singleCounts() {
 	return singleCounts;
 }
 
+//*****************************************************************************
+// singletons
 
 // returns an array of cells which only have one candidate
 function singletons() {
@@ -980,6 +1063,9 @@ function singletons() {
 	if (singletons.length == 0) return null;
 	return singletons;
 }
+
+//*****************************************************************************
+// nakedPairs
 
 // find pairs in the row/col/sq array and record the index of where they were found;
 function findPairs(arr) {
@@ -1008,24 +1094,8 @@ function findPairs(arr) {
 	return px;
 }
 
-// find cells in the array which contain any of vals, excluding cells in ex
-function findTargets(arr,vals,ex) {
-	var targets = [];
-
-	for (var i=0; i<9; ++i) {
-		var cix = arr[i];
-		var cel = cells[cix];
-		if (!ex.includes(cix)) {
-			if (cel.value === 0 && includesAny(cel.activecandidates, vals)) {
-				targets.push(cix);
-			}
-		}
-	}
-	return targets;
-
-}
 // return an array of cells which contain naked pairs
-function findNakedPairs() {
+function nakedPairs() {
 	var np = [];
 
 	// for each row/col/sq find a pair and look for another
@@ -1095,6 +1165,10 @@ function findNakedPairs() {
 	if (nakedPairs.length === 0) return null;
 	return nakedPairs;
 }
+
+
+//*****************************************************************************
+// pointingPairsRowCol
 
 // if a value only appears in the same row or column of a square
 // then that value can be eliminated from the remaining row or column cells outside the square
@@ -1351,7 +1425,9 @@ function oneColValues(sq, sqrc) {
 	return rv;
 }
 
+//*****************************************************************************
 // X-Wing
+
 function XWing() {
 	var xwings = [];
 
@@ -1461,7 +1537,6 @@ function XWing() {
 
 						}
 
-
 					}
 				}
 			}
@@ -1511,11 +1586,8 @@ function findPairInCol(cixin, p) {
 	return cp;
 }
 
-function candidatePairsMatch(c0, c1) {
-	if (c0[0] !== c1[0] && c0[0] !== c1[1]) return false;
-	if (c0[1] !== c1[0] && c0[1] !== c1[1]) return false;
-	return true;
-}
+//*****************************************************************************
+// XYZ-Wing
 
 function findAllPairs(p) {
 	var pairs = [];
@@ -1532,7 +1604,6 @@ function findAllPairs(p) {
 	return pairs;
 }
 
-// X-Wing
 function XYZWing() {
 	var pivots = [];
 	var xyzwings = [];
@@ -1684,11 +1755,12 @@ function XYZWing() {
 	}
 
 	if (xyzwings.length === 0) return null;
+	console.log("xyzwings", xyzwings);
 
 	var xyzHints = [];
 
-	console.log("xyzHints", xyzHints);
 	if (xyzHints.length === 0) return null;
+	console.log("xyzHints", xyzHints);
 	return xyzHints;
 }
 
@@ -1731,6 +1803,9 @@ function findXYPairs(ppiv, pivots) {
 	}
 	return pairs;
 }
+
+//*****************************************************************************
+// XY-Wing
 
 function XYWing() {
 	var pivots = [];
@@ -1915,125 +1990,6 @@ function tripleValues(trip) {
 	return Array.from(values);
 }
 
-function findNakedTriples() {
-	var nakedtriples = [];
-
-	var npRows = [[],[],[],[],[],[],[],[],[]]
-	var npCols = [[],[],[],[],[],[],[],[],[]]
-	var npSquares = [[],[],[],[],[],[],[],[],[]]
-
-	// find all naked pairs
-	for (var ix=0; ix<81; ++ix) {
-		var c = cells[ix];
-		var ac = c.activecandidates;
-		if (c.value === 0 && ac.length === 2){
-			var row = cellRow[ix];
-			var col = cellCol[ix];
-			var sq = cellSquare[ix];
-			npRows[row].push([ix,ac]);
-			npCols[col].push([ix,ac]);
-			npSquares[sq].push([ix,ac]);
-		}
-	};
-
-	// check the rows/cols/squares for four or more pairs
-
-	var nptrips = [];
-
-	for (var i=0; i<9; ++i) {
-		var npt;
-		if (npRows[i].length > 3) {
-			//console.log("npr", i, npRows[i]);
-			npt = findPairTriples(npRows[i]);
-			if (npt.length > 0) {
-				var npt0 = npt[0];
-				//console.log("npr", i, npt.length, npt0);
-				nptrips.push([i, null, null, npt0]);
-			}
-		}
-		if (npCols[i].length > 3) {
-			//console.log("npc", i, npCols[i]);
-			npt = findPairTriples(npCols[i]);
-			if (npt.length > 0) {
-				var npt0 = npt[0];
-				//console.log("npc", i, npt.length, npt0);
-				nptrips.push([null, i, null, npt0]);
-			}
-		}
-		if (npSquares[i].length > 3) {
-			npt = findPairTriples(npSquares[i]);
-			if (npt.length > 0) {
-				var npt0 = npt[0];
-				//console.log("npc", i, npt.length, npt0);
-				nptrips.push([null, null, i, npt0]);
-			}
-		}
-	}
-
-	//console.log("nptrips",nptrips)
-	if (nptrips.length === 0) return null;
-
-	nptrips.forEach((npt) => {
-		//console.log(npt);
-		var row = npt[0];
-		var col = npt[1];
-		var sq = npt[2];
-		var trip = npt[3];
-		var cls = [trip[0][0],trip[1][0],trip[2][0]];
-		var vals = tripleValues(trip);
-		var tgts = tripleTargets(row, col, sq, cls, vals);
-		//console.log(trip, row, col, sq, cls, vals, tgts);
-		if (tgts) {
-			var msg = "Naked Triple: ";
-			if (row) msg += `Row: ${row}`;
-			if (col) msg += `Column: ${col}`;
-			if (sq) msg += `Square: ${sq}`;
-			msg += `, Values: ${vals}`;
-
-			var xyt = {
-				type: 'xyTriple',
-				row: row,
-				col: col,
-				square: sq,
-				cells: cls,
-				offset: null,
-				values: vals,
-				targets: tgts,
-				msg: msg
-			}
-			nakedtriples.push(xyt);
-		}
-	})
-
-	if (nakedtriples.length === 0) return null;
-	console.log("nakedtriples", nakedtriples);
-	return nakedtriples;
-}
-
-// record the index of the occurance of each value with the number of counts in the row/col
-function valCounts(rowcol, count) {
-	var counts = [0,0,0,0,0,0,0,0,0,0];
-	var vrc = [[],[],[],[],[],[],[],[],[],[]];
-	var countsix = [];
-	//console.log(row);
-	for (var i=1; i<10; ++i) {
-		const val = rowcol[i];
-		if (val === count) {
-			counts[i] = 1;
-			countsix.push(i);
-			vrc[val].push(i);
-		};
-	}
-	return vrc;
-}
-
-function cellHasValue(r,c,v) {
-	var cix = rows[r][c];
-	var cel = cells[cix];
-	//console.log(r,c,v,cix,cel);
-	if (cel.value === 0 && cel.activecandidates.includes(v)) return ([cix,[r,c]]);
-	return null;
-}
 
 function findTriplesByRow(rows) {
 	const triples = [];
