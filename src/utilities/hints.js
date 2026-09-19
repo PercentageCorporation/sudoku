@@ -162,51 +162,61 @@ function includesAny(a,b) {
 // nakedTriples
 
 
-function findTriplesxxx(rows) {
+// for each row/col/square find the candidate triples
+function findTriplesNP(arr) {
 	const triples = [];
 
-	for (let r1 = 0; r1 < rows.length - 2; r1++) {
-		const [row1, cols1] = rows[r1];
+	var ijk = [];
+	for (var i=0; i<9; i++) {
+		var cixi = arr[i];
+		var ci = cells[cixi];
+		if (ci.value > 0) continue;
 
-		for (let r2 = r1 + 1; r2 < rows.length - 1; r2++) {
-			const [row2, cols2] = rows[r2];
+		var aci = ci.activecandidates;
+		if (aci.length === 3) {
+			for (var j=0; j<9; j++) {
+				if (i === j) continue;
+				var cixj = arr[j];
+				var cj = cells[cixj];
+				if (cj.value > 0) continue;
+				var acj = cj.activecandidates;
+				if (acj.length !== 2 && acj.length !== 3) continue
 
-			for (let r3 = r2 + 1; r3 < rows.length; r3++) {
-				const [row3, cols3] = rows[r3];
+					// are all of the acj values included in aci
+					var inc = includesAll(aci, acj);
+				if (!inc) continue;
 
-				// Generate one pair from row 1
-				for (let a = 0; a < cols1.length - 1; a++) {
-					for (let b = a + 1; b < cols1.length; b++) {
-						const p1 = [cols1[a], cols1[b]];
+				// found two candidates, look for a third
+				for (var k=0; k<9; k++) {
+					if (i === k || j === k) continue;
+					var cixk = arr[k];
+					var ck = cells[cixk];
+					if (ck.value > 0) continue;
+					var ack = ck.activecandidates;
+					if (ack.length !== 2 && ack.length !== 3) continue;
 
-						// Generate one pair from row 2
-						for (let c = 0; c < cols2.length - 1; c++) {
-							for (let d = c + 1; d < cols2.length; d++) {
-								const p2 = [cols2[c], cols2[d]];
+					// are all of the ack values included in aci
+					var inc = includesAll(aci, ack);
+					if (!inc) continue;
 
-								if (!oneInCommon(p1, p2)) continue;
+					// we might have a triple, but I do not yet know what to check for
+					// if two of the candidates are pairs, they cannot be the same pair
+					// since [aci] is of length three, we need to compare [acj] anc [ack]
+					if (acj.length === 2 && ack.length === 2 && includesAll(acj, ack)) continue;	// too bad
 
-								// Generate one pair from row 3
-								for (let e = 0; e < cols3.length - 1; e++) {
-									for (let f = e + 1; f < cols3.length; f++) {
-										const p3 = [cols3[e], cols3[f]];
+					var ijkkey = [i,j,k].sort().join('');
+					if (ijk.includes(ijkkey)) continue;
+					//console.log("nt", ijkkey, [cixi,aci], [cixj,acj], [cixk,ack])
+					ijk.push(ijkkey);
 
-										if (
-											oneInCommon(p1, p3) &&
-											oneInCommon(p2, p3) &&
-											validTriple(p1, p2, p3)
-										) {
-											triples.push([
-												[row1, p1],
-												[row2, p2],
-												[row3, p3]
-											]);
-										}
-									}
-								}
-							}
-						}
-					}
+					var cls = [cixi, cixj, cixk];
+					var vs = new Set();
+					aci.forEach(vs.add, vs)
+					acj.forEach(vs.add, vs)
+					ack.forEach(vs.add, vs)
+					var vals = Array.from(vs).sort();
+					var tgts = findTargets(arr, vals, cls);
+					if (tgts.length > 0) triples.push([cls, vals, tgts]);
 				}
 			}
 		}
@@ -228,61 +238,16 @@ function findAllTargets(rcs,vals) {
 function nakedTriples() {
 
 	var triples = [];
-	for (var r=0; r<9; r++) {
-		var row = rows[r];
-		var ijk = [];
-		for (var i=0; i<9; i++) {
-			var cixi = row[i];
-			var ci = cells[cixi];
-			if (ci.value > 0) continue;
 
-			var aci = ci.activecandidates;
-			if (aci.length === 3) {
-				for (var j=0; j<9; j++) {
-					if (i === j) continue;
-					var cixj = row[j];
-					var cj = cells[cixj];
-					if (cj.value > 0) continue;
-					var acj = cj.activecandidates;
-					if (acj.length !== 2 && acj.length !== 3) continue
-
-					// are all of the acj values included in aci
-					var inc = includesAll(aci, acj);
-					if (!inc) continue;
-
-					// found two candidates, look for a third
-					for (var k=0; k<9; k++) {
-						if (i === k || j === k) continue;
-						var cixk = row[k];
-						var ck = cells[cixk];
-						if (ck.value > 0) continue;
-						var ack = ck.activecandidates;
-						if (ack.length !== 2 && ack.length !== 3) continue;
-
-						// are all of the ack values included in aci
-						var inc = includesAll(aci, ack);
-						if (!inc) continue;
-
-						// we might have a triple, but I do not yet know what to check for
-						var ijkkey = [i,j,k].sort().join('');
-						if (ijk.includes(ijkkey)) continue;
-						console.log("nt", r, ijkkey, [cixi,aci], [cixj,acj], [cixk,ack])
-						ijk.push(ijkkey);
-
-						var cls = [cixi, cixj, cixk];
-						var vs = new Set();
-						aci.forEach(vs.add, vs)
-						acj.forEach(vs.add, vs)
-						ack.forEach(vs.add, vs)
-						var vals = Array.from(vs).sort();
-						var tgts = findTargets(row, vals, cls);
-						if (tgts.length > 0) triples.push(['r', r, cls, vals, tgts]);
-
-					}
-				}
-			}
-		}
+	for (var i=0; i<9; i++) {
+		var rt = findTriplesNP(rows[i])
+		if (rt.length > 0) rt.forEach((t) => triples.push(['r', i].concat(t)));
+		var ct = findTriplesNP(cols[i])
+		if (ct.length > 0) ct.forEach((t) => triples.push(['c', i].concat(t)));
+		var st = findTriplesNP(squares[i])
+		if (st.length > 0) st.forEach((t) => triples.push(['s', i].concat(t)));
 	}
+
 	console.log("np triples",triples)
 	var nakedTriples = [];
 	triples.forEach((npt) => {
