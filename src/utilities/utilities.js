@@ -24,6 +24,22 @@ export function linearToGrid(values) {
 	return grid;
 }
 
+export function gridToLinearText(cls) {
+	var linear = "";
+
+	for (let s=0; s<9; s++) {
+		var row = rows[s];
+		for (let rc = 0; rc < 9; rc++) {
+			var cix = row[rc];
+			var val = cls[cix].value;
+			linear += (val === 0) ? " " : Number(val);
+		}
+	}
+	//console.log(values);
+	console.log("/"+linear+"/");
+	return linear;
+}
+
 // array of squares to linear - keep if needed later
 export function getNewGame(dif) {
 	var board;

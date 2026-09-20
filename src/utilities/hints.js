@@ -241,7 +241,7 @@ function getSameRowCol(v, s) {
 				// are there any targets inside the square
 				tgts = findTargets(squares[s], [v], srt);
 				if (tgts) {
-					console.log("srcxr", v, s, si, srx, srt, tgts )
+					//console.log("srcxr", v, s, si, srx, srt, tgts )
 					//svc.push(['r2', v, s, sr[0], sr.length, srx]);
 					//return [svc];
 				}
@@ -266,7 +266,7 @@ function getSameRowCol(v, s) {
 				// are there any targets inside the square
 				tgts = findTargets(squares[s], [v], sct);
 				if (tgts) {
-					console.log("srcxc", v, s, si, scx, sct, tgts )
+					//console.log("srcxc", v, s, si, scx, sct, tgts )
 					//svc.push(['c2', v, s, sr[0], sr.length, srx]);
 					//return [svc];
 				}
@@ -1263,13 +1263,14 @@ function nakedPairs() {
 		var vals = npi[4];
 
 		if (rcs === 'r') {
-			var tgts = findTargets(rows[rcsix], cls, vals);
+			var tgts = findTargets(rows[rcsix], vals, cls);
 			if (tgts) npHints.push(['row', rcsix, cls, vals, tgts]);
 		} else if (rcs === 'c') {
-			var tgts = findTargets(cols[rcsix], cls, vals);
+			var tgts = findTargets(cols[rcsix], vals, cls);
+			console.log("ct", rcsix, cls, vals, tgts);
 			if (tgts) npHints.push(['col', rcsix, cls, vals, tgts]);
 		} else if (rcs === 's') {
-			var tgts = findTargets(squares[rcsix], cls, vals);
+			var tgts = findTargets(squares[rcsix], vals, cls);
 			if (tgts) npHints.push(['square', rcsix, cls, vals, tgts]);
 		}
 	}
@@ -1982,12 +1983,13 @@ function findKillZone(pix, p0, p1, val) {
 		var ac = c.activecandidates;
 
 		var xh = [cellRow[cix],cellCol[cix],cellSquare[cix]];
-		// see if the cell is in two of the wing houses
+		// see if the cell is in two of the wing houses of the pivot
 		var incommon = 0;
-		if (xh[0] === ph0[0] || xh[0] === ph1[0]) ++incommon;
-		if (xh[1] === ph0[1] || xh[1] === ph1[1]) ++incommon;
-		if (xh[2] === ph0[2] || xh[2] === ph1[2]) ++incommon;
-		if (incommon === 2) {	// should never be 3
+		if (xh[0] === ph0[0]) ++incommon;
+		if (xh[1] === ph0[1]) ++incommon;
+		if (xh[2] === ph0[2]) ++incommon;
+		console.log("com", incommon, xh, ph0, ph1, ac, cix, val)
+		if (incommon === 2) {	// it sould not ever be three
 			//console.log("com", xh, ph0, ph1, ac, cix, val)
 			if (ac.includes(val)) targets.push(cix);
 		}

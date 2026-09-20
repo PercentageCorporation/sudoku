@@ -51,8 +51,8 @@ export default function PlayMenu() {
 			case "xyTriple":
 			case "xyzWing":
 			case "swordfish":
+				console.log("hint:", h);
 				var cls = h.targets;
-				//console.log(cls);
 				cls.forEach((cix) => {
 					if (h.values) {
 						h.values.forEach((value) => {
