@@ -264,7 +264,7 @@ function getSameRowCol(v, s) {
 			var tgts = findTargets(cols[sc], [v], sct);
 			if (!tgts) {
 				// are there any targets inside the square
-				tgts = findTargets(squares[s], [v], srt);
+				tgts = findTargets(squares[s], [v], sct);
 				if (tgts) {
 					console.log("srcxc", v, s, si, scx, sct, tgts )
 					//svc.push(['c2', v, s, sr[0], sr.length, srx]);
@@ -317,7 +317,7 @@ function lockedCandidates() {
 			lh.push([vx[0], vx[3], vx[5], [vx[1]], tgts, vx[2]]);
 		}
 	})
-	console.log("lh",lh);
+	//console.log("lh",lh);
 
 
 	var locked = [];
@@ -1869,7 +1869,7 @@ function XYZWing() {
 					if (ix === pin1[0] || ix === pin2[0]) continue;
 					if (!ac.includes(pval)) continue;
 
-					console.log("acr",ix, crcs, pin1, pin2, pval, ac);
+					//console.log("acr",ix, crcs, pin1, pin2, pval, ac);
 					xyzwings.push(piv, pin1, pin2, pval);
 				}
 
@@ -1885,7 +1885,7 @@ function XYZWing() {
 					if (ix === pin1[0] || ix === pin2[0]) continue;
 					if (!ac.includes(pval)) continue;
 
-					console.log("acc",ix, crcs, pin1, pin2, pval, ac);
+					//console.log("acc",ix, crcs, pin1, pin2, pval, ac);
 					xyzwings.push(piv, pin1, pin2, pval);
 				}
 
@@ -1910,7 +1910,7 @@ function XYZWing() {
 	}
 
 	if (xyzwings.length === 0) return null;
-	console.log("xyzwings", xyzwings);
+	//console.log("xyzwings", xyzwings);
 
 	var xyzHints = [];
 
@@ -1965,6 +1965,37 @@ function findXYPairs(ppiv, pivots) {
 	return pairs;
 }
 
+// the kill zone is definded as those cells sharing a house with the wings
+// if the wings are far apart this means only the corners of the square defined by the wing cells as corners
+// if the wings intersect the same squares, then row/square combination can be used to find the kill zone
+function findKillZone(pix, p0, p1, val) {
+	var pix0 = p0[0];
+	var pix1 = p1[0];
+	var ph0 = [p0[1],p0[2],p0[3]];
+	var ph1 = [p1[1],p1[2],p1[3]];
+	var targets = [];
+
+	for (var cix=0; cix<81; ++cix) {
+		if (cix === pix || cix === pix0 || cix === pix1) continue;
+		var c = cells[cix];
+		if (c.value > 0) continue;
+		var ac = c.activecandidates;
+
+		var xh = [cellRow[cix],cellCol[cix],cellSquare[cix]];
+		// see if the cell is in two of the wing houses
+		var incommon = 0;
+		if (xh[0] === ph0[0] || xh[0] === ph1[0]) ++incommon;
+		if (xh[1] === ph0[1] || xh[1] === ph1[1]) ++incommon;
+		if (xh[2] === ph0[2] || xh[2] === ph1[2]) ++incommon;
+		if (incommon === 2) {	// should never be 3
+			//console.log("com", xh, ph0, ph1, ac, cix, val)
+			if (ac.includes(val)) targets.push(cix);
+		}
+	}
+
+	return targets;
+}
+
 function XYWing() {
 	var pivots = [];
 	var xywings = [];
@@ -1980,7 +2011,7 @@ function XYWing() {
 	console.log("xy pivots", pivots);
 
 	var xyPairs = [];
-	pivot: for (var px=0; px<pivots.length; ++px) {
+	for (var px=0; px<pivots.length; ++px) {
 		// find candidate pairs
 		// piv: [cix, row, col, ac]
 		var piv = pivots[px];
@@ -2029,12 +2060,13 @@ function XYWing() {
 				// I think we found one
 				console.log("xy wings", pix, z, prow, pcol, psq, pac, pi, pj)
 				// get the intersecting cells
+				var killBill = findKillZone(pix, pi, pj, z);
+				console.log("killBill", z, killBill);
+
 				var cix0 = rows[pi[1]][pj[2]];
 				var cix1 = rows[pj[1]][pi[2]];
-				var tgts = [];
-				if (cellHasCandidate(cix0, z)) tgts.push(cix0);
-				if (cellHasCandidate(cix1, z)) tgts.push(cix1);
-				if (tgts.length > 0) {
+				console.log("xy tgts", z, cix0, cix1, killBill);
+				if (killBill.length > 0) {
 					//console.log("found XY", wval, piv, rp, cp);
 					var cls = [pix,pi[0],pj[0]];
 					var h = {
@@ -2045,7 +2077,7 @@ function XYWing() {
 						cells: cls,
 						offset: null,
 						value: z,
-						targets: tgts,
+						targets: killBill,
 						msg: `XY-Wing: Cells: ${cls}, Value: ${z}`
 					}
 					//console.log("hint", h);
@@ -2060,6 +2092,9 @@ function XYWing() {
 	console.log("xyHints", xywings);
 	return xywings;
 }
+
+//*****************************************************************************
+// Swordfish
 
 // look for a set of three pairs where the pattern is [a,b] [a,c] [a,b]
 function findPairTriples(pairs) {
@@ -2653,7 +2688,7 @@ function swordfish() {
 									});
 								})
 								//console.log("pt",pt);
-								sfcandidates.push([v, tgts, cls])
+								if (tgts.length > 0) sfcandidates.push([v, tgts, cls])
 							})
 						}
 					}
@@ -2717,7 +2752,7 @@ function swordfish() {
 									});
 								})
 								//console.log("pt",pt);
-								sfcandidates.push([v, tgts, cls])
+								if (tgts.length > 0) sfcandidates.push([v, tgts, cls])
 							})
 						}
 					}
