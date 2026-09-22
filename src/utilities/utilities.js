@@ -166,51 +166,55 @@ export function valueInRowColSq(cellIx, value) {
 	return included;
 }
 
-// export function validateBoard() {
-// 	const { getCells } = useCellActions();
-// 	const cells = getCells();
-// 	// check each row for duplicates
-// 	for (var i=0; i<9; ++i) {
-// 		const row = rows[i];
-// 		var vals = [];
-// 		for (var j=0; j<9; ++j) {
-// 			const cix = row[j];
-// 			const val = cells[cix].value;
-// 			if (val > 0) {
-// 				if (vals.includes(val)) return false;
-// 				vals.push(val);
-// 			}
-// 		}
-// 	}
-// 	// check each col for duplicates
-// 	for (var i=0; i<9; ++i) {
-// 		const col = cols[i];
-// 		var vals = [];
-// 		for (var j=0; j<9; ++j) {
-// 			const cix = col[j];
-// 			const val = cells[cix].value;
-// 			if (val > 0) {
-// 				if (vals.includes(val)) return false;
-// 				vals.push(val);
-// 			}
-// 		}
-// 	}
-// 	// check each square for duplicates
-// 	for (var i=0; i<9; ++i) {
-// 		const sq = squares[i];
-// 		var vals = [];
-// 		for (var j=0; j<9; ++j) {
-// 			const cix = sq[j];
-// 			const val = cells[cix].value;
-// 			if (val > 0) {
-// 				if (vals.includes(val)) return false;
-// 				vals.push(val);
-// 			}
-// 		}
-// 	}
+export function validateBoard() {
+	const cells = cellStore.getState().cells;
+	// check for empty candidates
+	for (var i=0; i<81; ++i) {
+		const c = cells[i];
+		if (c.value === 0 && c.candidates.length === 0) return false;
+	}
+	// check each row for duplicates
+	for (var i=0; i<9; ++i) {
+		const row = rows[i];
+		var vals = [];
+		for (var j=0; j<9; ++j) {
+			const cix = row[j];
+			const val = cells[cix].value;
+			if (val > 0) {
+				if (vals.includes(val)) return false;
+				vals.push(val);
+			}
+		}
+	}
+	// check each col for duplicates
+	for (var i=0; i<9; ++i) {
+		const col = cols[i];
+		var vals = [];
+		for (var j=0; j<9; ++j) {
+			const cix = col[j];
+			const val = cells[cix].value;
+			if (val > 0) {
+				if (vals.includes(val)) return false;
+				vals.push(val);
+			}
+		}
+	}
+	// check each square for duplicates
+	for (var i=0; i<9; ++i) {
+		const sq = squares[i];
+		var vals = [];
+		for (var j=0; j<9; ++j) {
+			const cix = sq[j];
+			const val = cells[cix].value;
+			if (val > 0) {
+				if (vals.includes(val)) return false;
+				vals.push(val);
+			}
+		}
+	}
 
-// 	return true;
-// }
+	return true;
+}
 
 // -1: value already in row col
 // 	0: valid move

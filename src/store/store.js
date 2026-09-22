@@ -123,6 +123,7 @@ export const cellStore = create(
 	persist(
 		(set, get) => ({
 			cells: [],
+			saved: [],
 			selectedCell: -1,
 			selectedValue: -1,
 			currentValue: -1,
@@ -157,6 +158,7 @@ export const cellStore = create(
 					//console.log("initcells:", initcells);
 					set({
 						cells: initcells,
+						saved: [],
 						selectedValue: -1,
 						selectedCell: -1,
 						currentValue: -1,
@@ -194,6 +196,7 @@ export const cellStore = create(
 					};
 					set({
 						cells: initcells,
+						saved: [],
 						selectedCell: -1,
 						selectedValue: -1,
 						currentValue: -1,
@@ -205,30 +208,57 @@ export const cellStore = create(
 				},
 
 				newGame: () => {
-					set((state) => ({
+					set({
 						cells: [],
+						saved: [],
 						selectedCell: -1,
 						selectedValue: -1,
 						currentValue: -1,
 						gameComplete: false,
 						gameLoaded: false
-					}))
+					})
 				},
 
 				resetGame: () => {
-					set((state) => ({
-						cells: state.cells.map((c,ix) =>
-						ix === ix ?	{...c, ...{value: c.originalValue}} : c
-						),
-						selectedCell: -1,
-						selectedValue: -1,
-						currentValue: -1,
-						gameComplete: false,
-						gameLoaded: true
-					})),
-					get().actions.clearSelectedCell()
-					get().actions.clearSelectedValue()
+					set((state) => {
+						const cells = [...state.cells]
+						for (var ix = 0; ix < 81; ++ix) {
+							cells[ix] = {...cells[ix], value: cells[ix].originalValue, noncandidates: [] }
+						}
+						return {
+							cells,
+							gameComplete: false,
+							gameLoaded: true,
+						}
+					}),
+					get().actions.clearSelectedCell(),
+					get().actions.clearSelectedValue(),
 					get().actions.resetCandidates()
+				},
+
+				saveState: () => {
+					set((state) => {
+						const saved = [...state.cells]
+						return { saved }
+					})
+				},
+
+				restoreState: () => {
+					set((state) => {
+						if (state.saved != null) {
+							console.log("restoreState")
+							const cells = [...state.saved]
+							return {
+								cells,
+								gameComplete: false,
+								gameLoaded: true,
+							}
+						}
+					}),
+					get().actions.clearSelectedCell(),
+					get().actions.clearSelectedValue(),
+					get().actions.resetCandidates(),
+					get().actions.calcNumbersUsed()
 				},
 
 				calcNumbersUsed: () => {
@@ -475,6 +505,7 @@ export const cellStore = create(
 			name: "sudoku-pc", // Use a unique name for each person
 			partialize: (state) => ({ 
 				cells: state.cells,
+				saved: state.saved,
 				selectedCell: state.selectedCell,
 				selectedValue: state.selectedValue,
 				currentValue: state.currentValue,

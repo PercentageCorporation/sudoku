@@ -12,7 +12,7 @@ export const ninetolinear = [
 60,61,62,	69,70,71,	78,79,80
 ];
 
-
+// given the row, get the cell number by offset
 export const rows = [
 [ 0, 1, 2,	 9,10,11,	18,19,20],
 [ 3, 4, 5,	12,13,14,	21,22,23],
@@ -27,6 +27,7 @@ export const rows = [
 [60,61,62,	69,70,71,	78,79,80]
 ];
 
+// given the column, get the cell number by offset
 export const cols = [
 [ 0, 3, 6,	27,30,33,	54,57,60],
 [ 1, 4, 7,	28,31,34,	55,58,61],
@@ -41,6 +42,7 @@ export const cols = [
 [20,23,26,	47,50,53,	74,77,80]
 ];
 
+// given the square, get the cell number by offset
 export const squares = [
 [ 0, 1, 2, 3, 4, 5, 6, 7, 8],
 [ 9,10,11,12,13,14,15,16,17],
@@ -53,6 +55,7 @@ export const squares = [
 [72,73,74,75,76,77,78,79,80]
 ];
 
+// given the cell number get the row/col/square
 export const cellCol = [
 0,1,2,0,1,2,0,1,2,3,4,5,3,4,5,3,4,5,6,7,8,6,7,8,6,7,8,
 0,1,2,0,1,2,0,1,2,3,4,5,3,4,5,3,4,5,6,7,8,6,7,8,6,7,8,
@@ -72,7 +75,10 @@ export const cellSquare = [
 6,6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8,8
 ];
 
+
 // list of rows for each square
+// given the square and the row, get the cell number
+// sqRowCells[sq][row]
 export const sqRowCells = [
 [[ 0, 1, 2],
  [ 3, 4, 5],
@@ -159,6 +165,7 @@ export const sqColCells = [
 ];
 
 // row, column, square
+// given the cell number, get the row/col/square
 export const RCS = [
 [0,0,0],
 [0,1,0],

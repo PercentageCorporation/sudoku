@@ -8,11 +8,12 @@ import { getSSGame } from "./utilities/sudoku-solutions";
 import { gridToLinearText } from "./utilities/utilities";
 
 export default function App() {
-	const { newGame, resetGame, initGame, updateCandidates } = useCellActions();
-	const { gameLoaded, difficulty, gameId, cells } = cellStore();
+	const { newGame, resetGame, initGame, updateCandidates, saveState, restoreState } = useCellActions();
+	const { gameLoaded, difficulty, gameId, cells, saved } = cellStore();
 	const { resetHint } = useHintStore();
 	const navigate = useNavigate();
 	console.log("App", gameLoaded, difficulty, gameId);
+	console.log("saved", saved.length);
 
 	useEffect(() => {
 		console.log("App UE");
@@ -38,6 +39,19 @@ export default function App() {
 		e.preventDefault();
 		resetHint();
 		resetGame();
+		navigate("/", { replace: true });
+	}
+
+	function handleSaveGame(e) {
+		e.preventDefault();
+		saveState();
+		navigate("/", { replace: true });
+	}
+
+	function handleRestoreGame(e) {
+		e.preventDefault();
+		restoreState();
+		resetHint();
 		navigate("/", { replace: true });
 	}
 
@@ -73,43 +87,60 @@ export default function App() {
 			<div>
 				<PlayMenu />
 			</div>
-			<div className="flex flex-row justify-between mt-4">
+			<div className="flex flex-row justify-between mt-4 text-lg">
 				<button
 					type="button"
 					onClick={(e) => handleNewGame(e)}
-					className="px-4 py-2 text-xl font-bold bg-orange-300 rounded hover:cursor-pointer"
+					className="px-4 py-2 bg-orange-300 rounded hover:cursor-pointer"
 				>
 					New Game
 				</button>
 				<button
 					type="button"
 					onClick={(e) => handleRestartGame(e)}
-					className="mx-4 px-4 py-2 text-xl font-bold bg-red-300 rounded hover:cursor-pointer"
+					className="mx-4 px-4 py-2 bg-red-300 rounded hover:cursor-pointer"
 				>
 					Restart Game
 				</button>
 			</div>
-			<div className="flex flex-row justify-between mt-4">
+			<div className="flex flex-row justify-between mt-4 text-lg">
+				<button
+					type="button"
+					onClick={(e) => handleSaveGame(e)}
+					className="px-4 py-2 bg-orange-300 rounded hover:cursor-pointer"
+				>
+					Save Game
+				</button>
+				<button
+					type="button"
+					disabled={saved.length === 0}
+					onClick={(e) => handleRestoreGame(e)}
+					className="mx-4 px-4 py-2 bg-red-300 disabled:bg-red-100 rounded enabled:hover:cursor-pointer"
+				>
+					Restore Game
+				</button>
+			</div>
+			<div className="flex flex-row justify-between mt-4 text-lg">
 				<button
 					type="button"
 					onClick={(e) => handleManualGame(e)}
-					className="px-4 py-2 mr-4 text-xl font-bold bg-blue-300 rounded hover:cursor-pointer"
+					className="px-4 py-2 mr-4 bg-blue-300 rounded hover:cursor-pointer"
 				>
 					Manual Game
 				</button>
 				<button
 					type="button"
 					onClick={(e) => handleRefreshCandidates(e)}
-					className="px-4 py-2 text-xl font-bold bg-blue-300 rounded hover:cursor-pointer"
+					className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
 				>
 					Refresh Candidates
 				</button>
 			</div>
-			<div className="flex flex-row justify-between mt-4">
+			<div className="flex flex-row justify-between mt-4 text-sm">
 				<button
 					type="button"
 					onClick={(e) => showLinear(e)}
-					className="px-4 py-2 mr-4 text-xl font-bold bg-blue-300 rounded hover:cursor-pointer"
+					className="px-4 py-2 mr-4 bg-blue-300 rounded hover:cursor-pointer"
 				>
 					Show Linear
 				</button>

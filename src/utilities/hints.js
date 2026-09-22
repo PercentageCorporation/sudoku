@@ -1,5 +1,5 @@
 import { cellStore, useCellActions } from "/src/store/store";
-import {rows, cols, squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCells, sqRows012, sqCols012} from '/src/utilities/constants';
+import {rows, cols, squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCells, sqRows012, sqCols012, RCS} from '/src/utilities/constants';
 
 var cells = [];
 
@@ -7,6 +7,11 @@ export function runHints() {
 	var result;
 	cells = cellStore.getState().cells;
 	initCounts();
+
+	//result = wWing();
+	//if (result) return result[0];
+	result = xyChain();
+	if (result) return result[0];
 
 	result = lockedCandidates();
 	if (result) return result[0];
@@ -50,6 +55,7 @@ var vSqs = [];
 // we need columns[rows] containing exactly 3, and rows[columns] of 3 or more
 var rCounts2 = [[],[],[],[],[],[],[],[],[],[]];
 var cCounts2 = [[],[],[],[],[],[],[],[],[],[]];
+var sCounts2 = [[],[],[],[],[],[],[],[],[],[]];
 var rCounts3 = [[],[],[],[],[],[],[],[],[],[]];
 var cCounts3 = [[],[],[],[],[],[],[],[],[],[]];
 var rCounts23 = [[],[],[],[],[],[],[],[],[],[]];
@@ -79,6 +85,7 @@ function initCounts() {
 	// we need rows/cols/sqs containing 2 or 3 of the value
 	rCounts2 = [[],[],[],[],[],[],[],[],[],[]];
 	cCounts2 = [[],[],[],[],[],[],[],[],[],[]];
+	sCounts2 = [[],[],[],[],[],[],[],[],[],[]];
 	rCounts3 = [[],[],[],[],[],[],[],[],[],[]];
 	cCounts3 = [[],[],[],[],[],[],[],[],[],[]];
 	rCounts23 = [[],[],[],[],[],[],[],[],[],[]];
@@ -90,8 +97,6 @@ function initCounts() {
 	vRowPT = [];
 	vColPT = [];
 	vSqPT = [];
-
-
 
 	// get the value counts for all rows/columns/squares
 	for (var i=0; i<9; i++) {
@@ -117,6 +122,8 @@ function initCounts() {
 			if (cc === 3) cCounts3[v].push(i);
 			if (cc >= 2) cCounts2p[v].push(i);
 
+			if (sc === 2) sCounts2[v].push(i);
+
 			if (rc === 2 || rc === 3) rCounts23[v].push(i);
 			if (cc === 2 || cc === 3) cCounts23[v].push(i);
 			if (sc === 2 || sc === 3) sCounts23[v].push(i);
@@ -125,7 +132,7 @@ function initCounts() {
 	//console.log(rCounts2,cCounts2);
 	//console.log(rCounts3,cCounts3);
 	//console.log(rCounts23,cCounts23);
-	//console.log(sCounts23, vSqs);
+	//console.log(sCounts2);
 }
 
 // count the occurances of the active candidates in a row/col/sq
@@ -178,6 +185,46 @@ function cellHasCandidate(cix, z) {
 	return false;
 }
 
+// find the first occurance of the value in the row/col/sq
+function findValueInRCS(arr, val) {
+	for (var i=0; i<9; ++i) {
+		const cix = arr[i];
+		const cell = cells[cix];
+		//console.log("fvir", rix, val, cix, cell);
+		if (cell.value > 0) continue;
+		if (cell.activecandidates.includes(val)) return {cell: cix, offset: i};
+	}
+	return null;
+}
+
+
+function findAllBivalueCells() {
+	var bv = [];
+	for (var cix=0; cix<81; ++cix) {
+		var c = cells[cix];
+		var ac = c.activecandidates;
+		if ( c.value === 0 && ac.length === 2) {
+			bv.push([cix, cellRow[cix], cellCol[cix], cellSquare[cix],  ac]);
+		}
+	}
+	bv = bv.sort((a,b) => a[4][0] - b[4][0]);
+	bv = bv.sort((a,b) => a[4][1] - b[4][1]);
+
+	return bv;
+}
+
+function findAllTrivalueCells() {
+	var bv = [];
+	for (var cix=0; cix<81; ++cix) {
+		var c = cells[cix];
+		var ac = c.activecandidates;
+		if ( c.value === 0 && ac.length === 3) {
+			bv.push([cix, cellRow[cix], cellCol[cix], cellSquare[cix],  ac]);
+		}
+	}
+	return bv;
+}
+
 //*****************************************************************************
 // lockedCandidates
 
@@ -226,58 +273,58 @@ function getSameRowCol(v, s) {
 		svc.push(['c', v, s, sc[0], sc.length, scx]);
 		return svc;	// there can be no others
 	}
-	// look for row pair/triple type 2
-	if (sr.length > 2 ) {   // true if not all in same row/col
-		var si = getSameIndices(sr);	// get the row/col with 2 or 3 of the same value
-		si.forEach((sr) =>  {	// for each row
-			var srx = [];
-			var srt = [];
-			srcx.forEach((c) => {
-				if (sr === c[1]) {
-					srx.push(c);
-					srt.push(c[3]);
-				}
-			})
-
-			// now we need to see if there are any values in the row outside the square
-			// if so, that disqualifies us
-			var tgts = findTargets(rows[sr], [v], srt);
-			if (!tgts) {
-				// are there any targets inside the square
-				tgts = findTargets(squares[s], [v], srt);
-				if (tgts) {
-					//console.log("srcxr", v, s, si, srx, srt, tgts )
-					//svc.push(['r2', v, s, sr[0], sr.length, srx]);
-					//return [svc];
-				}
-			}
-		})
-	}
-	if (sc.length > 2 ) {   // true if not all in same row/col
-		var si = getSameIndices(sc);	// get the row/col with 2 or 3 of the same value
-		si.forEach((sc) =>  {	// for each col
-			var scx = [];
-			var sct = [];
-			srcx.forEach((c) => {
-				if (sc === c[2]) {
-					scx.push(c);
-					sct.push(c[3]);
-				}
-			})
-
-			// now we need to see if there are any values in the row outside the square
-			var tgts = findTargets(cols[sc], [v], sct);
-			if (!tgts) {
-				// are there any targets inside the square
-				tgts = findTargets(squares[s], [v], sct);
-				if (tgts) {
-					//console.log("srcxc", v, s, si, scx, sct, tgts )
-					//svc.push(['c2', v, s, sr[0], sr.length, srx]);
-					//return [svc];
-				}
-			}
-		})
-	}
+	// // look for row pair/triple type 2
+	// if (sr.length > 2 ) {   // true if not all in same row/col
+	// 	var si = getSameIndices(sr);	// get the row/col with 2 or 3 of the same value
+	// 	si.forEach((sr) =>  {	// for each row
+	// 		var srx = [];
+	// 		var srt = [];
+	// 		srcx.forEach((c) => {
+	// 			if (sr === c[1]) {
+	// 				srx.push(c);
+	// 				srt.push(c[3]);
+	// 			}
+	// 		})
+ //
+	// 		// now we need to see if there are any values in the row outside the square
+	// 		// if so, that disqualifies us
+	// 		var tgts = findTargets(rows[sr], [v], srt);
+	// 		if (!tgts) {
+	// 			// are there any targets inside the square
+	// 			tgts = findTargets(squares[s], [v], srt);
+	// 			if (tgts) {
+	// 				//console.log("srcxr", v, s, si, srx, srt, tgts )
+	// 				//svc.push(['r2', v, s, sr[0], sr.length, srx]);
+	// 				//return [svc];
+	// 			}
+	// 		}
+	// 	})
+	// }
+	// if (sc.length > 2 ) {   // true if not all in same row/col
+	// 	var si = getSameIndices(sc);	// get the row/col with 2 or 3 of the same value
+	// 	si.forEach((sc) =>  {	// for each col
+	// 		var scx = [];
+	// 		var sct = [];
+	// 		srcx.forEach((c) => {
+	// 			if (sc === c[2]) {
+	// 				scx.push(c);
+	// 				sct.push(c[3]);
+	// 			}
+	// 		})
+ //
+	// 		// now we need to see if there are any values in the row outside the square
+	// 		var tgts = findTargets(cols[sc], [v], sct);
+	// 		if (!tgts) {
+	// 			// are there any targets inside the square
+	// 			tgts = findTargets(squares[s], [v], sct);
+	// 			if (tgts) {
+	// 				//console.log("srcxc", v, s, si, scx, sct, tgts )
+	// 				//svc.push(['c2', v, s, sr[0], sr.length, srx]);
+	// 				//return [svc];
+	// 			}
+	// 		}
+	// 	})
+	// }
 
 	return null;
 }
@@ -330,7 +377,7 @@ function lockedCandidates() {
 		var rcs = lhh[0];
 		var rcsix = lhh[1];
 		var cls = lhh[2];
-		var vals = lhh[3];
+		var val = lhh[3];
 		var tgts = lhh[4];
 		var sq = lhh[5];
 		//console.log(dir,trc0,cls)
@@ -342,9 +389,9 @@ function lockedCandidates() {
 			square: sq,
 			cells: cls,
 			offset: null,
-			values: vals,
+			value: val[0],
 			targets: tgts,
-			msg: `Locked1: Cells: ${tgts}, Values: ${vals}`
+			msg: `Locked1: Cells: ${tgts}, Value: ${val[0]}`
 		}
 		locked.push(h);
 	})
@@ -1113,17 +1160,6 @@ function findPointingPairsSquare() {
 //*****************************************************************************
 // singleCounts
 
-function findValueInRCS(arr, val) {
-	for (var i=0; i<9; ++i) {
-		const cix = arr[i];
-		const cell = cells[cix];
-		//console.log("fvir", rix, val, cix, cell);
-		if (cell.value > 0) continue;
-		if (cell.activecandidates.includes(val)) return {cell: cix, offset: i};
-	}
-	return null;
-}
-
 
 function firstSingleValue(arr) {
 	for (var i=1; i<10; ++i)
@@ -1756,27 +1792,17 @@ function getCommonValue(ac1, ac2) {
 }
 
 function XYZWing() {
-	var pivots = [];
-	var xyzwings = [];
+	var xyzHints = [];
 
 	// find pivot cells
-	for (var cix=0; cix<81; ++cix) {
-		var c = cells[cix];
-		var ac = c.activecandidates;
-		if ( c.value === 0 && ac.length === 3) {
-			var rcs = [cellRow[cix],cellCol[cix],cellSquare[cix]];
-			pivots.push([cix, ac, rcs]);
-		}
-	}
+	var pivots = findAllTrivalueCells();
 	//console.log("xyz pivots", pivots);
 
 	// find pincer cells
-	var xyzHints = [];
-
 	for (var px=0; px<pivots.length; ++px) {
 		var piv = pivots[px];
 		var pix = piv[0];	// pivot cell index
-		var pac = piv[1];	// pivot activecandidates
+		var pac = piv[4];	// pivot activecandidates
 		var prow = cellRow[pix];
 		var pcol = cellCol[pix];
 		var psq = cellSquare[pix];
@@ -1917,8 +1943,8 @@ function findKillZone(pix, p0, p1, val) {
 	// the corners are obvious candidates for the kill zone
 	var c0x = rows[p0r][p1c];
 	var c1x = rows[p1r][p0c];
-	if (pix !== c0x && cellContainsCandidate(c0x,val)) targets.push(c0x);
-	if (pix !== c1x && cellContainsCandidate(c1x,val)) targets.push(c1x);
+	if (pix !== c0x && cellHasCandidate(c0x,val)) targets.push(c0x);
+	if (pix !== c1x && cellHasCandidate(c1x,val)) targets.push(c1x);
 
 	// if the pivot and one of the wings are in the same square we can consider the following
 	// otherwise we go home
@@ -1939,25 +1965,25 @@ function findKillZone(pix, p0, p1, val) {
 	if (sqrows0.includes(p1r)) {
 		var s0ix = p1r % 3;
 		var tgtcls = sqRowCells[p0s][s0ix];
-		tgtcls.forEach((tc) => {if (pix !== tc && cellContainsCandidate(tc,val)) targets.push(tc)});
+		tgtcls.forEach((tc) => {if (pix !== tc && cellHasCandidate(tc,val)) targets.push(tc)});
 		//console.log("rowsInSq 0", sqrows0, p0r, p1r, p0s, p1s, s0ix, tgtcls);
 	}
 	if (sqrows1.includes(p0r)) {
 		var s1ix = p0r % 3;
 		var tgtcls = sqRowCells[p1s][s1ix];
-		tgtcls.forEach((tc) => {if (pix !== tc && cellContainsCandidate(tc,val)) targets.push(tc)});
+		tgtcls.forEach((tc) => {if (pix !== tc && cellHasCandidate(tc,val)) targets.push(tc)});
 		//console.log("rowsInSq 1", sqrows1, p0r, p1r, p0s, p1s, s1ix, tgtcls);
 	}
 	if (sqcols0.includes(p1c)) {
 		var s0ix = p1c % 3;
 		var tgtcls = sqColCells[p0s][s0ix];
-		tgtcls.forEach((tc) => {if (pix !== tc && cellContainsCandidate(tc,val)) targets.push(tc)});
+		tgtcls.forEach((tc) => {if (pix !== tc && cellHasCandidate(tc,val)) targets.push(tc)});
 		//console.log("colsInSq 0", sqrows0, p0c, p1c, p0s, p1s, s0ix, tgtcls);
 	}
 	if (sqcols1.includes(p0c)) {
 		var s1ix = p0c % 3;
 		var tgtcls = sqRowCells[p1s][s1ix];
-		tgtcls.forEach((tc) => {if (pix !== tc && cellContainsCandidate(tc,val)) targets.push(tc)});
+		tgtcls.forEach((tc) => {if (pix !== tc && cellHasCandidate(tc,val)) targets.push(tc)});
 		//console.log("colsInSq 1", sqrows1, p0c, p1c, p0s, p1s, s1ix, tgtcls);
 	}
 
@@ -2063,85 +2089,6 @@ function XYWing() {
 
 //*****************************************************************************
 // Swordfish
-
-// look for a set of three pairs where the pattern is [a,b] [a,c] [a,b]
-function findPairTriples(pairs) {
-	const triples = [];
-
-	const oneInCommon = (p1, p2) =>
-	p1.filter(v => p2.includes(v)).length === 1;
-
-	const validDigitCounts = (triple) => {
-		const counts = {};
-
-		for (const pair of triple) {
-			for (const value of pair) {
-				counts[value] = (counts[value] || 0) + 1;
-
-				if (counts[value] > 2) {
-					return false;
-				}
-			}
-		}
-
-		return true;
-	};
-
-	for (let i = 0; i < pairs.length - 2; i++) {
-		for (let j = i + 1; j < pairs.length - 1; j++) {
-			if (!oneInCommon(pairs[i][1], pairs[j][1])) continue;
-
-			for (let k = j + 1; k < pairs.length; k++) {
-				const triple = [
-					pairs[i],
-					pairs[j],
-					pairs[k]
-				];
-
-				if (
-					oneInCommon(pairs[i][1], pairs[k][1]) &&
-					oneInCommon(pairs[j][1], pairs[k][1]) &&
-					validDigitCounts(triple)
-				) {
-					triples.push(triple);
-				}
-			}
-		}
-	}
-
-	return triples;
-}
-
-// for either row,col,sq find the cells containing [vals] that are not in [cls]
-function tripleTargets(row, col, sq, cls, vals) {
-	var targets = [];
-	var cix = row ? rows[row] : col ? cols[col] : sq ? squares[sq] : [];
-	cix.forEach((cx) => {
-		if (!cls.includes(cx)) {
-			var c = cells[cx];
-			if (c.value === 0) {
-				var ac = c.activecandidates;
-				var has = vals.some(r => ac.includes(r))
-				if (has) targets.push(cx);
-			}
-		}
-	})
-
-	if (targets.length === 0) return null;
-	return targets;
-}
-
-function tripleValues(trip) {
-	const values = new Set();
-	trip.forEach((t) => {
-		var pair = t[1];
-		if (!values.has(pair[0])) values.add(pair[0]);
-		if (!values.has(pair[1])) values.add(pair[1]);
-	})
-	//console.log("set",values);
-	return Array.from(values);
-}
-
 
 function findTriplesByRow(rows) {
 	const triples = [];
@@ -2306,12 +2253,6 @@ function rowsInColumn(c, r, v) {
 	return [c,rir,rxx];
 }
 
-function cellContainsCandidate(cix, v) {
-	var c = cells[cix];
-	if (c.value === 0 && c.activecandidates.includes(v)) return true;
-	return false;
-}
-
 // check if the columns have all rows in common
 function rowsInCommon(c1, c2, c3, v) {
 	var ric = [];
@@ -2323,9 +2264,9 @@ function rowsInCommon(c1, c2, c3, v) {
 		var c2x = c2r[2];
 		var c3x = c3r[3];
 		// for each row in the column, make sure they contain the candidate value
-		var ccc1 = cellContainsCandidate(c1x, v);
-		var ccc2 = cellContainsCandidate(c2x, v);
-		var ccc3 = cellContainsCandidate(c3x, v);
+		var ccc1 = cellHasCandidate(c1x, v);
+		var ccc2 = cellHasCandidate(c2x, v);
+		var ccc3 = cellHasCandidate(c3x, v);
 		// all or nothing
 		if (!(ccc1 && ccc2 && ccc3)) return null;
 		ric.push([c1x,c2x,c3x]);
@@ -2346,9 +2287,9 @@ function columnsInCommon(r1, r2, r3, v) {
 		var r2x = r2c[2];
 		var r3x = r3c[3];
 		// for each column in the row, make sure they all contain the candidate value
-		var ccc1 = cellContainsCandidate(r1x, v);
-		var ccc2 = cellContainsCandidate(r2x, v);
-		var ccc3 = cellContainsCandidate(r3x, v);
+		var ccc1 = cellHasCandidate(r1x, v);
+		var ccc2 = cellHasCandidate(r2x, v);
+		var ccc3 = cellHasCandidate(r3x, v);
 		// all or nothing
 		if (!(ccc1 && ccc2 && ccc3)) return null;
 		cic.push([r1x,r2x,r3x]);
@@ -2358,35 +2299,6 @@ function columnsInCommon(r1, r2, r3, v) {
 	return cic;
 }
 
-function rowsInCommon23(c1, c2, c3, v) {
-	var ric = [];
-	var c1r = cols[c1];
-	var c2r = cols[c2];
-	var c3r = cols[c3];
-	for (var i=0; i<9; i++) {
-		var c1x = c1r[i];
-		var c2x = c2r[i];
-		var c3x = c3r[i];
-		// we only need to check columns from r1 that have the value
-		// if the other rows have the value in a column then that column must be in the first row
-		var ccc1 = cellContainsCandidate(c1x, v);
-		var ccc2 = cellContainsCandidate(c2x, v);
-		if (ccc2 && !ccc1) return null;
-		var ccc3 = cellContainsCandidate(c3x, v);
-		if (ccc3 && !ccc1) return null;
-		if (ccc1 ) {
-			if (ccc2 && ccc3)
-				ric.push([i,[c1x,c2x,c3x]]);
-			else if (ccc2)
-				ric.push([i,[c1x,c2x]]);
-			else if (ccc3)
-				ric.push([i,[c1x,c3x]]);
-		}
-	}
-	//console.log("cir23", v, ric);
-	return ric;
-}
-
 // get the column number for the row containing the value v
 function getRowColumnsWithValue(r, v) {
 	var columns = [];
@@ -2394,7 +2306,7 @@ function getRowColumnsWithValue(r, v) {
 	var row = rows[r];
 	for (var i=0; i<9; i++) {	// for each column
 		var cix = row[i];
-		var hasValue = cellContainsCandidate(cix, v);
+		var hasValue = cellHasCandidate(cix, v);
 		if (hasValue) {
 			columns.push(i)
 			cls.push(cix);
@@ -2410,7 +2322,7 @@ function getColumnRowsWithValue(c, v) {
 	var col = cols[c];
 	for (var i=0; i<9; i++) {	// for each column
 		var cix = col[i];
-		var hasValue = cellContainsCandidate(cix, v);
+		var hasValue = cellHasCandidate(cix, v);
 		if (hasValue) {
 			colrows.push(i)
 			cls.push(cix);
@@ -2431,7 +2343,7 @@ function columnsInCommon3(r1, r2, r3, v) {
 	if (!includesAll(r1cols[0],r2cols[0])) return false;
 	if (!includesAll(r1cols[0],r3cols[0])) return false;
 
-	console.log("cic3", v, r1, r2, r3, r1cols, r2cols, r3cols);
+	//console.log("cic3", v, r1, r2, r3, r1cols, r2cols, r3cols);
 	return [r1cols, r2cols, r3cols];
 }
 
@@ -2593,7 +2505,7 @@ function swordfish() {
 				var tgts = findColumnTargets(tgtcols, v, cls);
 				//console.log("cicr3", v, t, cls, tgtcols, tgts, cicr3);
 				if (tgts.length > 0) {
-					console.log("cicr3", v, t, cls, tgtcols, tgts, cicr3);
+					//console.log("cicr3", v, t, cls, tgtcols, tgts, cicr3);
 					sfcandidates.push([v, tgts, cls]);
 				}
 
@@ -2612,10 +2524,10 @@ function swordfish() {
 
 		cols3.sort((a,b) => a-b);
 		cols2p.sort((a,b) => a-b);
-		console.log("cols", cols3, cols2p);
+		//console.log("cols", cols3, cols2p);
 
 		var triples = makeTriples(cols3, cols2p);
-		console.log("triples", cols3, cols2p, triples);
+		//console.log("triples", cols3, cols2p, triples);
 
 		// for each row of three find other rows
 		triples.forEach((t) => {
@@ -2629,11 +2541,11 @@ function swordfish() {
 					cls = cls.concat(ri[1]);
 				})
 				cls.sort((a,b) => a-b);
-				console.log("ric3", v, t, cls, tgtrows, tgts, ric3);
+				//console.log("ric3", v, t, cls, tgtrows, tgts, ric3);
 				// find targets in cols
 				var tgts = findRowTargets(tgtrows, v, cls);
 				if (tgts.length > 0) {
-					console.log("ric3", v, t, cls, tgtrows, tgts, ric3);
+					//console.log("ric3", v, t, cls, tgtrows, tgts, ric3);
 					sfcandidates.push([v, tgts, cls]);
 				}
 
@@ -2807,3 +2719,251 @@ function swordfish() {
 	return swordfish;
 }
 
+//*****************************************************************************
+// W-Wing
+
+function wWing() {
+	var wwings = [];
+
+	//console.log("wwing", rCounts2, cCounts2 );
+
+	var bvp = findAllBivalueCells();
+	console.log("bvp", bvp);
+
+	var bvpp = [];
+	var bvplen = bvp.length;
+	var i = 0;
+	while (i<bvplen) {
+		var bvpi = bvp[i]
+		var bxrcsi = [bvp[i][0],bvp[i][1],bvp[i][2],bvp[i][3]];
+		var bvppi = [bvp[i][4], [bxrcsi]];
+		for (var j=i+1; j<bvplen; ++j) {
+			if ((bvp[i][4][0] === bvp[j][4][0]) && (bvp[i][4][1] === bvp[j][4][1])) {
+				var bxrcsj = [bvp[j][0],bvp[j][1],bvp[j][2],bvp[j][3]];
+				bvppi[1].push(bxrcsj)
+			} else {
+				if (bvppi[1].length > 1) bvpp.push(bvppi);
+				bvppi = null;
+				//continue bvi;
+				i = j-1;
+				break;
+			}
+		}
+		if (bvppi && bvppi[1].length > 1) bvpp.push(bvppi);
+		++i;
+	}
+
+	//console.log("bvpp", bvpp);
+
+	// we have all the bivalue pairs
+	// we need to regroup them into pairs of pairs that cannot see each other
+
+	var endpoints = [];
+	bvpp.forEach((bvp) => {
+		// bvp: [[pair] [[cix,r,c,s]...]]
+		var bvp1 = bvp[1];
+		var b1len = bvp1.length;
+		if (b1len === 2) {
+			if (bvp1[0][1] !== bvp1[1][1] && bvp1[0][2] !== bvp1[1][2] && bvp1[0][3] !== bvp1[1][3]) {
+				endpoints.push(bvp);
+				//console.log("push1", bvp);
+			}
+		} else {
+			for (var i=0; i<b1len; ++i) {
+				var bvp1i = bvp1[i];	//
+				for (var j=i+1; j<b1len; ++j) {
+					var bvp1j = bvp1[j];
+					if (bvp1i[1] !== bvp1j[1] && bvp1i[2] !== bvp1j[2] && bvp1i[3] !== bvp1j[3]) {
+						var bp = [bvp[0],[bvp1i,bvp1j]];
+						endpoints.push(bp);
+						//console.log("push2", i, j, bp);
+					}
+				}
+			}
+		}
+	});
+	console.log("endpoints", endpoints);
+
+
+
+	if (wwings.length === 0) return null;
+	console.log("wwings", wwings);
+	return wwings;
+}
+
+//*****************************************************************************
+// XY-Chain
+
+// find all occurances of the value in the row/col/sq
+function findValuePairsInRCS(arr, val) {
+	var cls = [];
+	for (var i=0; i<9; ++i) {
+		const cixi = arr[i];
+		const celli = cells[cixi];
+		if (celli.value > 0) continue;
+		var aci = celli.activecandidates;
+		if (!aci.includes(val)) continue;
+		// found one, look for another
+		for (var j=i+1; j<9; ++j) {
+			const cixj = arr[j];
+			const cellj = cells[cixj];
+			if (cellj.value > 0) continue;
+			var acj = cellj.activecandidates;
+			if (!acj.includes(val)) continue;
+			// found two
+			cls.push([i, cixi, aci],[j, cixj, acj]);
+		}
+	}
+	return cls;
+}
+
+function findConjugatePairs() {
+	// find conjugate pairs
+	// if a value only appears twice in a row/col it is a strong link conjugate pair
+
+	// for each row for each value of count 2 get their cell info
+	var cpairs = [];
+	for (var v=1; v<10; ++v) {
+		var vrows = rCounts2[v];
+		//console.log(v, vrows);
+		vrows.forEach((r) => {
+			// vals [ [col1, cell1, ac1] [col2, cell2, ac2] ]
+			var vals = findValuePairsInRCS(rows[r], v);
+			if (vals.length === 2) {
+				var ac1 = vals[0][2]
+				var ac2 = vals[1][2]
+				var cel1 = vals[0][1];
+				var cel2 = vals[1][1];
+				var col1 = RCS[cel1][1];
+				var col2 = RCS[cel2][1];
+				var sq1 = RCS[cel1][2];
+				var sq2 = RCS[cel2][2];
+				var rcs1 = [r, col1, sq1, cel1, ac1];
+				var rcs2 = [r, col2, sq2, cel2, ac2];
+				cpairs.push([v, rcs1, rcs2]);
+			}
+		})
+
+		var vcols = cCounts2[v];
+		//console.log(v, vcols);
+		vcols.forEach((c) => {
+			// vals [ [row1, cell1, ac1] [row2, cell2, ac2] ]
+			var vals = findValuePairsInRCS(cols[c], v);
+			if (vals.length === 2) {
+				var ac1 = vals[0][2]
+				var ac2 = vals[1][2]
+				var cel1 = vals[0][1];
+				var cel2 = vals[1][1];
+				var row1 = RCS[cel1][0];
+				var row2 = RCS[cel2][0];
+				var sq1 = RCS[cel1][2];
+				var sq2 = RCS[cel2][2];
+				var rcs1 = [row1, c, sq1, cel1, ac1];
+				var rcs2 = [row2, c, sq2, cel2, ac2];
+				cpairs.push([v, rcs1, rcs2]);
+			}
+		})
+
+		var vsqs = sCounts2[v];
+		//console.log(v, vsqs);
+		vsqs.forEach((s) => {
+			// vals [ [off1, cell1, ac1] [off2, cell2, ac2] ]
+			var vals = findValuePairsInRCS(squares[s], v);
+			if (vals.length === 2) {
+				var ac1 = vals[0][2]
+				var ac2 = vals[1][2]
+				var cel1 = vals[0][1];
+				var cel2 = vals[1][1];
+				var row1 = RCS[cel1][0];
+				var row2 = RCS[cel2][0];
+				var col1 = RCS[cel1][1];
+				var col2 = RCS[cel2][1];
+				var rcs1 = [row1, col1, s, cel1, ac1];
+				var rcs2 = [row2, col2, s, cel2, ac2];
+				cpairs.push([v, rcs1, rcs2]);
+			}
+		})
+	}
+	//console.log("cpairs", cpairs);
+
+	// remove duplicates
+	var ncp = [];
+	cpairs.forEach((a) => {
+		// find entry in new array
+		var found = false;
+		for (var i=0; i<ncp.length; ++i) {
+			var b = ncp[i];
+			if (a[0] === b[0] && a[1][3] === b[1][3] && a[2][3] === b[2][3]) found = true;
+			if (found) break;
+		}
+		if (!found) ncp.push(a);
+	})
+
+	//console.log("ncp", ncp);
+	return ncp;
+}
+
+var bvpairs;
+var chain = [];
+
+function findLink(lnk, lval, previx) {
+	// l0: [ cell, r, c, s, ac]
+	//console.log("fl", lval, previx, lnk)
+	chain.push(lnk);
+
+	var inlink = lval;
+	var outlink = 0;
+	var ac = lnk[4];
+	for (var i=0; i<bvpairs.length; ++i) {
+		var lx = bvpairs[i];
+		lx = lx.concat([[-1]]);
+		if (lnk[0] === lx[0]) continue;	// skip ourselves
+		if (lnk[1] !== lx[1] && lnk[2] !== lx[2] && lnk[3] !== lx[3]) continue;	// not in the same house
+		var lxac = lx[4];
+		var lxix = lx[0];	//cell index
+		//console.log("lx", lx, lxac)
+		if (!includesAny(lxac, [inlink])) continue;	// not a candidate
+		// check to see if we already have this cell in the chain
+		//console.log("ch,", lxix, lnk[5]);
+		if (lnk[5].some(c => c === lxix)) {
+			//console.log("haveit", lxix);
+			continue;
+		}
+		if ( lxac[0] === inlink) {
+			outlink = lxac[1];
+		} else {
+			outlink = lxac[0];
+		}
+		lnk[5].push(lxix)
+		lx[5] = lnk[5];
+		findLink(lx, outlink, lxix);
+	}
+
+}
+
+function xyChain() {
+	var xychain = [];
+	bvpairs = findAllBivalueCells();
+	console.log("bvpairs",bvpairs)
+
+	bvpairs.forEach((cp) => {
+		var cp = cp.concat([[-1]]);
+		console.log("chain",cp, cp[4][0])
+		chain = [];
+		findLink(cp, cp[4][0], -1);
+		console.log("chainout", cp[4][0], chain)
+
+		console.log("chain2",cp, cp[4][0])
+		chain = [];
+		findLink(cp, cp[4][1], -1);
+		console.log("chainout", cp[4][1], chain)
+	})
+
+
+
+
+	if (xychain.length === 0) return null;
+	console.log("xychain", xychain);
+	return xychain;
+
+}

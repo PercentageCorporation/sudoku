@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { cellStore, useHintStore, useCellActions } from "../store/store";
-import { validateMove } from "../utilities/utilities";
+import { validateMove, validateBoard } from "../utilities/utilities";
 import { runHints } from "../utilities/hints";
 import { rows, cols, squares } from "../utilities/constants";
 //import { Hint } from "../store/store";
@@ -19,17 +19,21 @@ export default function PlayMenu() {
 	useEffect(() => {
 		console.log("PlayMenu UE");
 		calcNumbersUsed();
-		const solved = gameComplete;
-		console.log("solved:", solved);
-		if (solved == 1) {
-			console.log("game solved");
-			setMessage("Game Solved");
-		} else if (solved == 2) {
-			console.log("game solved, alternate solution");
-			setMessage("Game Solved, Alternate Solution");
-		} else
-			setMessage(null);
-
+		const valid = validateBoard();
+		if (!valid) {
+			setMessage("Invalid Board");
+		} else {
+			const solved = gameComplete;
+			console.log("solved:", solved);
+			if (solved == 1) {
+				console.log("game solved");
+				setMessage("Game Solved");
+			} else if (solved == 2) {
+				console.log("game solved, alternate solution");
+				setMessage("Game Solved, Alternate Solution");
+			} else
+				setMessage(null);
+		}
 	},[gameComplete])
 
 	function doHint(e) {
@@ -81,14 +85,20 @@ export default function PlayMenu() {
 		}
 
 		clearSelectedValue();
-		var h = runHints();
-		if (h) {
-			console.log("hint:", h, h.msg);
-			setHintMsg(h.msg);
-			setHint(h);
-		} else {
+		if (!validateBoard()) {
+			setMessage("Invalid Board");
 			resetHint();
-			checkGameSolved();
+		} else {
+
+			var h = runHints();
+			if (h) {
+				console.log("hint:", h, h.msg);
+				setHintMsg(h.msg);
+				setHint(h);
+			} else {
+				resetHint();
+				checkGameSolved();
+			}
 		}
 	}
 
@@ -147,6 +157,9 @@ export default function PlayMenu() {
 					clearSelectedCell();
 					updateCandidates();
 				}
+			}
+			if (!validateBoard()) {
+				msg = "Invalid Board";
 			}
 		} else { // s === 0
 			if (selectedCell < 0) {
