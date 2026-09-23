@@ -53,6 +53,7 @@ export default function PlayMenu() {
 			case "xWing":
 			case "xyWing":
 			case "xyTriple":
+			case "xyChain":
 			case "xyzWing":
 			case "swordfish":
 				console.log("hint:", h);

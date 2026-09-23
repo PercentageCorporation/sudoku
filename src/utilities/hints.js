@@ -8,10 +8,6 @@ export function runHints() {
 	cells = cellStore.getState().cells;
 	initCounts();
 
-	//result = wWing();
-	//if (result) return result[0];
-	result = xyChain();
-	if (result) return result[0];
 
 	result = lockedCandidates();
 	if (result) return result[0];
@@ -33,9 +29,13 @@ export function runHints() {
 	if (result) return result[0];
 	result = XWing();
 	if (result) return result[0];
+	result = XYChain();
+	if (result) return result[0];
 	result = XYWing();
 	if (result) return result[0];
 	result = XYZWing();
+	if (result) return result[0];
+	result = wWing();
 	if (result) return result[0];
 	result = swordfish();
 	if (result) return result[0];
@@ -161,6 +161,50 @@ function findTargets(arr,vals,ex) {
 			if (cel.value === 0 && includesAny(cel.activecandidates, vals)) {
 				targets.push(cix);
 			}
+		}
+	}
+	if (targets.length === 0) return null;
+	return targets;
+}
+
+function canSeeEachOther(c0, c1) {
+	var rcs0 = RCS[c0];
+	var rcs1 = RCS[c1];
+	// they must be in the same house
+	if (rcs0[0] === rcs1[0]) return true;
+	if (rcs0[1] === rcs1[1]) return true;
+	if (rcs0[2] === rcs1[2]) return true;
+	return false;
+}
+
+// determine if cell 0 can be seen by both cell1 and cell2
+function canBeSeen(c0, c1, c2) {
+	var rcs0 = RCS[c0];
+	var rcs1 = RCS[c1];
+	var rcs2 = RCS[c2];
+	//if (c0 === 73 ) console.log(c0,c1,c2,rcs0,rcs1,rcs2);
+	// in the same row as 1 and same col as 2 or vice versa
+	if (rcs0[0] === rcs1[0] && rcs0[1] === rcs2[1])	return true;
+	if (rcs0[1] === rcs2[1] && rcs0[0] === rcs1[0])	return true;
+	// does row/col intersect a square
+	// same row as 1 same square as 2 or vice versa
+	if (rcs0[0] === rcs1[0] && rcs0[2] === rcs2[2])	return true;
+	if (rcs0[0] === rcs2[0] && rcs0[2] === rcs1[2])	return true;
+	// same col as 1 same square as 2 or vice versa
+	if (rcs0[1] === rcs1[1] && rcs0[2] === rcs2[2])	return true;
+	if (rcs0[1] === rcs2[1] && rcs0[2] === rcs1[2])	return true;
+	return false;
+}
+
+// find seen targets
+// targets have to be in the same row/col or row/sq or col/sq
+function findSeenTargets(val, c1, c2) {
+	var targets = [];
+	for (var i=0; i<81; ++i) {
+		if (i === c1 || i === c2) continue;
+		var seen = canBeSeen( i, c1, c2);
+		if (seen) {
+			if (cellHasCandidate(i, val)) targets.push(i);
 		}
 	}
 	if (targets.length === 0) return null;
@@ -2728,7 +2772,7 @@ function wWing() {
 	//console.log("wwing", rCounts2, cCounts2 );
 
 	var bvp = findAllBivalueCells();
-	console.log("bvp", bvp);
+	//console.log("bvp", bvp);
 
 	var bvpp = [];
 	var bvplen = bvp.length;
@@ -2904,63 +2948,177 @@ function findConjugatePairs() {
 }
 
 var bvpairs;
-var chain = [];
 
-function findLink(lnk, lval, previx) {
-	// l0: [ cell, r, c, s, ac]
-	//console.log("fl", lval, previx, lnk)
-	chain.push(lnk);
+// links: [ cix, prevlink, [nextlinks] ]
+// check link chain to see if we already have this cell
+function haveCellInLinks(links, cix) {
+	var curlink = links.length -1;
+	while (curlink >= 0) {
+		if (links[curlink][1] === cix) return true;
+		--curlink;
+	}
+	return false;
+}
 
-	var inlink = lval;
-	var outlink = 0;
-	var ac = lnk[4];
+function cellsInSameHouse(c0,c1) {
+	if (cellRow[c0] === cellRow[c1]) return true;	// same row
+	if (cellCol[c0] === cellCol[c1]) return true;	// same col
+	if (cellSquare[c0] === cellSquare[c1]) return true;	// same sq
+	return false;
+}
+
+var links = [];
+
+function findLink(curlinkix, nextval, endval ) {
+	// link: [ val, cix, prevlink, [nextlinks] ]
+	var curlink = links[curlinkix];
+	var curcix = curlink[1];	// current link cell index
+//	console.log("link", curlinkix, curcix, nextval, endval, curlink);
+//	console.log("links", links);
+
+	var outval = 0;
+
+	// look for a cell containint one of the curent link values
 	for (var i=0; i<bvpairs.length; ++i) {
-		var lx = bvpairs[i];
-		lx = lx.concat([[-1]]);
-		if (lnk[0] === lx[0]) continue;	// skip ourselves
-		if (lnk[1] !== lx[1] && lnk[2] !== lx[2] && lnk[3] !== lx[3]) continue;	// not in the same house
-		var lxac = lx[4];
-		var lxix = lx[0];	//cell index
-		//console.log("lx", lx, lxac)
-		if (!includesAny(lxac, [inlink])) continue;	// not a candidate
-		// check to see if we already have this cell in the chain
-		//console.log("ch,", lxix, lnk[5]);
-		if (lnk[5].some(c => c === lxix)) {
-			//console.log("haveit", lxix);
-			continue;
-		}
-		if ( lxac[0] === inlink) {
-			outlink = lxac[1];
+		var bvx = bvpairs[i];
+		var bvix = bvx[0];
+		if (curcix === bvix) continue;	// skip ourselves if same cell
+		// see if this cell has the candidate value
+		var bvcell = cells[bvix];
+		if (bvcell.value > 0) continue;
+		var bvac = bvcell.activecandidates;
+		if (!bvac.includes(nextval)) continue;	// not what we are looking for
+		if (!cellsInSameHouse(curcix, bvix)) continue;	// not in the same house
+		// check to see if we already have this cell in the links
+		if (haveCellInLinks(links,bvix)) continue;	// not a candidate
+
+		// which value is the candidate
+		if ( bvac[0] === nextval) {
+			// [0] is the candidate so look for [1] next
+			outval = bvac[1];
 		} else {
-			outlink = lxac[0];
+			outval = bvac[0];
 		}
-		lnk[5].push(lxix)
-		lx[5] = lnk[5];
-		findLink(lx, outlink, lxix);
+		//console.log("bv", bvix, bvac, nextval, outval);
+
+		// create a new link
+		var nextlink = links.length;
+		//console.log("curlink before", structuredClone(curlink), nextlink);
+		(links[curlinkix][3]).push(nextlink);
+		//console.log("curlink after", structuredClone(curlink));
+		var newlink = [outval, bvix, curlinkix, [] ];
+		links.push(newlink);
+		// if the next value is the one we are looking for we are done
+		if (outval === endval) return;		// end of chain ??
+		findLink(links.length-1, outval, endval);
 	}
 
 }
 
-function xyChain() {
-	var xychain = [];
+function linkPaths() {
+	// link: [ val, cix, prevlink, [nextlinks] ]
+	var paths = [];
+	var end = links.length - 1;
+	for (var i=end; i >= 0; --i) {
+		var path = [];
+		if (links[i][3].length === 0) {
+			// follow the path up
+			var endval = links[i][0];
+			var val = -1;
+			var j = i;
+			while (j >= 0) {
+				val = links[j][0];
+				path.push(links[j][1]);
+				j = links[j][2];
+			}
+			// the start and end values must match
+			if (val === endval) {
+				path.reverse();
+				paths.push([val, path]);
+			}
+		}
+	}
+	return paths;
+}
+
+
+function XYChain() {
 	bvpairs = findAllBivalueCells();
-	console.log("bvpairs",bvpairs)
+	//console.log("bvpairs",bvpairs)
+	var paths = [];
 
-	bvpairs.forEach((cp) => {
-		var cp = cp.concat([[-1]]);
-		console.log("chain",cp, cp[4][0])
-		chain = [];
-		findLink(cp, cp[4][0], -1);
-		console.log("chainout", cp[4][0], chain)
+	//bvpairs.forEach((cp) => {
+	for (var b=0; b<bvpairs.length; ++b) {
+		var cp = bvpairs[b];
+		//console.log("cp", cp);
+		var cix = cp[0];
+		//if (cix !== 17) continue;	// TEST
+		var val0 = cp[4][0];
+		var val1 = cp[4][1];
 
-		console.log("chain2",cp, cp[4][0])
-		chain = [];
-		findLink(cp, cp[4][1], -1);
-		console.log("chainout", cp[4][1], chain)
+		//console.log("links1", cix, val0, val1)
+
+		links = [];
+		var link0 = [val1, cix, -1, []];
+		links.push(link0);
+		//links.push(structuredClone(link0));
+		findLink(0, val0, val1);
+		if (links.length > 2) {
+			//console.log("linksout0", val0, structuredClone(links));
+			var paths0 = linkPaths(links);
+			//console.log("paths0", paths0)
+			paths0.forEach(p => paths.push(p));
+		}
+//		console.log("links1", val0, val1)
+		links = [];
+		var link1 = [val0, cix, -1, []];
+		links.push(link1);
+		//links.push(structuredClone(link1));
+		findLink(0, val1, val0);
+		if (links.length > 2) {
+			//console.log("linksout1", val1, structuredClone(links));
+			var paths1 = linkPaths(links);
+			//console.log("paths1", paths1)
+			paths1.forEach(p => paths.push(p));
+		}
+	}
+
+	paths = paths.sort((a,b) => a[0] - b[0]);
+	console.log("paths", structuredClone(paths));
+
+	var xytargets = [];
+	paths.forEach((p) => {
+		var val = p[0];
+		var es = p[1][0];
+		var end = p[1].length - 1;
+		var ee = p[1][end];
+		var tgts = findSeenTargets(val, es, ee);
+		//console.log(val, es, ee, tgts);
+		if (tgts) xytargets.push([val, p[1], tgts])
 	})
+	xytargets = xytargets.sort((a,b) => b[2].length - a[2].length);
+	console.log("xytargets", xytargets);
 
+	var xychain = [];
+	xytargets.forEach((t) => {
+		var val = t[0];
+		var cls = t[1];
+		var tgts = t[2];
 
+		var h = {
+			type: 'xyChain',
+			rows: null,
+			cols: null,
+			square: null,
+			cells: cls,
+			offset: null,
+			value: val,
+			targets: tgts,
+			msg: `XY-Chain: Cells: ${tgts}, Value: ${val}`
+		}
+		xychain.push(h);
 
+	})
 
 	if (xychain.length === 0) return null;
 	console.log("xychain", xychain);
