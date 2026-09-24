@@ -14,7 +14,7 @@ export const useManCellsStore = create (
 	persist (
 		(set, get) => ({
 			cells: [],
-			selectedCell: 0,
+			selectedCell: -1,
 			initialized: false,
 
 			initialize: () => {
@@ -172,7 +172,7 @@ export const cellStore = create(
 					//console.log("cells:", get().cells);
 				},
 
-				loadGame: (values) => {
+				loadGame: (values, gameId) => {
 					const initcells = [];
 					//console.log("values:", values);
 					for (var i = 0; i < 81; ++i) initcells.push(
@@ -201,10 +201,14 @@ export const cellStore = create(
 						selectedValue: -1,
 						currentValue: -1,
 						difficulty: "",
+						gameId: gameId,
 						gameComplete: false,
 						gameLoaded: true,
 						hint: {...Hint}
-					})
+					}),
+					get().actions.clearSelectedCell(),
+					get().actions.clearSelectedValue(),
+					get().actions.resetCandidates()
 				},
 
 				newGame: () => {

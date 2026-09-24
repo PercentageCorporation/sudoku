@@ -1,5 +1,5 @@
 import { cellStore } from "../store/store";
-import { rows, cols, squares, cellRow, cellCol, cellSquare } from './constants';
+import { Rows, Cols, Squares, cellRow, cellCol, cellSquare } from './constants';
 
 function getCellLocal(ix) {
 	const getCell = cellStore.getState().actions.getCell;
@@ -13,7 +13,7 @@ export function linearToGrid(values) {
 	// for each row
 	for (let r = 0; r < 9; r++) {
 		// for each cell in the row
-		var row = rows[r];
+		var row = Rows[r];
 		for (let rc = 0; rc < 9; rc++) {
 			var cix = row[rc];
 			grid[cix] = values[vix++]
@@ -28,7 +28,7 @@ export function gridToLinearText(cls) {
 	var linear = "";
 
 	for (let s=0; s<9; s++) {
-		var row = rows[s];
+		var row = Rows[s];
 		for (let rc = 0; rc < 9; rc++) {
 			var cix = row[rc];
 			var val = cls[cix].value;
@@ -96,18 +96,18 @@ export function findCandidates(cellIx, cells) {
 	const rowix = cellRow[cellIx];
 	const colix = cellCol[cellIx];
 	//console.log("valInRow:", value, cellIx, rowix, colix);
-	//console.log(rows[rowix], cols[colix]);
-	rows[rowix].map(rix => {
+	//console.log(Rows[rowix], Cols[colix]);
+	Rows[rowix].map(rix => {
 		const rv = cells[rix].value;
 		if (rv > 0) values = values.filter(v => v !== rv);
 	})
-	cols[colix].map(cix => {
+	Cols[colix].map(cix => {
 		const cv = cells[cix].value;
 		if (cv > 0) values = values.filter(v => v !== cv);
 	})
 	const sqix = Math.floor(cellIx/9);
-	//console.log(sqix, squares[sqix]);
-	squares[sqix].map(six => {
+	//console.log(sqix, Squares[sqix]);
+	Squares[sqix].map(six => {
 		const sv = cells[six].value;
 		if (sv > 0) values = values.filter(v => v !== sv);
 	})
@@ -121,18 +121,18 @@ export function getRemainingValues(cellIx) {
 	const rowix = cellRow[cellIx];
 	const colix = cellCol[cellIx];
 	//console.log("valInRow:", value, cellIx, rowix, colix);
-	//console.log(rows[rowix], cols[colix]);
-	rows[rowix].map(rix => {
+	//console.log(Rows[rowix], Cols[colix]);
+	Rows[rowix].map(rix => {
 		const r = getCellLocal(rix);
 		if (r.value > 0) values = values.filter(v => v !== r.value);
 	})
-	cols[colix].map(cix => {
+	Cols[colix].map(cix => {
 		const c = getCellLocal(cix);
 		if (c.value > 0) values = values.filter(v => v !== c.value);
 	})
 	const sqix = Math.floor(cellIx/9);
-	//console.log(sqix, squares[sqix]);
-	squares[sqix].map(six => {
+	//console.log(sqix, Squares[sqix]);
+	Squares[sqix].map(six => {
 		const s = getCellLocal(six);
 		if (s.value > 0) values = values.filter(v => v !== s.value);
 	})
@@ -145,19 +145,19 @@ export function valueInRowColSq(cellIx, value) {
 	const rowix = cellRow[cellIx];
 	const colix = cellCol[cellIx];
 	//console.log("valInRow:", value, cellIx, rowix, colix);
-	//console.log(rows[rowix], cols[colix]);
-	rows[rowix].map(rix => {
+	//console.log(Rows[rowix], Cols[colix]);
+	Rows[rowix].map(rix => {
 		const r = getCellLocal(rix);
 		//console.log(rix, r);
 		if (r.value === value) included=true;
 	})
-	cols[colix].map(cix => {
+	Cols[colix].map(cix => {
 		const c = getCellLocal(cix);
 		//console.log(cix, c);
 		if (c.value === value) included=true;
 	})
 	const sqix = cellSquare[cellIx];
-	squares[sqix].map(six => {
+	Squares[sqix].map(six => {
 		const s = getCellLocal(six);
 		//console.log(cix, c);
 		if (s.value === value) included=true;
@@ -175,7 +175,7 @@ export function validateBoard() {
 	}
 	// check each row for duplicates
 	for (var i=0; i<9; ++i) {
-		const row = rows[i];
+		const row = Rows[i];
 		var vals = [];
 		for (var j=0; j<9; ++j) {
 			const cix = row[j];
@@ -188,7 +188,7 @@ export function validateBoard() {
 	}
 	// check each col for duplicates
 	for (var i=0; i<9; ++i) {
-		const col = cols[i];
+		const col = Cols[i];
 		var vals = [];
 		for (var j=0; j<9; ++j) {
 			const cix = col[j];
@@ -201,7 +201,7 @@ export function validateBoard() {
 	}
 	// check each square for duplicates
 	for (var i=0; i<9; ++i) {
-		const sq = squares[i];
+		const sq = Squares[i];
 		var vals = [];
 		for (var j=0; j<9; ++j) {
 			const cix = sq[j];

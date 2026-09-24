@@ -13,7 +13,7 @@ export const ninetolinear = [
 ];
 
 // given the row, get the cell number by offset
-export const rows = [
+export const Rows = [
 [ 0, 1, 2,	 9,10,11,	18,19,20],
 [ 3, 4, 5,	12,13,14,	21,22,23],
 [ 6, 7, 8,	15,16,17,	24,25,26],
@@ -28,7 +28,7 @@ export const rows = [
 ];
 
 // given the column, get the cell number by offset
-export const cols = [
+export const Cols = [
 [ 0, 3, 6,	27,30,33,	54,57,60],
 [ 1, 4, 7,	28,31,34,	55,58,61],
 [ 2, 5, 8,	29,32,35,	56,59,62],
@@ -43,7 +43,7 @@ export const cols = [
 ];
 
 // given the square, get the cell number by offset
-export const squares = [
+export const Squares = [
 [ 0, 1, 2, 3, 4, 5, 6, 7, 8],
 [ 9,10,11,12,13,14,15,16,17],
 [18,19,20,21,22,23,24,25,26],

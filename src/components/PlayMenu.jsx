@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { cellStore, useHintStore, useCellActions } from "../store/store";
 import { validateMove, validateBoard } from "../utilities/utilities";
-import { runHints } from "../utilities/hints";
-import { rows, cols, squares } from "../utilities/constants";
-//import { Hint } from "../store/store";
+import { runHints } from '/src/hints/hints';
 //import Spinner from "./Spinner";
 
 export default function PlayMenu() {
@@ -56,6 +54,8 @@ export default function PlayMenu() {
 			case "xyChain":
 			case "xyzWing":
 			case "swordfish":
+			case "urType1":
+			case 'urType25':
 				console.log("hint:", h);
 				var cls = h.targets;
 				cls.forEach((cix) => {

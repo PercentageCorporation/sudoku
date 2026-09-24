@@ -181,7 +181,7 @@ export default function ManualGrid() {
 		console.log("handlePlay");
 		const mc = getManCells();
 		console.log("handlePlay", mc);
-		loadGame(mc);
+		loadGame(mc, "Manual Game");
 		navigate('/');
 	}
 

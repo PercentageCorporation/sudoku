@@ -117,9 +117,11 @@ function Cell({ix}) {
 			case 'xyTriple':
 			case 'xyChain':
 			case 'xyzWing':
+			case 'urType1':
+			case 'urType25':
 				if (hint.cells.includes(ix))
 					selMode = 2;
-				else if (hint.targets.includes(ix))
+				if (hint.targets.includes(ix))
 					selMode = 3;
 			break;
 
