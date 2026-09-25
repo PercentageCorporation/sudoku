@@ -168,6 +168,17 @@ export function findTargets(arr,vals,ex) {
 	return targets;
 }
 
+// find cells in the array which contain any of vals, excluding cells in ex
+export function rcsContainsValue(arr,val,ex) {
+	for (var i=0; i<9; ++i) {
+		var cix = arr[i];
+		if (!ex.includes(cix)) {
+			if (cellHasCandidate(cix, val)) return true;
+		}
+	}
+	return false;
+}
+
 export function canSeeEachOther(c0, c1) {
 	var rcs0 = RCS[c0];
 	var rcs1 = RCS[c1];
@@ -717,7 +728,7 @@ function compareArrays(a,b) {
 	return(a.length === b.length && a.every((element, index) => element === b[index]));
 }
 
-// create a unique indes for the triple value a,b,c
+// create a unique index for the triple value a,b,c
 function arrindex(a,b,c) {return ((c*100) + (a*10) + b)};
 
 

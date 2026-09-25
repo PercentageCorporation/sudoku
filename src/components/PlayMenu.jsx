@@ -56,6 +56,7 @@ export default function PlayMenu() {
 			case "swordfish":
 			case "urType1":
 			case 'urType25':
+			case 'urType4':
 				console.log("hint:", h);
 				var cls = h.targets;
 				cls.forEach((cix) => {

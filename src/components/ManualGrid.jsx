@@ -55,7 +55,7 @@ export default function ManualGrid() {
 	const navigate = useNavigate();
 	const { initialized, initialize } = useManCellsStore();
 	const { number: manNumber, description: manDescription } = useManCellsStore();
-	const { setManSelectedCell, setManCellValue, getManCells, loadManCells, getManCellsLinear } = useManCellsStore();
+	const { setManSelectedCell, setManCellValue, getManCells, setManId, loadManCells, getManCellsLinear } = useManCellsStore();
 	const { loadGame } = useCellActions();
 
 	const [ loadSavedGame, setLoadSavedGame ] = useState(false);
@@ -205,7 +205,9 @@ export default function ManualGrid() {
 		var cls = getManCells();
 		console.log("save game", description, cls);
 
-		saveGame(description, cls);
+		var number = saveGame(description, cls);
+		setManId(number, description);
+		useManCellsStore.persist.rehydrate();
 	}
 
 	function saveCancel() {

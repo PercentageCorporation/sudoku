@@ -67,6 +67,13 @@ export const useManCellsStore = create (
 				set({ selectedCell: ix })
 			},
 
+			setManId: (number, description) => {
+				set({
+					number: number,
+					description: description
+				})
+			},
+
 		}),
 		{
 			name: 'sudoku-game', // Unique name for the storage item

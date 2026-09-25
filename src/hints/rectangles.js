@@ -2,7 +2,7 @@ import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCel
 import { rCounts2, cCounts2, sCounts2, rCounts3, cCounts3, rCounts23, cCounts23, sCounts23, rCounts2p, cCounts2p } from '/src/hints/hints';
 import { cells, vRows, vCols, vSqs, vRowPT, vColPT, vSqPT } from '/src/hints/hints';
 import { includesAll, includesAny } from '/src/hints/hints';
-import { findAllBivalueCells, findSeenTargets, getActiveCandidates } from '/src/hints/hints';
+import { findAllBivalueCells, findSeenTargets, getActiveCandidates, rcsContainsValue, findTargets } from '/src/hints/hints';
 
 
 //*****************************************************************************
@@ -169,22 +169,24 @@ export function rectangles() {
 	//return null;	// TEST
 	for (var i = 0; i < squares.length; ++i) {
 		// square: [ [ac], [c0,c1,c2,c3] ]
-		var bivals = [];
 		var square = squares[i]
-		var sqac = square[0];	// original bivalue pair
+		var sqac = square[0];		// original bivalue pair
+		var sqcells = square[1];	// cells in square
 
 		var numextras = 0;
 		var oneextra = 0;
 		var oneextras = [];
+		var extraextras = [];
 		var extras = [];
 
 		square[1].forEach((s) => {
+			// for each cell in the square
 			var cac = getCellCandidates(s);
-			var eac = cac.filter(x => !sqac.includes(x));
-
+			var eac = cac.filter(x => !sqac.includes(x));	// extra candidates
+			//console.log(cac, eac);
 			//console.log(sqac, cac, eac);
-			bivals.push([s, cac]);
 			if (cac.length > 2) {
+				eac.forEach(ac => {if (!extraextras.includes(ac)) extraextras.push(ac)});
 				extras.push(s);
 				if (eac.length === 1) {
 					// there is one extra candidate
@@ -196,19 +198,19 @@ export function rectangles() {
 
 			}
 		})
-		console.log("ac", oneextra, numextras, bivals, extras, oneextras);
+		console.log("ac", oneextra, numextras, extras, extraextras, oneextras);
 
 		if (oneextra === 1 && numextras === 1) {
 			// Type 1 rectangle
-			console.log("Type1", oneextra, numextras, bivals, extras, oneextras);
+			console.log("Type1", oneextra, numextras, extraextras, extras, oneextras);
 			var tgts = [extras[0]];
-			var vals = square[0];
+			var vals = sqac;
 			var h = {
 				type: 'urType1',
 				rows: null,
 				cols: null,
 				square: null,
-				cells: square[1],
+				cells: sqcells,
 				offset: null,
 				values: vals,
 				targets: tgts,
@@ -216,10 +218,12 @@ export function rectangles() {
 			}
 
 			rectangles.push(h);
+			continue;
 		}
-		else if (oneextra === numextras && oneextra >= 1 && oneextra < 4 && oneextras.length === 1) {
+
+		if (oneextra === numextras && oneextra >= 1 && oneextra < 4 && oneextras.length === 1) {
 			// two or three cells with the same extra candidate
-			console.log("Type25", oneextra, numextras, bivals, extras, oneextras);
+			console.log("Type25", oneextra, numextras, extraextras, extras, oneextras);
 			// Type 2 and 5 rectangles
 			var val = oneextras[0];
 			var c0 = extras[0];
@@ -232,16 +236,54 @@ export function rectangles() {
 					rows: null,
 					cols: null,
 					square: null,
-					cells: square[1],
+					cells: sqcells,
 					offset: null,
 					value: val,
 					targets: tgts,
 					msg: `UR Type25: Cells: ${tgts}, Value: ${val}`
 				}
+				rectangles.push(h);
+			}
+			continue;
+		}
 
+		// check for Type 4
+		if (numextras == 2) {
+			var c0 =  extras[0];
+			var c1 =  extras[1];
+			var comrow = commonRow(c0, c1);
+			var comcol = commonColumn(c0, c1);
+			var comsq = commonSquare(c0, c1);
+			// check the common row/col/sq for only one of the bivalues
+			var arr = comrow ? Rows[cellRow[c0]] : comcol ? Cols[cellCol[c0]] : comsq ? Squares[cellSquare[c0]] : null;
+			console.log( c0, c1, comrow, comcol, comsq, arr);
+			var tgts0 = findTargets(arr, [sqac[0]], extras);
+			var tgts1 = findTargets(arr, [sqac[1]], extras);
+			var hasVal0 = tgts0 != null;
+			var hasVal1 = tgts1 != null;
+
+			if ((hasVal0 && !hasVal1) || (!hasVal0 && hasVal1)) {
+				// we have a Type 4
+				var val = hasVal0 ? sqac[0] : sqac[1];
+				var tgts = tgts0 != null ? tgts0 : tgts1;
+				console.log("Type4", oneextra, numextras, extraextras, extras, val, tgts, square);
+				var h = {
+					type: 'urType4',
+					rows: null,
+					cols: null,
+					square: null,
+					cells: sqcells,
+					offset: null,
+					value: val,
+					targets: tgts,
+					msg: `UR Type4: Cells: ${tgts}, Value: ${val}`
+				}
 				rectangles.push(h);
 			}
 		}
+
+
+
 	}
 
 	if (rectangles.length === 0) return null;
