@@ -97,20 +97,21 @@ export function rectangles() {
 						var comsqr = false;	// common square row
 						var comsqc = false;	// common square col
 						if (commonRow(bi, bj) && commonRow(bk, bl)) {
-							console.log("rijkl", i, j, k, l, bi, bj, bk, bl);
+							//console.log("rijkl", i, j, k, l, bi, bj, bk, bl);
 							// if i,j and k,l have common rows, then either i,l and j,k or i,k and j,l must have common columns
 							var rcs = commonSquare(bi, bj);	// if same row, if one is in common square the other has to be
 							// they just cannot be in the same square
 							if (rcs && RCS[bi][2] === RCS[bk][2]) continue;
 							if (commonColumn(bi, bk) && commonColumn(bj, bl)) {
-								console.log("cikjl", i, j, k, l, bi, bj, bk, bl);
+								//console.log("cikjl", i, j, k, l, bi, bj, bk, bl);
 								// if the rows are in the same square, the columns cannot be
-								var ccs = commonSquare(bi, bk);	// if same row, if one is in common square the other has to be
+								// checking the ends of one common colum is sufficient
+								var ccs = commonSquare(bi, bk);	// if same row, if one column is in square the other has to be
 								if (rcs && ccs) continue;	// everyting is in the same square
-								if (ccs && RCS[bi][2] === RCS[bj][2]) continue; // cannot be in the same square
+								if (ccs && RCS[bi][2] === RCS[bj][2]) continue; // if column ends in common squares they cannot be in the same square
 								squares.push([bac,[bi,bj,bk,bl]]);
 							} else if (commonColumn(bi, bl) && commonColumn(bj, bk)) {
-								console.log("ciljk", i, j, k, l, bi, bj, bk, bl);
+								//console.log("ciljk", i, j, k, l, bi, bj, bk, bl);
 								// if the rows are in the same square, the columns cannot be
 								var ccs = commonSquare(bi, bl);	// if same row, if one is in common square the other has to be
 								if (rcs && ccs) continue;	// everyting is in the same square
@@ -118,30 +119,42 @@ export function rectangles() {
 								squares.push([bac,[bi,bj,bk,bl]]);
 							}
 						} else if (commonRow(bi, bk) && commonRow(bj, bl)) {
-							console.log("rikjl", i, j, k, l, bi, bj, bk, bl);
+							//console.log("rikjl", i, j, k, l, bi, bj, bk, bl);
 							var rsc = commonSquare(bi, bk);	// if same row, if one is in common square the other has to be
 							// they just cannot be in the same square
 							if (rsc && RCS[bi][2] === RCS[bj][0]) continue;
 							// if i,k and j,l have common rows, then either (i,j and k,l) or (i,l and k,j) must have common columns
 							if (commonColumn(bi, bj) && commonColumn(bk, bl)) {
-								console.log("cijkl", i, j, k, l, bi, bj, bk, bl);
+								//console.log("cijkl", i, j, k, l, bi, bj, bk, bl);
+								var ccs = commonSquare(bi, bj);	// if same row, if one is in common square the other has to be
+								if (rcs && ccs) continue;	// everyting is in the same square
+								if (ccs && RCS[bi][2] === RCS[bk][2]) continue; // cannot be in the same square
 								squares.push([bac,[bi,bj,bk,bl]]);
 							} else if (commonColumn(bi, bl) && commonColumn(bk, bj)) {
-								console.log("cilkj", i, j, k, l, bi, bj, bk, bl, comsqr, comsqc);
+								//console.log("cilkj", i, j, k, l, bi, bj, bk, bl, comsqr, comsqc);
 								//console.log(i, j, k, l, bi, bj, bk, bl);
+								var ccs = commonSquare(bi, bl);	// if same row, if one is in common square the other has to be
+								if (rcs && ccs) continue;	// everyting is in the same square
+								if (ccs && RCS[bi][2] === RCS[bk][2]) continue; // cannot be in the same square
 								squares.push([bac,[bi,bj,bk,bl]]);
 							}
 						} else if (commonRow(bi, bl) && commonRow(bj, bk)) {
-							console.log("riljk", i, j, k, l, bi, bj, bk, bl);
+							//console.log("riljk", i, j, k, l, bi, bj, bk, bl);
 							var rsc = commonSquare(bi, bl);	// if same row, if one pair is in common square the other has to be
 							// they just cannot be in the same square
 							if (rsc && RCS[bi][2] === RCS[bj][0]) continue;
 							// if i,l and j,k have common rows, then either (i,j and k,l) or (i,k and l,j) must have common columns
 							if (commonColumn(bi, bj) && commonColumn(bk, bl)) {
-								console.log("ciljk",i, j, k, l, bi, bj, bk, bl);
-								squares.push([bac,[ bi,bj,bk,bl]]);
+								//console.log("ciljk",i, j, k, l, bi, bj, bk, bl);
+								var ccs = commonSquare(bi, bj);	// if same row, if one is in common square the other has to be
+								if (rcs && ccs) continue;	// everyting is in the same square
+								if (ccs && RCS[bi][2] === RCS[bj][2]) continue; // cannot be in the same square
+								squares.push([bac,[ bi,bj,bk,bk]]);
 							} else if (commonColumn(bi, bk) && commonColumn(bj, bl)) {
-								console.log("cikjl",i, j, k, l, bi, bj, bk, bl);
+								//console.log("cikjl",i, j, k, l, bi, bj, bk, bl);
+								var ccs = commonSquare(bi, bk);	// if same row, if one is in common square the other has to be
+								if (rcs && ccs) continue;	// everyting is in the same square
+								if (ccs && RCS[bi][2] === RCS[bj][2]) continue; // cannot be in the same square
 								squares.push([bac,[ bi,bj,bk,bl]]);
 							}
 						}

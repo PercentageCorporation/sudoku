@@ -1,5 +1,5 @@
 import { apiGetGame } from "./sudokuApi";
-import { games } from "../store/games";
+import { sampleGames } from "../store/sampleGames";
 import { linearToGrid } from "./utilities";
 
 const SUDOKUSOLUTIONS_API = "https://www.sudoku-solutions.com/";
@@ -30,10 +30,10 @@ export async function getSudokuSoluitons() {
 }
 
 export function getSSGame() {
-	const numGames = games.length;
+	const numGames = sampleGames.length;
 	const ix = Math.floor(Math.random() * numGames);
 	console.log("getSSGame:", ix);
-	const g = games[ix];
+	const g = sampleGames[ix];
 
 	const gameid = g["game"];
 	const difficulty = g["difficulty"];

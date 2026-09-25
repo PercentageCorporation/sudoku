@@ -1,11 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cellStore, useCellActions, useHintStore } from "./store/store";
+import { getSSGame } from "./utilities/sudoku-solutions";
+import { gridToLinearText } from "./utilities/utilities";
 import GameGrid from "./components/GameGrid";
 import PlayMenu from "./components/PlayMenu";
 import Spinner from "./components/Spinner";
-import { getSSGame } from "./utilities/sudoku-solutions";
-import { gridToLinearText } from "./utilities/utilities";
 
 export default function App() {
 	const { newGame, resetGame, initGame, updateCandidates, saveState, restoreState } = useCellActions();
@@ -78,16 +78,16 @@ export default function App() {
 
 	return (
 		<div className="max-w-[412px] mx-2 select-none">
-			{`Difficulty: ${difficulty} / Game: ${gameId}`}
-			<div>
+			<div className="mx-2 h-12 flex items-center text-lg font-semibold">
+				{`Difficulty: ${difficulty} / Game: ${gameId}`}
 			</div>
-			<div className="mt-4">
+			<div className="">
 				<GameGrid />
 			</div>
 			<div>
 				<PlayMenu />
 			</div>
-			<div className="flex flex-row justify-between mt-4 text-lg">
+			<div className="flex flex-row justify-between mt-4 text-base">
 				<button
 					type="button"
 					onClick={(e) => handleNewGame(e)}
@@ -103,21 +103,21 @@ export default function App() {
 					Restart Game
 				</button>
 			</div>
-			<div className="flex flex-row justify-between mt-4 text-lg">
+			<div className="flex flex-row justify-between mt-4 text-base">
 				<button
 					type="button"
 					onClick={(e) => handleSaveGame(e)}
-					className="px-4 py-2 bg-orange-300 rounded hover:cursor-pointer"
+					className="px-2 py-2 bg-orange-300 rounded hover:cursor-pointer"
 				>
-					Save Game
+					Save Game State
 				</button>
 				<button
 					type="button"
 					disabled={saved.length === 0}
 					onClick={(e) => handleRestoreGame(e)}
-					className="mx-4 px-4 py-2 bg-red-300 disabled:bg-red-100 rounded enabled:hover:cursor-pointer"
+					className="px-2 py-2 bg-red-300 disabled:bg-red-100 rounded enabled:hover:cursor-pointer"
 				>
-					Restore Game
+					Restore Game State
 				</button>
 			</div>
 			<div className="flex flex-row justify-between mt-4 text-lg">

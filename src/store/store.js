@@ -13,23 +13,28 @@ export const useManCells = () => useManCellsStore((state) => state.cells);
 export const useManCellsStore = create (
 	persist (
 		(set, get) => ({
-			cells: [],
+			cells: new Array(81).fill(0),
+			number: 0,
+			description: "",
 			selectedCell: -1,
 			initialized: false,
 
 			initialize: () => {
-				var init = [];
-				for (var i = 0; i < 81; ++i) init.push(0);
+				var init = new Array(81).fill(0);
 				set({
 					cells: init,
+					number: null,
+					description: "New Game",
 					selectedCell: 0,
 					initialized: true
 				})
 			},
 
-			loadManCells: (cls) => {
+			loadManCells: (num, descr, cls) => {
 				set({
 					cells: cls,
+					number: num,
+					description: descr,
 					selectedCell: -1,
 					initialized: true
 				})
@@ -41,7 +46,8 @@ export const useManCellsStore = create (
 
 			getManCellsLinear: () => {
 				var linear = ""
-				for (var i = 0; i < 81; ++i) linear += Number(get().cells[ninetolinear[i]])
+				var cells = get().cells
+				for (var i = 0; i < cells.length; ++i) linear += Number(cells[ninetolinear[i]])
 				return linear
 			},
 
