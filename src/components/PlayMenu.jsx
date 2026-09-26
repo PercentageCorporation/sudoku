@@ -57,6 +57,8 @@ export default function PlayMenu() {
 			case "urType1":
 			case 'urType25':
 			case 'urType4':
+			case 'urType6':
+			case 'urType7':
 				console.log("hint:", h);
 				var cls = h.targets;
 				cls.forEach((cix) => {

@@ -120,6 +120,8 @@ function Cell({ix}) {
 			case 'urType1':
 			case 'urType25':
 			case 'urType4':
+			case 'urType6':
+			case 'urType7':
 				if (hint.cells.includes(ix))
 					selMode = 2;
 				if (hint.targets.includes(ix))

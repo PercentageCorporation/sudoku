@@ -74,7 +74,7 @@ export default function ManualGrid() {
 		const key = e.key;
 		if (key.length === 1) char = key[0];
 
-		console.log("key:", key);
+		//console.log("key:", key);
 		switch (e.key) {
 			case " ":
 				if (sel >= 0) setManCellValue(sel, 0);

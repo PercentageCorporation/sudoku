@@ -25,7 +25,7 @@ export const useManCellsStore = create (
 					cells: init,
 					number: null,
 					description: "New Game",
-					selectedCell: 0,
+					selectedCell: -1,
 					initialized: true
 				})
 			},
