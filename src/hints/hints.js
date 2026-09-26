@@ -168,15 +168,85 @@ export function findTargets(arr,vals,ex) {
 	return targets;
 }
 
-// find cells in the array which contain any of vals, excluding cells in ex
-export function rcsContainsValue(arr,val,ex) {
+// find cells in the array which contain all of the vals, excluding cells in ex
+export function findTargetsAll(arr,vals,ex) {
+	var targets = [];
+
 	for (var i=0; i<9; ++i) {
 		var cix = arr[i];
+		var cel = cells[cix];
 		if (!ex.includes(cix)) {
-			if (cellHasCandidate(cix, val)) return true;
+			if (cel.value === 0 && includesAll(cel.activecandidates, vals)) {
+				targets.push(cix);
+			}
 		}
 	}
-	return false;
+	if (targets.length === 0) return null;
+	return targets;
+}
+
+// find cells in the array which contain all of the vals and only the vals, excluding cells in ex
+export function findTargetsOnly(arr,vals,ex) {
+	var targets = [];
+
+	var varlen = vals.length;	// number of values
+
+	for (var i=0; i<9; ++i) {
+		var cix = arr[i];
+		var cel = cells[cix];
+		if (!ex.includes(cix)) {
+			var ac = cel.activecandidates;
+			if (cel.value === 0 && ac.length === varlen && includesAll(ac, vals)) {
+				targets.push(cix);
+			}
+		}
+	}
+	if (targets.length === 0) return null;
+	return targets;
+}
+
+// find any values in the cells that are not in the vals list
+export function findInternalTargets(cls,vals) {
+	var tgts = new Set();
+	var tgtvals = new Set();
+	cls.forEach((cix) => {
+		var c = cells[cix];
+		if (c.value === 0) {
+			c.activecandidates.forEach((ac) => {
+				if (!vals.includes(ac)) {
+					tgts.add(cix);
+					tgtvals.add(ac);
+				}
+			})
+		}
+	})
+
+	if (tgts.size === 0) return null;
+	return [Array.from(tgts).sort(),Array.from(tgtvals).sort()];
+}
+
+// get all cells with candidates from array excluding cells in ex
+export function getCandidateCells(arr, ex) {
+	var targets = [];
+	for (var i=0; i<9; ++i) {
+		var cix = arr[i];
+		var cel = cells[cix];
+		if (!ex.includes(cix)) {
+			var ac = cel.activecandidates;
+			if (cel.value === 0) targets.push([cix,ac]);
+		}
+	}
+	if (targets.length === 0) return null;
+	return targets;
+
+}
+
+export function findCandidatesWithValues(can, vals) {
+	var candids = [];
+	can.forEach((c)  => {
+		if (includesAny(c[1], vals)) candids.push(c);
+	})
+	return candids;
 }
 
 export function canSeeEachOther(c0, c1) {
@@ -214,18 +284,43 @@ export function canBeSeen(c0, c1, c2) {
 
 // find seen targets
 // targets have to be in the same row/col or row/sq or col/sq
-export function findSeenTargets(val, c1, c2) {
+export function findSeenTargets2(val, c1, c2) {
 	var targets = [];
 	for (var i=0; i<81; ++i) {
+		if (!cellHasCandidate(i, val)) continue;
 		if (i === c1 || i === c2) continue;
-		var seen = canBeSeen( i, c1, c2);
-		if (seen) {
-			var seen = canBeSeen( i, c1, c2, val);
-			if (cellHasCandidate(i, val)) targets.push(i);
-		}
+		if (!canSeeEachOther( i, c1)) continue;
+		if (!canSeeEachOther( i, c2)) continue;
+		targets.push(i);
 	}
 	if (targets.length === 0) return null;
 	return targets;
+}
+
+// targets have to be in the same row/col or row/sq or col/sq
+export function findSeenTargets3(val, c1, c2, c3) {
+	var targets = [];
+	for (var i=0; i<81; ++i) {
+		if (!cellHasCandidate(i, val)) continue;
+		if (i === c1 || i === c2 || i === c3) continue;
+		if (!canSeeEachOther( i, c1)) continue;
+		if (!canSeeEachOther( i, c2)) continue;
+		if (!canSeeEachOther( i, c3)) continue;
+		targets.push(i);
+	}
+	if (targets.length === 0) return null;
+	return targets;
+}
+
+// find cells in the array which contain any of vals, excluding cells in ex
+export function rcsContainsValue(arr,val,ex) {
+	for (var i=0; i<9; ++i) {
+		var cix = arr[i];
+		if (!ex.includes(cix)) {
+			if (cellHasCandidate(cix, val)) return true;
+		}
+	}
+	return false;
 }
 
 // are all values in [b] included in [a]
@@ -720,367 +815,6 @@ function hiddenPairs() {
 	return hiddenPairs;
 }
 
-//*****************************************************************************
-// hiddenTriples
-
-// compare two arrays to see if they contain exactly the same values
-function compareArrays(a,b) {
-	return(a.length === b.length && a.every((element, index) => element === b[index]));
-}
-
-// create a unique index for the triple value a,b,c
-function arrindex(a,b,c) {return ((c*100) + (a*10) + b)};
-
-
-function makePairsTriples(ac) {
-	var pt = [];
-
-	var aclen = ac.length;
-	if (aclen === 0) [];
-
-	for (var i=0; i<aclen; i++) {
-		var a1 = ac[i];
-		for (var j=i+1; j<aclen; j++) {
-			var a2 = ac[j];
-			pt.push([a1,a2]);
-			for (var k=j+1; k<aclen; k++) {
-				var a3 = ac[k];
-				pt.push([a1,a3]);
-				pt.push([a2,a3]);
-				pt.push([a1,a2,a3]);
-			}
-		}
-	}
-	console.log(ac, pt);
-	return pt;
-}
-
-function rcsPairsTriples(arr) {
-	var pt = [];
-	for (var j=0; j<9; j++) {
-		var cix = arr[j];
-		var cell = cells[cix];
-		var ac = cell.activecandidates;
-		if (cell.value > 0 || ac.length === 0) continue;
-		//var pandt = findPairsTriples(ac);
-		pt.push([j,ac]);
-	}
-	return Array.from(pt).sort((a,b) => a-b);
-}
-
-function countTheHouse(house) {
-	var vc = [0,0,0,0,0,0,0,0,0,0];
-	// count the values in each cell
-	var hlen = house.length;
-	// count the candidate values
-	for (var i=0; i<hlen; i++) {
-		house[i][1].forEach((v) => {vc[v] += 1});
-	}
-	return vc;
-}
-
-// house[]: [row/col/sq, [candidates]]
-function collectHouseValues(house) {
-	var hv = new Set();
-	house.forEach((h) => {
-		h[1].forEach(hv.add, hv)
-	})
-	return Array.from(hv).sort((a,b) => a-b);
-}
-
-function packTheHouse(house) {
-	var inHouse = structuredClone(house);
-	//var inHouse = house;
-	var updated = false;
-
-	var hlen = inHouse.length;
-	// count candidates in the house
-	var vc = countTheHouse(inHouse);
-	// eliminate any values with a count greater than 0 but not equal to 2 or 3
-	//console.log(vc);
-	for (var value=1; value<10; ++value) {
-		if (vc[value] === 1 || vc[value] > 3) {
-			//console.log("value removed",value, vc[value])
-			for (var i=0; i<hlen; i++) {
-				inHouse[i][1] = inHouse[i][1].filter(v => v != value);
-			}
-			updated = true;
-		}
-	}
-
-	// remove any cells with one (or less) candidates
-	var hx = [];
-	for (var i=0; i<hlen; i++) {
-		if (inHouse[i][1].length >= 2)
-			hx.push([inHouse[i][0],inHouse[i][1]]);
-		else
-			updated = true;	// we skipped one
-	}
-	inHouse = hx;
-	return {updated: updated, house:inHouse};
-}
-
-function checkForTripleCounts(cnts) {
-	var c2 = 0;
-	var c3 = 0;
-	var vals = [];
-	for (var value=1; value<10; ++value) {
-		if (cnts[value] === 2) {
-			++c2;
-			vals.push(value);
-		}
-		else if (cnts[value] === 3) {
-			++c3;
-			vals.push(value);
-		}
-	}
-
-	if ((c2 + c3) !== 3) return null;
-	return {
-		twos: c2,
-		threes: c3,
-		values: vals
-	};
-}
-
-// for the cells in a row/col/square find any triples
-function findHiddenTriple(ptIn) {
-	var ptInlen = ptIn.length;
-	var pt = structuredClone(ptIn);
-	//console.log("ptIn", ptIn);
-	// pt[]: [row/col/sq, [candidates]]
-	var vc = [0,0,0,0,0,0,0,0,0,0];
-	// count the values in each cell and collect the indices
-	var ptlen = pt.length;
-	var ptIx = [];
-	for (var i=0; i<ptlen; i++) {
-		//console.log("map", pt[i][1]);
-		pt[i][1].forEach((v) => {vc[v] += 1});
-		ptIx.push(pt[i]);
-	}
-
-	// run the value elimination process
-	var updated = false;
-	var hx;
-	do {
-		var pack = packTheHouse(pt);
-		updated = pack.updated;
-		hx = pack.house;
-		//console.log(updated, pt, hx);
-		pt = hx;
-		//console.log("pack", count, updated, pack);
-	} while (updated === true);
-
-	var ptlen = pt.length;
-	if (ptlen < 3) return null;	// not enough cells
-	//console.log("pt", ptlen, pt);
-	// we have a candidate house
-
-	var triples = [];
-
-	if (ptlen === 3) {
-		// possible valid triple
-		var hv = collectHouseValues(pt);			// the collection of all values in the house cells
-		var hc = countTheHouse(pt);					// counts of the values in the candidate cells
-		var hi = [pt[0][0], pt[1][0], pt[2][0]];	// indices of the candidate cells
-		var tcc = checkForTripleCounts(hc);
-		if (tcc) {
-			//console.log("hicv", hi, hc, hv, pt);
-			//console.log("tcc3", 0, 1, 2, pt[0][0], pt[1][0], pt[2][0], tcc, pt);
-			// we have a possible triple
-			// check if any of the triple values occur outside of the triple
-			// the triple candidate values are [hc]
-			// the triple candidate indices are
-			var valid = true;
-			for (var i=0; i<ptInlen; i++) {
-				// only check the candidtate cells
-				if (!hi.includes(ptIn[i])) continue;
-				if (includesAny(ptIn[i], hv)) valid = false;
-			}
-			if (valid) {
-				//console.log("valid3");
-				//console.log("hv", hc, hv, pt);
-				//console.log("tcc3", 0, 1, 2, pt[0][0], pt[1][0], pt[2][0], tcc, pt);
-				triples.push([pt[0][0], pt[1][0], pt[2][0]],tcc.values);
-			}
-		}
-
-	} else { // ptlen > 3
-		// count the values for each group of three
-		//console.log("pt", ptlen, pt);
-		for (var i=0; i<ptlen; i++) {
-			for (var j=i+1; j<ptlen; j++) {
-				for (var k=j+1; k<ptlen; k++) {
-					// count the values in each cell
-					var tc = [0,0,0,0,0,0,0,0,0,0];
-					pt[i][1].forEach((v) => {tc[v] += 1});
-					pt[j][1].forEach((v) => {tc[v] += 1});
-					pt[k][1].forEach((v) => {tc[v] += 1});
-					//console.log("tc", i, j, k, tc);
-					var tcc = checkForTripleCounts(tc);
-					if (tcc) {
-						//console.log("tcc", i, j, k, pt[i][0], pt[j][0], pt[k][0], tcc, pt);
-						// now if any of the tcc.values are in cells outside of [i,j,k] then this is not a valid triple
-						var hi = [i,j,k];		// indices of the candidate cells
-						var hv = tcc.values;	// values in the candidate cells
-						var valid = true;
-						for (var l=0; l<ptInlen; l++) {
-							// skip the candidate cells
-							if (hi.includes(ptIn[l])) continue;
-							if (includesAny(ptIn[l], hv)) valid = false;
-						}
-
-						if (valid) {
-							//console.log("valid3p");
-							//console.log("tcc", i, j, k, pt[i][0], pt[j][0], pt[k][0], tcc, pt);
-							//triples.push([[pt[i], pt[j], pt[k]],tcc.values]);
-							triples.push([pt[i][0], pt[j][0], pt[k][0]],tcc.values);
-						}
-					}
-				}
-			}
-		}
-	}
-
-
-	if (triples.length === 0) return null;
-	//console.log("triples", triples);
-	return triples;
-}
-
-
-
-// find any values in the cells that are not in the vals list
-function findInternalTargets(cls,vals) {
-	var tgts = new Set();
-	var tgtvals = new Set();
-	cls.forEach((cix) => {
-		var c = cells[cix];
-		if (c.value === 0) {
-			c.activecandidates.forEach((ac) => {
-				if (!vals.includes(ac)) {
-					tgts.add(cix);
-					tgtvals.add(ac);
-				}
-			})
-		}
-	})
-
-	if (tgts.size === 0) return null;
-	return [Array.from(tgts).sort(),Array.from(tgtvals).sort()];
-}
-
-function hiddenTriples() {
-
-	// for each row/col/square calculate the possible triples/pairs for each cell;
-	for (var i=0; i<9; i++) {
-		var rc = rcsPairsTriples(Rows[i]);
-		var cc = rcsPairsTriples(Cols[i]);
-		var sc = rcsPairsTriples(Squares[i]);
-		vRowPT.push([i, rc]);
-		vColPT.push([i, cc]);
-		vSqPT.push([i, sc]);
-	}
-	//console.log(vRowPT, vColPT, vSqPT);
-
-	// for each row/col/square find candidate houses
-	var rowC = [];
-	var colC = [];
-	var sqC = [];
-	var ht;
-	for (var i=0; i<9; i++) {
-		if (vRowPT[i][1].length > 2) {
-			if (i !== 6) continue;	// TEST
-			//console.log("row",i);
-			ht = findHiddenTriple(vRowPT[i][1]);
-			if (ht) rowC.push([i,ht[0],ht[1]]);
-		}
-		if (vColPT[i][1].length > 2) {
-			if (i !== 9) continue;	// TEST
-				//console.log("col",i);
-			ht = findHiddenTriple(vColPT[i][1]);
-			if (ht) colC.push([i,ht[0],ht[1]]);
-		}
-		if (vSqPT[i][1].length > 2) {
-			if (i !== 9) continue;	// TEST
-				//console.log("sq",i);
-			ht = findHiddenTriple(vSqPT[i][1]);
-			if (ht) sqC.push([i,ht[0],ht[1]]);
-		}
-	}
-
-	var targets = [];
-	rowC.forEach((rc) => {
-		var r = rc[0];
-		var row = Rows[r];
-		var cls = [ row[rc[1][0]],row[rc[1][1]],row[rc[1][2]] ];
-		var vals = rc[2];
-		var tgtvals = findInternalTargets(cls, vals);
-		if (tgtvals) {
-			// have targets
-			//console.log("r",r,cls,tgtvals[1],tgtvals[0]);
-			targets.push(["r",r,cls,tgtvals[1],tgtvals[0]]);
-		}
-	})
-
-	colC.forEach((cc) => {
-		var c = cc[0];
-		var col = Cols[c];
-		var cls = [ col[cc[1][0]],col[cc[1][1]],col[cc[1][2]] ];
-		var vals = cc[2];
-		var tgtvals = findInternalTargets(cls, vals);
-		if (tgtvals) {
-			// have targets
-			//console.log("c",c,cls,tgtvals[1],tgtvals[0]);
-			targets.push(["c",c,cls,tgtvals[1],tgtvals[0]]);
-		}
-	})
-
-	sqC.forEach((sc) => {
-		var s = sc[0];
-		var sq = Squares[s];
-		var cls = [ sq[sc[1][0]],sq[sc[1][1]],sq[sc[1][2]] ];
-		var vals = sc[2];
-		var tgtvals = findInternalTargets(cls, vals);
-		if (tgtvals) {
-			// have targets
-			//console.log("s",s,cls,tgtvals[1],tgtvals[0]);
-			targets.push(["s",s,cls,tgtvals[1],tgtvals[0]]);
-		}
-	})
-
-	//console.log("targets",targets);
-
-	var triples = [];
-	targets.forEach((tgt) => {
-		var dir = tgt[0];
-		var rcs = tgt[1];
-		var cls = tgt[2];
-		var vals = tgt[3];
-		var tgts = tgt[4]
-		//console.log(dir,trc0,cls)
-
-		var h = {
-			type: 'hiddenTriple',
-			rows: rcs === 'r' ? rcs : null,
-			cols: rcs === 'c' ? rcs : null,
-			square: rcs === 's' ? rcs : null,
-			cells: cls,
-			offset: null,
-			values: vals,
-			targets: tgts,
-			msg: `Hidden Triple: Cells: ${tgts}, Values: ${vals}`
-		}
-		triples.push(h);
-
-	})
-
-	// convert targets to hints
-
-	if (triples.length === 0) return null;
-	console.log("triples",triples);
-	return triples;
-}
 
 //*****************************************************************************
 // pointingPairsSquare
@@ -3122,7 +2856,7 @@ function XYChain() {
 		var es = p[1][0];
 		var end = p[1].length - 1;
 		var ee = p[1][end];
-		var tgts = findSeenTargets(val, es, ee);
+		var tgts = findSeenTargets2(val, es, ee);
 		//console.log(val, es, ee, tgts);
 		if (tgts) xytargets.push([val, p[1], tgts])
 	})

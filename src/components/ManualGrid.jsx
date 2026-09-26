@@ -1,7 +1,7 @@
 import "/src/styles/borders.css";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCellActions, useManCellsStore } from "/src/store/store";
+import { useCellActions, useManCellsStore, useHintStore } from "/src/store/store";
 import { LRUD, bstyles } from "/src/utilities/constants";
 import LoadGameModal from "/src/components/LoadGameModal";
 import { deleteGame, getGame, saveGame } from "../utilities/games";
@@ -56,6 +56,7 @@ export default function ManualGrid() {
 	const { initialized, initialize } = useManCellsStore();
 	const { number: manNumber, description: manDescription } = useManCellsStore();
 	const { setManSelectedCell, setManCellValue, getManCells, setManId, loadManCells, getManCellsLinear } = useManCellsStore();
+	const { resetHint } = useHintStore();
 	const { loadGame } = useCellActions();
 
 	const [ loadSavedGame, setLoadSavedGame ] = useState(false);
@@ -160,6 +161,7 @@ export default function ManualGrid() {
 		const mc = getManCells();
 		//console.log("handlePlay", mc);
 		loadGame(mc, manDescription);	// load live game
+		resetHint();
 		navigate('/');
 	}
 

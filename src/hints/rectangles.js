@@ -2,9 +2,9 @@ import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCel
 import { rCounts2, cCounts2, sCounts2, rCounts3, cCounts3, rCounts23, cCounts23, sCounts23, rCounts2p, cCounts2p } from '/src/hints/hints';
 import { cells, vRows, vCols, vSqs, vRowPT, vColPT, vSqPT } from '/src/hints/hints';
 import { includesAll, includesAny } from '/src/hints/hints';
-import { findAllBivalueCells, findSeenTargets, getActiveCandidates, rcsContainsValue, findTargets } from '/src/hints/hints';
-
-
+import { findAllBivalueCells, rcsContainsValue, findTargets, findSeenTargets2,  findSeenTargets3, findTargetsAll, findTargetsOnly } from '/src/hints/hints';
+import { getActiveCandidates, getCandidateCells, findCandidatesWithValues } from '/src/hints/hints';
+import { countTheHouse, packTheHouse, findHiddenTriple, checkForTripleCounts } from '/src/hints/triples';
 //*****************************************************************************
 // Unique Rectangles
 
@@ -17,6 +17,17 @@ function commonColumn(c0, c1) {
 }
 function commonSquare(c0, c1) {
 	return ((RCS[c0][2] === RCS[c1][2]));
+}
+
+
+function getCommonHouses(c0, c1) {
+	var common = [];
+	var rcs0 = RCS[c0];
+	var rcs1 = RCS[c1];
+	common.push((rcs0[0] === rcs1[0]) ? rcs0[0] : -1);
+	common.push((rcs0[1] === rcs1[1]) ? rcs0[1] : -1);
+	common.push((rcs0[2] === rcs1[2]) ? rcs0[2] : -1);
+	return common;
 }
 
 function getCellCandidates(cix) {
@@ -176,17 +187,19 @@ export function rectangles() {
 	var rectangles = [];
 	//return null;	// TEST
 	for (var i = 0; i < squares.length; ++i) {
+		if (rectangles.length > 0) break;	// found one
 		// square: [ [ac], [c0,c1,c2,c3] ]
 		var square = squares[i]
 		var sqac = square[0];		// original bivalue pair
 		var sqcells = square[1];	// cells in square
 
-		var numextras = 0;
-		var oneextra = 0;
-		var oneextras = [];
-		var extraextras = [];
-		var extras = [];
-		var nonextras = [];
+		// classify the cells into the pure bivalue cells and cells with extra candidates
+		var numextras = 0;			// count of cells with extra candidates
+		var oneextra = 0;			// count of cells with just one extra candidate
+		var oneextras = [];			// cells with one extra candidate
+		var extras = [];			// cells with extra candidates
+		var extraextras = [];		// list of extra candidates
+		var nonextras = [];			// cells with no extra candidates (bivalue cells)
 
 		sqcells.forEach((s) => {
 			// for each cell in the square
@@ -209,14 +222,25 @@ export function rectangles() {
 				nonextras.push(s);
 			}
 		})
-		console.log("ac", oneextra, numextras, sqac, sqcells, extras, extraextras, oneextras);
-		// if there are two bivalue cells are they diagonal
+
+		// define/init some common values
+		var vac0 = sqac[0];
+		var vac1 = sqac[1];
+		var hasVal0 = false;
+		var hasVal1 = false;
+
+		// check if there if there are two bivalue cells and if they are diagonal
+		var diagonal = false;
 		if (numextras === 2) {
 			var c0 = nonextras[0];
 			var c1 = nonextras[1];
-			var diagonal = !commonRow(c0, c1) && !commonColumn(c0, c1);
+			diagonal = !commonRow(c0, c1) && !commonColumn(c0, c1);
 		}
 
+		console.log("ac", sqac, oneextra, numextras, extraextras, extras, oneextras, sqcells);
+
+		// UR Type 1
+		// only one cell with one extra candidate
 		if (oneextra === 1 && numextras === 1) {
 			// Type 1 rectangle
 			console.log("Type1", oneextra, numextras, extraextras, extras, oneextras);
@@ -231,25 +255,26 @@ export function rectangles() {
 				offset: null,
 				values: vals,
 				targets: tgts,
-				msg: `UR Type1: Cells: ${tgts}, Value: ${vals}`
+				msg: `UR Type 1: Cells: ${tgts}, Value: ${vals}`
 			}
 
 			rectangles.push(h);
 			continue;
 		}
 
-		if (oneextra === numextras && oneextra >= 1 && oneextra < 4 && oneextras.length === 1) {
-			// two or three cells with the same extra candidate
-			console.log("Type25", oneextra, numextras, extraextras, extras, oneextras);
+		// Type 2 has two non-diagonal cells with one extra candidate that is the same in both cells
+		// any other matching candidates that can see both those cells can be eliminated
+		if (!diagonal && oneextra === 2 && numextras === 2 && oneextras.length === 1) {
+			console.log("Type2", oneextra, numextras, extraextras, extras, oneextras);
 			// Type 2 and 5 rectangles
 			var val = oneextras[0];
 			var cx0 = extras[0];
 			var cx1 = extras[1];
-			var tgts = findSeenTargets(val, cx0, cx1);
+			var tgts = findSeenTargets2(val, cx0, cx1);
 			console.log(val, cx0, cx1, tgts);
 			if (tgts) {
 				var h = {
-					type: 'urType25',
+					type: 'urType2',
 					rows: null,
 					cols: null,
 					square: null,
@@ -257,7 +282,130 @@ export function rectangles() {
 					offset: null,
 					value: val,
 					targets: tgts,
-					msg: `UR Type25: Cells: ${tgts}, Value: ${val}`
+					msg: `UR Type 2: Cells: ${tgts}, Value: ${val}`
+				}
+				rectangles.push(h);
+			}
+			continue;
+		}
+
+		// Type 3 maybe
+		if (!diagonal && numextras === 2) {
+			var cx0 = extras[0];
+			var cx1 = extras[1];
+
+			// common row or col?
+			if (commonRow(cx0, cx1))
+				var arr = Rows[cellRow[cx0]];
+			else // must be one or the other
+				var arr = Cols[cellCol[cx0]];
+
+			var virtcell = extraextras;
+			console.log("Type3", extras, nonextras, extraextras);
+
+			if (virtcell.length === 2) {
+				// look for naked pair
+				var cls = findTargetsOnly(arr, extraextras, nonextras);
+				if (cls && cls.length === 1) {
+					console.log("t3 pair", cls);
+					// found a pair look for targets
+					var skipcells = [...extras, ...cls];
+					console.log("t3 pair", cls, skipcells);
+					var tgts = findTargets(arr, virtcell, skipcells);
+					console.log("t3 pair", cls, skipcells, tgts);
+					if (tgts) {
+						var h = {
+							type: 'urType3',
+							rows: null,
+							cols: null,
+							square: null,
+							cells: sqcells,
+							offset: null,
+							values: virtcell,
+							targets: tgts,
+							msg: `UR Type 3: Cells: ${tgts}, Value: ${virtcell}`
+						}
+						rectangles.push(h);
+					}
+					continue;
+				}
+			}
+			if (virtcell.length === 2 ||  virtcell.length === 3) {
+				// get cells to check for a triple
+				var trips = [];
+				var tcells = getCandidateCells(arr, extras);
+				var tmaybe = findCandidatesWithValues(tcells, virtcell);
+				var tml = tmaybe.length;
+				for (var i=0; i<tml; ++i) {
+					for (var j=i+1; j<tml; ++j) {
+						var thouse = [];
+						thouse.push([-1, virtcell]);
+						thouse.push(tmaybe[i]);
+						thouse.push(tmaybe[j]);
+						var tc = countTheHouse(thouse);
+						var tcc = checkForTripleCounts(tc);
+						if (tcc) {
+							console.log("tcc", thouse, tc, tcc);
+							trips.push(tcc.values, [tmaybe[i][0],tmaybe[j][0]]);
+						}
+					}
+
+				}
+				console.log("tccells", tcells, tmaybe, trips);
+				if (trips.length > 1) {
+					var skipcells = [...extras, ...trips[1]];
+					var vals = trips[0];
+					var tgts = findTargets(arr, vals, skipcells);
+					console.log("trips", trips, skipcells, vals, tgts);
+
+					if (tgts) {
+						var h = {
+							type: 'urType3',
+							rows: null,
+							cols: null,
+							square: null,
+							cells: sqcells,
+							offset: null,
+							values: vals,
+							targets: tgts,
+							msg: `UR Type 3: Cells: ${tgts}, Values: ${vals}`
+						}
+						rectangles.push(h);
+					}
+					continue;
+				}
+
+
+			}
+		}
+
+		// Type 5 has two diagonal cells or three cells with one extra candidate that is the same
+		// any other matching candidate that can see all those cells can be eliminated
+		if (((diagonal && oneextra === 2 && numextras === 3) || (oneextra === 3 && numextras === 3)) && oneextras.length === 1) {
+			// two or three cells with the same extra candidate
+			console.log("Type5", oneextra, numextras, extraextras, extras, oneextras);
+			// Type 2 and 5 rectangles
+			var val = oneextras[0];
+			var cx0 = extras[0];
+			var cx1 = extras[1];
+			if (oneextra === 2)
+				var tgts = findSeenTargets2(val, cx0, cx1);
+			else {
+				var cx2 = extras[1];
+				var tgts = findSeenTargets3(val, cx0, cx1, cx2);
+			}
+			console.log(val, cx0, cx1, tgts);
+			if (tgts) {
+				var h = {
+					type: 'urType5',
+					rows: null,
+					cols: null,
+					square: null,
+					cells: sqcells,
+					offset: null,
+					value: val,
+					targets: tgts,
+					msg: `UR Type 5: Cells: ${tgts}, Value: ${val}`
 				}
 				rectangles.push(h);
 			}
@@ -271,30 +419,30 @@ export function rectangles() {
 		if (numextras === 2 && diagonal) {
 			var cn0 = nonextras[0];
 			var cn1 = nonextras[1];
-			var val0 = sqac[0];
-			var val1 = sqac[1];
 			// check both rows/cols for each value
 			var row0 = Rows[cellRow[cn0]];
 			var col0 = Cols[cellCol[cn0]];
 			var row1 = Rows[cellRow[cn1]];
 			var col1 = Cols[cellCol[cn1]];
 
-			var tgtsr0 = findTargets(row0, [val0], sqcells);
-			var tgtsc0 = findTargets(col0, [val0], sqcells);
-			var tgtsr1 = findTargets(row1, [val0], sqcells);
-			var tgtsc1 = findTargets(col1, [val0], sqcells);
-			hasVal0 = tgtsr0 !== null || tgtsc0 !== null || tgtsr1 !== null || tgtsc1 !== null;
-			var tgtsr0 = findTargets(row0, [val1], sqcells);
-			var tgtsc0 = findTargets(col0, [val1], sqcells);
-			var tgtsr1 = findTargets(row1, [val1], sqcells);
-			var tgtsc1 = findTargets(col1, [val1], sqcells);
-			hasVal1 = tgtsr0 !== null || tgtsc0 !== null || tgtsr1 !== null || tgtsc1 !== null;
+			var hasVal0r0 = rcsContainsValue(row0, vac0, sqcells);
+			var hasVal0r1 = rcsContainsValue(row1, vac0, sqcells);
+			var hasVal0c0 = rcsContainsValue(col0, vac0, sqcells);
+			var hasVal0c1 = rcsContainsValue(col1, vac0, sqcells);
+			console.log("6has0", vac0, sqcells, hasVal0r0, hasVal0r1, hasVal0c0, hasVal0c1);
+			hasVal0 = hasVal0r0 || hasVal0r1 || hasVal0c0 || hasVal0c1;
+
+			var hasVal1r0 = rcsContainsValue(row0, vac1, sqcells);
+			var hasVal1r1 = rcsContainsValue(row1, vac1, sqcells);
+			var hasVal1c0 = rcsContainsValue(col0, vac1, sqcells);
+			var hasVal1c1 = rcsContainsValue(col1, vac1, sqcells);
+			console.log("6has1", vac1, sqcells, hasVal1r0, hasVal1r1, hasVal1c0, hasVal1c1);
+			hasVal1 = hasVal1r0 || hasVal1r1 || hasVal1c0 || hasVal1c1;
 
 			console.log("Type6", cn0, cn1, sqac, hasVal0, hasVal1);
-			if ((hasVal0 && !hasVal1) || (!hasVal0 && hasVal1)) {
-				var val = hasVal0 ? val1 : val0;
+			if (!(hasVal0 === hasVal1)) {
+				var val = hasVal0 ? vac1 : vac0;
 
-				console.log("Type6", corner1, val, tgts, square);
 				var h = {
 					type: 'urType6',
 					rows: null,
@@ -311,36 +459,39 @@ export function rectangles() {
 			}
 		}
 
-		// check for Type 4
-		if (numextras === 2) {
+		// Type 4 has two nondiagonal cells with extra candidates
+		// for each house that the nondiagonal cells are in
+		//   if only one of the bivalue candidates in that house can be seen by the cells with extra candidates,
+		//   that candidate can be eliminated from the cells with extra candidates
+		if (!diagonal && numextras === 2) {
+			// Type 4 with common row/column
 			var cx0 = extras[0];
 			var cx1 = extras[1];
-			var comrow = commonRow(cx0, cx1);
-			var comcol = commonColumn(cx0, cx1);
-			var comsq = commonSquare(cx0, cx1);
-		}
-		var val0 = sqac[0];
-		var val1 = sqac[1];
-		var hasVal0 = false;
-		var hasVal1 = false;
+			var com = getCommonHouses(cx0, cx1);
 
-		// check for types 4 and 7
-		console.log("t47", numextras, comrow, comcol, comsq);
-		// check the common row/col/sq for only one of the bivalues
-		if (numextras === 2 && (comrow || comcol)) {
-			// Type 4 with common row/column
-			var arr = comrow ? Rows[cellRow[cx0]] : Cols[cellCol[cx0]];
-			console.log("com rc", cx0, cx1, sqac, comrow, comcol, comsq, arr);
-			var tgts0 = findTargets(arr, [val0], extras);
-			var tgts1 = findTargets(arr, [val1], extras);
-			hasVal0 = tgts0 !== null;
-			hasVal1 = tgts1 !== null;
-			console.log("Type4 RC", val0, val1, tgts0, tgts1, hasVal0, hasVal1);
-			if ((!hasVal0 && hasVal1) || (!hasVal0 && hasVal1)) {
-				// we have a Type 4 row/col
-				var val = hasVal0 ? sqac[0] : sqac[1];
-				var tgts = tgts0 !== null ? tgts0 : tgts1;
+			if (com[0] >= 0) {
+				// common row
+				hasVal0 = rcsContainsValue(Rows[com[0]], vac0, nonextras);
+				hasVal1 = rcsContainsValue(Rows[com[0]], vac1, nonextras);
+				console.log("has0", hasVal0, hasVal1);
+			}
+			if ((hasVal0 === hasVal1) && com[1] >= 0) {
+				// common col
+				hasVal0 = rcsContainsValue(Rows[com[1]], vac0, nonextras);
+				hasVal1 = rcsContainsValue(Rows[com[1]], vac1, nonextras);
+				console.log("has1", hasVal0, hasVal1);
+			}
+			if ((hasVal0 === hasVal1) && com[2] >= 0) {
+				// common square
+				hasVal0 = rcsContainsValue(Rows[com[2]], vac0, nonextras);
+				hasVal1 = rcsContainsValue(Rows[com[2]], vac1, nonextras);
+				console.log("has2", hasVal0, hasVal1);
+			}
+			console.log("com rc", square, cx0, cx1, com, nonextras, hasVal0, hasVal1);
+
+			if (!(hasVal0 === hasVal1)) {
 				console.log("Type4", oneextra, numextras, extraextras, extras, val, tgts, square);
+				var val = hasVal0 ? sqac[0] : sqac[1];
 				var h = {
 					type: 'urType4',
 					rows: null,
@@ -350,108 +501,98 @@ export function rectangles() {
 					offset: null,
 					value: val,
 					targets: extras,
-					msg: `UR Type4: Cells: ${extras}, Value: ${val}`
+					msg: `UR Type 4: Cells: ${extras}, Value: ${val}`
 				}
 				rectangles.push(h);
 				continue;
 			}
 		}
 
-		// row/com test failed, try the square if there is one
-		// try for a Type 4 square
-		if (numextras === 2 && comsq) {
-			// Type 4 with common square
-			var arr = Squares[cellSquare[cx0]];
-			console.log("com sq", cx0, cx1, sqac, comsq, arr);
-			var tgts0 = findTargets(arr, [val0], extras);
-			var tgts1 = findTargets(arr, [val1], extras);
-			hasVal0 = tgts0 !== null;
-			hasVal1 = tgts1 !== null;
-			console.log("Type4 SQ", val0, val1, tgts0, tgts1, hasVal0, hasVal1);
-			if ((!hasVal0 && hasVal1) || (!hasVal0 && hasVal1)) {
-				// we have a Type 4 row/col
-				var val = hasVal0 ? sqac[0] : sqac[1];
-				var tgts = tgts0 !== null ? tgts0 : tgts1;
-				console.log("Type4", oneextra, numextras, extraextras, extras, val, tgts, square);
-				var h = {
-					type: 'urType4',
-					rows: null,
-					cols: null,
-					square: null,
-					cells: sqcells,
-					offset: null,
-					value: val,
-					targets: extras,
-					msg: `UR Type4: Cells: ${extras}, Value: ${val}`
-				}
-				rectangles.push(h);
-				continue;
-			}
-		}
-
-		// not Type 4, let us try for Type 7
-		// for these we are interested in a diagonal pair with at least one bivalue cell
-		if (numextras === 2) {
-			// we should have a diagonal bivalue pair at this point
-			// the corners are the cells without the extra values
-			var corner0 = nonextras[0];
-			var corner1 = nonextras[1];
-		} else { // should be numextras === 3
-			var corner0 = findDiagonalCorner(nonextras[0], extras);
-			var corner1 = null;
-		}
-
-		if (numextras >= 2 && !comrow && !comcol && !comsq) {
-			console.log("diag", corner0, corner1, sqac);
-			// for each corner of the diagonal, check the candidates in each row/col
-			// there is always a corner 0
-			var row = Rows[cellRow[corner0]];
-			var col = Cols[cellCol[corner0]];
-			var tgtsr0 = findTargets(row, [val0], sqcells);
-			var tgtsc0 = findTargets(col, [val0], sqcells);
-			var tgtsr1 = findTargets(row, [val1], sqcells);
-			var tgtsc1 = findTargets(col, [val1], sqcells);
-			hasVal0 = tgtsr0 !== null || tgtsc0 !== null;
-			hasVal1 = tgtsr1 !== null || tgtsc1 != null;
-			console.log("Type7a", corner0, hasVal0, hasVal1);
-
-			if ((hasVal0 && !hasVal1) || (!hasVal0 && hasVal1)) {
-				// this corner works
-
-				var val = hasVal0 ? sqac[0] : sqac[1];
-				var tgts = hasVal0 ? [...tgtsr0, ...tgtsc0] : [...tgtsr1, ...tgtsc1];
-				console.log("Type7a", corner1, val, tgts, square);
-				var h = {
-					type: 'urType7',
-					rows: null,
-					cols: null,
-					square: null,
-					cells: sqcells,
-					offset: null,
-					value: val,
-					targets: [corner0],
-					msg: `UR Type7: Cells: ${corner0}, Value: ${val}`
-				}
-				rectangles.push(h);
-				continue;
+		// Type 7 for these we are interested in a diagonal pair with at least one bivalue cell
+		if ((diagonal && numextras === 2) || numextras === 3) {
+			if (diagonal && numextras === 2) {
+				// either diagonal bivalue pairs with two cells with additonal candidates
+				// we should have a diagonal bivalue pair at this point
+				// the corners are the cells without the extra values
+				var corner0 = nonextras[0];
+				var corner1 = nonextras[1];
+			} else if (numextras === 3) {
+				// or one bivalue cell with three cells with extra candidates
+				// corner0 should be the cell diagonally opposite the bivalue cell
+				var corner0 = findDiagonalCorner(nonextras[0], extras);
+				var corner1 = null;
 			}
 
-			if (corner1) {	// if there are two usable corners
+			console.log("diag7", corner0, corner1, sqac);
+			if (!corner1) {
+				// we have three cells with extra candidates
+				// so we use the cell diagonally opposite the bivalue cell
+				var row = Rows[cellRow[corner0]];
+				var col = Cols[cellCol[corner0]];
+				var hasVal0r = rcsContainsValue(row, vac0, sqcells);
+				var hasVal0c = rcsContainsValue(col, vac0, sqcells);
+				hasVal0 = hasVal0r || hasVal0c;
+
+				var hasVal1r = rcsContainsValue(row, vac1, sqcells);
+				var hasVal1c = rcsContainsValue(col, vac1, sqcells);
+				hasVal1 = hasVal1r || hasVal1c;
+
+				console.log("Type7a", corner0, hasVal0, hasVal1);
+
+				if (!(hasVal0 === hasVal1)) {
+					// this corner works
+					var val = hasVal0 ? vac0 : vac1;
+					console.log("Type7a", corner1, val, tgts, square);
+					var h = {
+						type: 'urType7',
+						rows: null,
+						cols: null,
+						square: null,
+						cells: sqcells,
+						offset: null,
+						value: val,
+						targets: [corner0],
+						msg: `UR Type 7: Cells: ${corner0}, Value: ${val}`
+					}
+					rectangles.push(h);
+					continue;
+				}
+			}
+
+			if (corner0 && corner1) {	// if there are two usable corners
+				// for each corner check the values in the houses
+				var row = Rows[cellRow[corner0]];
+				var col = Cols[cellCol[corner0]];
+				var hasVal0r = rcsContainsValue(row, vac0, sqcells);
+				var hasVal0c = rcsContainsValue(col, vac0, sqcells);
+				var hasVal00 = hasVal0r || hasVal0c;
+				var hasVal1r = rcsContainsValue(row, vac1, sqcells);
+				var hasVal1c = rcsContainsValue(col, vac1, sqcells);
+				var hasVal01 = hasVal1r || hasVal1c;
+				var corner0usable = hasVal00 !== hasVal01;
+
 				var row = Rows[cellRow[corner1]];
 				var col = Cols[cellCol[corner1]];
-				var tgtsr0 = findTargets(row, [val0], sqcells);
-				var tgtsc0 = findTargets(col, [val0], sqcells);
-				var tgtsr1 = findTargets(row, [val1], sqcells);
-				var tgtsc1 = findTargets(col, [val1], sqcells);
-				hasVal0 = tgtsr0 !== null && tgtsc0 !== null;
-				hasVal1 = tgtsr1 !== null && tgtsc1 != null;
-				console.log("Type7b", corner1, hasVal0, hasVal1);
+				var hasVal0r = rcsContainsValue(row, vac0, sqcells);
+				var hasVal0c = rcsContainsValue(col, vac0, sqcells);
+				var hasVal10 = hasVal0r || hasVal0c;
+				var hasVal1r = rcsContainsValue(row, vac1, sqcells);
+				var hasVal1c = rcsContainsValue(col, vac1, sqcells);
+				var hasVal11 = hasVal1r || hasVal1c;
+				var corner1usable = hasVal10 !== hasVal11;
 
-				if ((hasVal0 && !hasVal1) || (!hasVal0 && hasVal1)) {
-					// this corner works
+				console.log("Type7b", corner0, corner1, corner0usable, corner1usable);
 
-					var val = hasVal0 ? sqac[0] : sqac[1];
-					var tgts = hasVal0 ? [...tgtsr0, ...tgtsc0] : [...tgtsr1, ...tgtsc1];
+				if (corner0usable || corner1usable) {
+					// something works
+					if (corner0usable) {
+						var corner = corner0;
+						var val = hasVal00 ? vac0 : vac1;
+					} else {
+						var corner = corner1;
+						var val = hasVal10 ? vac0 : vac1;
+					}
+
 					console.log("Type7b", corner1, val, tgts, square);
 					var h = {
 						type: 'urType7',
@@ -461,14 +602,15 @@ export function rectangles() {
 						cells: sqcells,
 						offset: null,
 						value: val,
-						targets: [corner1],
-						msg: `UR Type7: Cells: ${corner1}, Value: ${val}`
+						targets: [corner],
+						msg: `UR Type 7: Cells: ${corner}, Value: ${val}`
 					}
 					rectangles.push(h);
 					continue;
 				}
 			}
 		}
+
 
 
 	}

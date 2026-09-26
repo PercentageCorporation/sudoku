@@ -55,8 +55,10 @@ export default function PlayMenu() {
 			case "xyzWing":
 			case "swordfish":
 			case "urType1":
-			case 'urType25':
+			case 'urType2':
+			case 'urType3':
 			case 'urType4':
+			case 'urType5':
 			case 'urType6':
 			case 'urType7':
 				console.log("hint:", h);
