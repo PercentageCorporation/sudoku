@@ -1,4 +1,28 @@
+import { LinearToGrid } from "../utilities/constants";
 
+
+export function linearTextToGrid(values) {
+	var grid = new Array(81).fill(0);
+	for (let i = 0; i < 81; i++) {
+		var tval = values[i];
+		var val = isNaN(tval) ? 0 : Number(tval);
+		grid[LinearToGrid[i]] = Number(val);
+	}
+	//console.log(values);
+	//console.log(grid);
+	return grid;
+}
+
+export function gridToLinearText(grid) {
+	var linear = "";
+	for (let i = 0; i < 81; i++) {
+		var val = grid[LinearToGrid[i]].value;
+		linear += (val === 0) ? " " : Number(val);
+	}
+	//console.log(values);
+	console.log("/"+linear+"/");
+	return linear;
+}
 
 
 
@@ -26,7 +50,7 @@ export function getGame(ix) {
 	var retGame = null;
 	games.games.forEach((g) => {
 		var gnum = g.number;
-		console.log("getGame", ix, g.description);
+		//console.log("getGame", ix, g.description);
 		if (gnum === ix) {
 			retGame = g;
 		}
@@ -42,7 +66,7 @@ export function saveGame(description, cells) {
 	var games = JSON.parse(lcgames);
 
 	var ngames =  games["games"].length;
-	console.log("saved games", ngames);
+	//console.log("saved games", ngames);
 	var newgame = {
 		number: ngames + 1,
 		description: description,
@@ -54,16 +78,16 @@ export function saveGame(description, cells) {
 	//console.log(sgames);
 
 	localStorage.setItem('sudoku-games', sgames);
-	console.log("game saved")
+	//console.log("game saved")
 	return newgame.number;
 }
 
 export function deleteGame(ix) {
-	console.log("delete game", ix);
+	//console.log("delete game", ix);
 	var lcgames = localStorage.getItem('sudoku-games');
 	if (!lcgames) return null;
 	var games = JSON.parse(lcgames);
-	console.log("delete game", ix, games);
+	//console.log("delete game", ix, games);
 	var ngames =  games.length;
 	if (ngames === 0) return null;
 	games.games = games.games.filter((g) => g.number != ix);
@@ -71,7 +95,7 @@ export function deleteGame(ix) {
 	//console.log(sgames);
 
 	localStorage.setItem('sudoku-games', sgames);
-	console.log("game deleted",games)
+	//console.log("game deleted",games)
 
 }
 

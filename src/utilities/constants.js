@@ -1,4 +1,4 @@
-export const ninetolinear = [
+export const LinearToGrid = [
  0, 1, 2,	 9,10,11,	18,19,20,
  3, 4, 5,	12,13,14,	21,22,23,
  6, 7, 8,	15,16,17,	24,25,26,

@@ -2,18 +2,17 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cellStore, useCellActions, useHintStore } from "./store/store";
 import { getSSGame } from "./utilities/sudoku-solutions";
-import { gridToLinearText } from "./utilities/utilities";
 import GameGrid from "./components/GameGrid";
 import PlayMenu from "./components/PlayMenu";
 import Spinner from "./components/Spinner";
 
 export default function App() {
-	const { newGame, resetGame, initGame, updateCandidates, saveState, restoreState } = useCellActions();
+	const { newGame, resetGame, initGame, updateCandidates, saveState, restoreState, getLinearText } = useCellActions();
 	const { gameLoaded, difficulty, gameId, cells, saved } = cellStore();
 	const { resetHint } = useHintStore();
 	const navigate = useNavigate();
 	console.log("App", gameLoaded, difficulty, gameId);
-	console.log("saved", saved.length);
+	//console.log("saved", saved.length);
 
 	useEffect(() => {
 		console.log("App UE");
@@ -69,9 +68,11 @@ export default function App() {
 
 	function showLinear(e) {
 		e.preventDefault();
-		var linear = gridToLinearText(cells);
-		alert(linear);
+		var linear = getLinearText();
+		//alert(linear);
 		console.log(linear);
+		var linearspaces = linear.replaceAll('0', ' ');
+		console.log(linearspaces);
 	}
 
 	if (!gameLoaded) return <Spinner />;

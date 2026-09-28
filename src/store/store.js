@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { findCandidates } from "../utilities/utilities";
-import { RCS, ninetolinear } from "../utilities/constants";
+import { RCS, LinearToGrid } from "../utilities/constants";
 
 // export const ManCell = {
 // 	value: 0,
@@ -47,7 +47,7 @@ export const useManCellsStore = create (
 			getManCellsLinear: () => {
 				var linear = ""
 				var cells = get().cells
-				for (var i = 0; i < cells.length; ++i) linear += Number(cells[ninetolinear[i]])
+				for (var i = 0; i < cells.length; ++i) linear += Number(cells[LinearToGrid[i]])
 				return linear
 			},
 
@@ -144,7 +144,7 @@ export const cellStore = create(
 			difficulty: "",
 			gameId: "",
 			numbersUsed: [0,0,0,0,0,0,0,0,0,0],
-			gameComplete: false,
+			gameComplete: 0,
 			gameLoaded: false,
 
 			actions: {
@@ -178,7 +178,7 @@ export const cellStore = create(
 						editCandidates: -1,
 						difficulty: difficulty,
 						gameId: gameid,
-						gameComplete: false,
+						gameComplete: 0,
 						numbersUsed: [0,0,0,0,0,0,0,0,0,0],
 						gameLoaded: true
 					});
@@ -215,7 +215,7 @@ export const cellStore = create(
 						currentValue: -1,
 						difficulty: "",
 						gameId: gameId,
-						gameComplete: false,
+						gameComplete: 0,
 						gameLoaded: true,
 						hint: {...Hint}
 					}),
@@ -231,7 +231,7 @@ export const cellStore = create(
 						selectedCell: -1,
 						selectedValue: -1,
 						currentValue: -1,
-						gameComplete: false,
+						gameComplete: 0,
 						gameLoaded: false
 					})
 				},
@@ -244,7 +244,7 @@ export const cellStore = create(
 						}
 						return {
 							cells,
-							gameComplete: false,
+							gameComplete: 0,
 							gameLoaded: true,
 						}
 					}),
@@ -267,7 +267,7 @@ export const cellStore = create(
 							const cells = [...state.saved]
 							return {
 								cells,
-								gameComplete: false,
+								gameComplete: 0,
 								gameLoaded: true,
 							}
 						}
@@ -296,7 +296,7 @@ export const cellStore = create(
 					}
 					set({
 						numbersUsed: used,
-						gameComplete: complete,
+						gameComplete: 0,
 						selectedValue: selVal
 					})
 				},
@@ -394,7 +394,7 @@ export const cellStore = create(
 				//  0: finished
 				//  1: finished, alternate solution
 				checkGameSolved: () => {
-					console.log("gameComplete");
+					//console.log("gameComplete");
 					const cells = get().cells;
 					var alt = false;
 					var solved = true;
@@ -416,6 +416,17 @@ export const cellStore = create(
 					set({
 						gameComplete: s
 					})
+					return solved;
+				},
+
+				getLinearText: () => {
+					var linear = "";
+					var cells = get().cells;
+					for (let i = 0; i < 81; i++) {
+						var val = cells[LinearToGrid[i]].value;
+						linear += Number(val);
+					}
+					return linear;
 				},
 
 				getCells: () => {
@@ -432,7 +443,7 @@ export const cellStore = create(
 				},
 
 				setGameSolved: (tf) => {
-					set({ gameComplete: tf})
+					set({ gameComplete: tf ? 1 : 0})
 				},
 
 				setEditCandidates: (cix) => {

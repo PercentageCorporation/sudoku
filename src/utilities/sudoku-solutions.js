@@ -1,6 +1,6 @@
-import { apiGetGame } from "./sudokuApi";
-import { sampleGames } from "../store/sampleGames";
-import { linearToGrid } from "./utilities";
+import { apiGetGame } from "/src/utilities/sudokuApi";
+import { sampleGames } from "/src/store/sampleGames";
+import { linearTextToGrid } from "/src/utilities/games";
 
 const SUDOKUSOLUTIONS_API = "https://www.sudoku-solutions.com/";
 
@@ -39,8 +39,8 @@ export function getSSGame() {
 	const difficulty = g["difficulty"];
 	const v = g["values"];
 	const s = g["solution"];
-	const values = linearToGrid(v);
-	const solution = linearToGrid(s);
+	const values = linearTextToGrid(v);
+	const solution = linearTextToGrid(s);
 	return {values, solution, difficulty, gameid};
 }
 

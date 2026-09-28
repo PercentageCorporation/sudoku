@@ -6,40 +6,6 @@ function getCellLocal(ix) {
 	return getCell(ix);
 }
 
-export function linearToGrid(values) {
-	var vix = 0;
-	var grid = [];
-
-	// for each row
-	for (let r = 0; r < 9; r++) {
-		// for each cell in the row
-		var row = Rows[r];
-		for (let rc = 0; rc < 9; rc++) {
-			var cix = row[rc];
-			grid[cix] = values[vix++]
-		}
-	}
-	//console.log(values);
-	//console.log(grid);
-	return grid;
-}
-
-export function gridToLinearText(cls) {
-	var linear = "";
-
-	for (let s=0; s<9; s++) {
-		var row = Rows[s];
-		for (let rc = 0; rc < 9; rc++) {
-			var cix = row[rc];
-			var val = cls[cix].value;
-			linear += (val === 0) ? " " : Number(val);
-		}
-	}
-	//console.log(values);
-	console.log("/"+linear+"/");
-	return linear;
-}
-
 // array of squares to linear - keep if needed later
 export function getNewGame(dif) {
 	var board;

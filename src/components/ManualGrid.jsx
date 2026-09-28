@@ -4,9 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { useCellActions, useManCellsStore, useHintStore } from "/src/store/store";
 import { LRUD, bstyles } from "/src/utilities/constants";
 import LoadGameModal from "/src/components/LoadGameModal";
-import { deleteGame, getGame, saveGame } from "../utilities/games";
+import { deleteGame, getGame, saveGame, linearTextToGrid } from "../utilities/games";
 import SaveGameModal from "./SaveGameModal";
 import ConfirmModal from "./ConfirmModal";
+import ImportGameModal from "./ImportGameModal";
 
 function ManualCell({ix}) {
 	const { getManCell, selectedCell, setManSelectedCell } = useManCellsStore();
@@ -60,6 +61,7 @@ export default function ManualGrid() {
 	const { loadGame } = useCellActions();
 
 	const [ loadSavedGame, setLoadSavedGame ] = useState(false);
+	const [ importGame, setImportGame ] = useState(false);
 	const [ saveManGame, setSaveManGame ] = useState(false);
 	const [ deleteId, setDeleteId ] = useState(null);
 	//console.log("ManGrid", selectedCell);
@@ -182,6 +184,11 @@ export default function ManualGrid() {
 		setDeleteId({number: manNumber, title: "Delete Game", content: content})
 	}
 
+	function handleImportGame(e) {
+		e.preventDefault();
+		setImportGame(true)
+	}
+
 	function loadConfirm(ix) {
 		console.log("load game", ix);
 		setLoadSavedGame(false);
@@ -227,9 +234,25 @@ export default function ManualGrid() {
 		setDeleteId(null);
 	}
 
+	function importConfirm(gamecells) {
+		console.log("importGame");
+		console.log(gamecells);
+		setImportGame(false);
+		var grid = linearTextToGrid(gamecells);
+		console.log(grid);
+		loadManCells("", "Imported Game", grid);
+		useManCellsStore.persist.rehydrate();
+		navigate("/manual");
+	}
+
+	function importCancel() {
+		setImportGame(false);
+	}
+
 	return (
 		<div className="max-w-[412px] mx-2 ">
 			<div>
+			{ importGame && <ImportGameModal onConfirm={importConfirm} onCancel={importCancel}/> }
 			{ loadSavedGame && <LoadGameModal onConfirm={loadConfirm} onCancel={loadCancel}/> }
 			{ saveManGame && <SaveGameModal onConfirm={saveConfirm} onCancel={saveCancel}/> }
 			{ deleteId && <ConfirmModal title={deleteId.title} content={deleteId.content} onConfirm={deleteConfirm} onCancel={deleteCancel}/> }
@@ -269,6 +292,14 @@ export default function ManualGrid() {
 						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Return to Game
+					</button>
+					<button
+						type="button"
+						tabIndex={-1}
+						onClick={(e) => handleImportGame(e)}
+						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						>
+						Import Game
 					</button>
 				</div>
 				<div className="mx-2 flex flex-row justify-between mt-4">
