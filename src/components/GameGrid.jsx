@@ -90,18 +90,20 @@ function Cell({ix}) {
 	}
 	else if (hint.type) {
 		switch (hint.type) {
-			case "locked":
-			case "nakedPair":
-			case "nakedTriple":
-			case "pointingPair":
-			case "pointingPairSquare":
-			case "hiddenPair":
-			case "hiddenTriple":
-			case "swordfish":
-				if (hint.cells.includes(ix))
-					selMode = 3;
+			case "colorsI":
+				if (hint.cells0.includes(ix))
+					selMode = 8;
+				else if (hint.cells1.includes(ix))
+					selMode = 9;
 				else if (hint.targets.includes(ix))
+						selMode = 3;
+				break;
+
+			case "colorsI":
+				if (hint.cells.includes(ix))
 					selMode = 2;
+			else if (hint.targets.includes(ix))
+				selMode = 3;
 			break;
 
 			case "pointingPairXX":
@@ -112,6 +114,15 @@ function Cell({ix}) {
 				}
 				break;
 
+			case "locked":
+			case "nakedPair":
+			case "nakedTriple":
+			case "pointingPair":
+			case "pointingPairSquare":
+			case "hiddenPair":
+			case "hiddenTriple":
+			case "swordfish":
+			case 'wWing':
 			case 'xWing':
 			case 'xyWing':
 			case 'xyTriple':
@@ -176,6 +187,12 @@ function Cell({ix}) {
 			break;
 		case 7:
 			cn = "bg-slate-200";
+			break;
+		case 8:
+			cn = "bg-red-200";
+			break;
+		case 9:
+			cn = "bg-blue-200";
 			break;
 	}
 	const bs = bstyles[ix];

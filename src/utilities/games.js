@@ -65,10 +65,13 @@ export function saveGame(description, cells) {
 	if (!lcgames) {lcgames = `{"games": []}`;};
 	var games = JSON.parse(lcgames);
 
-	var ngames =  games["games"].length;
 	//console.log("saved games", ngames);
+	var gnum = 1;
+	games["games"].forEach((g) => {
+		g.number = gnum++
+	})
 	var newgame = {
-		number: ngames + 1,
+		number: gnum,
 		description: description,
 		game: cells
 	}

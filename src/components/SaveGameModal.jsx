@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getGameList } from "../utilities/games";
 
-export default function SaveGameModal({ onConfirm, onCancel }) {
+export default function SaveGameModal({ description, onConfirm, onCancel }) {
 
 	useEffect(() => {
 
@@ -28,6 +28,7 @@ export default function SaveGameModal({ onConfirm, onCancel }) {
 					<div className="flex flex-col w-full">
 						<div className='text-lg font-bold'>Enter Game Description</div>
 						<input id="game-descr"
+							defaultValue={description}
 							type="text"
 							className="w-full mt-2 px-2 text-lg border-1"
 						/>

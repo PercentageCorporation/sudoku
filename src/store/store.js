@@ -397,25 +397,26 @@ export const cellStore = create(
 					//console.log("gameComplete");
 					const cells = get().cells;
 					var alt = false;
-					var solved = true;
+					var complete = true;
 					for (var i=0; i<81; ++i) {
 						const c = cells[i];
 						if (c.value === 0) {
-							solved = false;
+							complete = false;
 							break;
 						}
 						if (c.solutionValue > 0 && c.value !== c.solutionValue) alt = true;
 					}
 
-					var s = 0;
-					if (!solved) {
-						s = 1;
-						if (alt) s = 2;
+					var solved = 0;
+					if (complete) {
+						solved = 1;
+						if (alt) solved = 2;
 					}
 
 					set({
-						gameComplete: s
+						gameComplete: complete
 					})
+					console.log("gameComplete", solved, complete);
 					return solved;
 				},
 

@@ -8,7 +8,7 @@ import Spinner from "./components/Spinner";
 
 export default function App() {
 	const { newGame, resetGame, initGame, updateCandidates, saveState, restoreState, getLinearText } = useCellActions();
-	const { gameLoaded, difficulty, gameId, cells, saved } = cellStore();
+	const { gameLoaded, difficulty, gameId, saved } = cellStore();
 	const { resetHint } = useHintStore();
 	const navigate = useNavigate();
 	console.log("App", gameLoaded, difficulty, gameId);
@@ -80,7 +80,7 @@ export default function App() {
 	return (
 		<div className="max-w-[412px] mx-2 select-none">
 			<div className="mx-2 h-12 flex items-center text-lg font-semibold">
-				{`Difficulty: ${difficulty} / Game: ${gameId}`}
+				{difficulty === "" ? `Game: ${gameId}` : `Difficulty: ${difficulty} / Game: ${gameId}`}
 			</div>
 			<div className="">
 				<GameGrid />

@@ -165,12 +165,12 @@ export function nakedPairs() {
 		}
 	}
 
-	console.log("npHints", npHints);
+	//console.log("npHints", npHints);
 
 	var nakedPairs = [];
 
 	npHints.forEach((nph) => {
-		console.log("nph", nph);
+		//console.log("nph", nph);
 		var dir = nph[0];
 		var cls = nph[2];
 		var vals = nph[3];

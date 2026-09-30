@@ -1,6 +1,8 @@
 import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCells, sqRows012, sqCols012, RCS } from '/src/utilities/constants';
-import { findTargets, findInternalTargets, includesAll, includesAny } from '/src/hints/hints';
-import { cells, findAllBivalueCells, findAllTrivalueCells } from '/src/hints/hints';
+import { findTargets, includesAll, includesAny } from '/src/hints/hints';
+import { cells, getBivalueList, findConjugatePairs, findAllTrivalueCells, findSeenTargets2, cellHasCandidate } from '/src/hints/hints';
+import { sameRow2, sameCol2, sameSq2 } from '/src/hints/hints';
+import { canSeeEachOther } from './hints';
 
 
 //*****************************************************************************
@@ -9,42 +11,6 @@ import { cells, findAllBivalueCells, findAllTrivalueCells } from '/src/hints/hin
 function getCommonValue(ac1, ac2) {
 	// find the common value
 	return ac1.filter(item => ac2.includes(item));
-}
-
-function findPairInRow(rix, p) {
-	//console.log("inRow", rixin, p);
-	var rp = [];
-	var row = Rows[rix];
-	for (var r=0; r<9; ++r) {
-		var cix = row[r];
-		var cel = cells[cix];
-		//console.log("inRow", cix);
-		var ac = cel.activecandidates;
-		if (cel.value === 0 && ac.length === 2) {
-			if (ac.includes(p[0]) && ac.includes(p[1])) {
-				rp.push(cix);
-			}
-		}
-	}
-	return rp;
-}
-
-function findPairInCol(cixin, p) {
-	var cp = [];
-	//console.log("inCol", cixin, p);
-	var col = Cols[cixin];
-	for (var c=0; c<9; ++c) {
-		var cix = col[c];
-		//console.log("inCol", cix);
-		var cel = cells[cix];
-		var ac = cel.activecandidates;
-		if (cel.value === 0 && ac.length === 2) {
-			if (ac.includes(p[0]) && ac.includes(p[1])) {
-				cp.push(cix);
-			}
-		}
-	}
-	return cp;
 }
 
 function findXYPairs(ppiv, pivots) {
@@ -140,123 +106,150 @@ function findKillZone(pix, p0, p1, val) {
 }
 
 //*****************************************************************************
-// X-Wing
+// X-Wing (Fish size 2)
 
 export function XWing() {
-	var xwings = [];
+
+	var feathers = [];
 
 	// for every value
 	for (var value=1; value<10; ++value) {
-		// for each row
+		// look for rows that have only 2 of the value
 		var rowPairs = [];
 		for (var r=0; r<9; ++r) {
 			var count = 0;
 			var colCells = [];
 			var row = Rows[r];
-			// for each cell in the row
-			for (var c=0; c<9; ++c) {
-				var cix = row[c];
+			// for each cell in the row check if it contains the value
+			for (var i=0; i<9; ++i) {
+				var cix = row[i];
 				var clx = cells[cix];
+				// if the cell contains the value record the column cell
 				if (clx.value === 0 && clx.activecandidates.includes(value)) {
 					count++;
-					colCells.push(cellCol[cix]);
+					colCells.push(cix);
 				}
 			}
+			// if the row contains just two of the value, save the column cells
 			if (count === 2) {
 				rowPairs.push( [r, colCells]);
 			}
 		}
-		//console.log("xw", value, rowPairs.length, rowPairs);
+		//console.log("rowPairs", value, rowPairs);
+		// look for columhs that have only 2 of the value
+		var colPairs = [];
+		for (var c=0; c<9; ++c) {
+			var count = 0;
+			var rowCells = [];
+			var col = Cols[c];
+			// for each cell in the row check if it contains the value
+			for (var i=0; i<9; ++i) {
+				var cix = col[i];
+				var clx = cells[cix];
+				// if the cell contains the value record the column cell
+				if (clx.value === 0 && clx.activecandidates.includes(value)) {
+					count++;
+					rowCells.push(cix);
+				}
+			}
+			// if the row contains just two of the value, save the column cells
+			if (count === 2) {
+				colPairs.push( [c, rowCells]);
+			}
+		}
+		//console.log("colPairs", value, colPairs);
 
-		if (rowPairs.length > 1) {
-			for (var i=0; i<rowPairs.length; ++i) {
-				var pi = rowPairs[i];
-				for (var j=i+1; j<rowPairs.length; ++j) {
-					var pj = rowPairs[j];
-					//console.log(pi, pj);
-					if (pi[1][0] === pj[1][0] && pi[1][1] === pj[1][1]) {
-						var r0 = pi[0];
-						var r1 = pj[0];
-						var c0 = pi[1][0];
-						var c1 = pj[1][1];
-						//console.log("xw", value, r0, r1, c0, c1);
+		// we now have a list of rows that contain two cells of a candidate value
+		// check to see if any combinatin of the rows have matching columns
+		var rplen = rowPairs.length;
+		for (var i=0; i<rplen; ++i) {
+			var pi = rowPairs[i];
+			for (var j=i+1; j<rplen; ++j) {
+				var pj = rowPairs[j];
+				// rowPair: [ row, [colCell, colCell] ]
+				var r0c0 = pi[1][0];	//  r0c0 r0c1
+				var r0c1 = pi[1][1];
+				var r1c0 = pj[1][0];	//  r1c0 r1c1
+				var r1c1 = pj[1][1];
+				//console.log("xwr", value, pi, pj, r0c0, r0c1, r1c0, r1c1);
 
-						// check for candidates for elimination
-						var hasCandidates = false;
-						var targets = [];
-						// check the rows for elimination candidates
-						var rlist = [r0,r1];
-						var clist = [c0,c1];
-						for (var k in rlist) {
-							var rx = rlist[k];
-							//console.log("RX",rx, rlist)
-							var row = Rows[rx];
-							// for each cell in the row
-							for (var cx=0; cx<9; ++cx) {
-								if (cx != c0 && cx != c1) {
-									var cix0 = row[cx];
-									var cl0 = cells[cix0]
-									//console.log("rc", rx, cx, cix0, cl0);
-									if (cl0.value === 0 && cl0.activecandidates.includes(value)) {
-										hasCandidates = true;
-										targets.push(cix0)
-										console.log("push1", cix0);
-									}
-								}
-							}
-						}
-						// check the rows for elimination candidates
-						for (k in clist) {
-							var cx = clist[k]
-							var col = Cols[cx];
-							// for each cell in the cols
-							for (var rx=0; rx<9; ++rx) {
-								if (rx != r0 && rx != r1) {
-									var cix0 = col[rx];
-									var cl0 = cells[cix0]
-									//console.log("cc", rx, cx, cix0, cl0);
-									if (cl0.value === 0 && cl0.activecandidates.includes(value)) {
-										hasCandidates = true;
-										targets.push(cix0)
-										//console.log("push3", cix0);
-									}
-								}
-							}
-						}
-						if (hasCandidates) {
-							var x0 = (r0*9)+c0;
-							var x1 = (r0*9)+c1;
-							var x2 = (r1*9)+c0;
-							var x3 = (r1*9)+c1;
-							//console.log(x0,x1,x2,x3);
-							var xwcells = [
-								Rows[r0][c0],
-								Rows[r0][c1],
-								Rows[r1][c0],
-								Rows[r1][c1],
-							];
-							//console.log("has", targets, r0, r1, c0, c1, xwcells);
-							var xw = {
-								type: 'xWing',
-								rows: [r0,r1],
-								cols: [c0,c1],
-								square: null,
-								cells: xwcells,
-								offset: null,
-								value: value,
-								targets: targets,
-								msg: `XWing Rows: ${r0}, ${r1}, Cols: ${c0}, ${c1}, Value: ${value}`
-							}
-							xwings.push(xw);
+				if (!sameCol2(r0c0,r1c0) || !sameCol2(r0c1,r1c1)) continue;
+				//console.log("xwr", value, pi, pj, r0c0, r0c1, r1c0, r1c1);
+				// we have an X-Wing in rows at this point
 
-						}
+				// HOWEVER, they cannot share a square (if this is possible ???)
+				if (sameSq2(r0c0, r1c0)) continue;
 
-					}
+				// check the columns for possible targets
+				var t0 = findTargets(Cols[cellCol[r0c0]], [value], [r0c0,r1c0]);
+				var t1 = findTargets(Cols[cellCol[r0c1]], [value], [r0c1,r1c1]);
+				var tgts = [];
+				if (t0) tgts = tgts.concat(t0);
+				if (t1) tgts = tgts.concat(t1);
+				if (tgts.length > 0) {
+					//console.log("xw", value, r0, r1, c0, c1);
+					var cls = [r0c0, r0c1, r1c0, r1c1];
+					feathers.push([value, cls, tgts]);
+				}
+			}
+		}
+		// do the same for the column pairs
+		var cplen = colPairs.length;
+		for (var i=0; i<cplen; ++i) {
+			var pi = colPairs[i];
+			for (var j=i+1; j<cplen; ++j) {
+				var pj = colPairs[j];
+				//console.log(pi, pj);
+				var c0r0 = pi[1][0];	//  r0c0 r0c1
+				var c0r1 = pi[1][1];
+				var c1r0 = pj[1][0];	//  r1c0 r1c1
+				var c1r1 = pj[1][1];
+				//console.log("xwc", value, pi, pj, c0r0, c0r1, c1r0, c1r1);
+				if (!sameRow2(c0r0,c1r0) || !sameRow2(c0r1,c1r1)) continue;
+				//console.log("xwc1", value, pi, pj, c0r0, c0r1, c1r0, c1r1);
+				// we have an X-Wing in columns at this point
+
+				// HOWEVER, they cannot share a square (if this is possible ???)
+				if (sameSq2(c0r0, c1r0)) continue;
+
+				// check the rows for possible targets
+				var t0 = findTargets(Rows[cellRow[c0r0]], [value], [c0r0,c1r0]);
+				var t1 = findTargets(Rows[cellRow[c0r1]], [value], [c0r1,c1r1]);
+				var tgts = [];
+				if (t0) tgts = tgts.concat(t0);
+				if (t1) tgts = tgts.concat(t1);
+				if (tgts.length > 0) {
+					//console.log("xw", value, r0, r1, c0, c1);
+					var cls = [c0r0, c0r1, c1r0, c1r1];
+					feathers.push([value, cls, tgts]);
 				}
 			}
 		}
 	}
 
+	console.log("feathers", feathers);
+
+	var xwings = [];
+
+	feathers.forEach((f) => {
+		var val = f[0];
+		var cls = f[1];
+		var tgts = f[2]
+		//console.log("has", targets, r0, r1, c0, c1, xwcells);
+		var xw = {
+			type: 'xWing',
+			rows: null,
+			cols: null,
+			square: null,
+			cells: cls,
+			offset: null,
+			value: val,
+			targets: tgts,
+			msg: `XWing Cells: ${cls}, Value: ${val}`
+		}
+		xwings.push(xw);
+
+	})
 
 	if (xwings.length == 0) return null;
 	return xwings;
@@ -477,61 +470,37 @@ export function XYZWing() {
 // W-Wing
 
 export function WWing() {
-	var wwings = [];
 
-	//console.log("wwing", rCounts2, cCounts2 );
+	var cpairs = findConjugatePairs();
+	//console.log("cpairs", cpairs);
+	if (cpairs.length === 0) return null;
 
-	var bvp = findAllBivalueCells();
-	// bv: [ cix, [ac] ]
-	//console.log("bvp", bvp);
-
-	var bvpp = [];
-	var bvplen = bvp.length;
-	var i = 0;
-	while (i<bvplen) {
-		var bvpi = bvp[i];
-		var bvix = bvpi[0];
-		var bxrcsi = RCS[bvix];
-		// create array of [ [ac], [rcs] ]
-		var bvppi = [bvp[i][4], [bxrcsi]];
-		// check the rest of the pairs and collect the rcs
-		for (var j=i+1; j<bvplen; ++j) {
-			if (bvp[i][1].includesAll(bvp[j][1])) {
-				var bxrcsj = RCS[bvp[j][0]];
-				bvppi[1].push(bxrcsj)
-			} else {
-				if (bvppi[1].length > 1) bvpp.push(bvppi);
-				bvppi = null;
-				//continue bvi;
-				i = j-1;
-				break;
-			}
-		}
-		if (bvppi && bvppi[1].length > 1) bvpp.push(bvppi);
-		++i;
-	}
-
-	console.log("bvpp", bvpp);
+	// get a list of bivalues and their cells
+	var bvl = getBivalueList();
+	//console.log("bvlist", bvl);
+	// bvl: [ [pair] [cells] ]
 
 	// we have all the bivalue pairs
 	// we need to regroup them into pairs of pairs that cannot see each other
 
 	var endpoints = [];
-	bvpp.forEach((bvp) => {
-		// bvp: [[pair] [[cix,r,c,s]...]]
+	bvl.forEach((bvp) => {
+		// bvp: [ [pair] [[cix, cix, ] ]
 		var bvp1 = bvp[1];
 		var b1len = bvp1.length;
 		if (b1len === 2) {
-			if (bvp1[0][1] !== bvp1[1][1] && bvp1[0][2] !== bvp1[1][2] && bvp1[0][3] !== bvp1[1][3]) {
+			//console.log("push1", bvp1[0], bvp1[1]);
+			if (!canSeeEachOther(bvp1[0], bvp1[1])) {
 				endpoints.push(bvp);
 				//console.log("push1", bvp);
 			}
 		} else {
+			// for each cell with the pair
 			for (var i=0; i<b1len; ++i) {
 				var bvp1i = bvp1[i];	//
 				for (var j=i+1; j<b1len; ++j) {
 					var bvp1j = bvp1[j];
-					if (bvp1i[1] !== bvp1j[1] && bvp1i[2] !== bvp1j[2] && bvp1i[3] !== bvp1j[3]) {
+					if (!canSeeEachOther(bvp1i, bvp1j)) {
 						var bp = [bvp[0],[bvp1i,bvp1j]];
 						endpoints.push(bp);
 						//console.log("push2", i, j, bp);
@@ -540,12 +509,81 @@ export function WWing() {
 			}
 		}
 	});
-	console.log("endpoints", endpoints);
+	//console.log("endpoints", endpoints);
+	if (endpoints.length === 0) return null;
 
+	// now we need to connect enpoints with conjugate pairs
+	// cp: [ value, [cel0, [ac0]], [cel1, [ac1]] ]
+	// ep: [ [ac], [cel0, cel1] ]
+	var ww = [];
+	var eplen = endpoints.length;
+	var cplen = cpairs.length;
+	for (var ep=0; ep<eplen; ++ep) {
+		var epv0 = endpoints[ep][0][0];
+		var epv1 = endpoints[ep][0][1];
+		var epvals = [epv0,epv1];
+		var ep0 = endpoints[ep][1][0];	// endpoint cell 0
+		var ep1 = endpoints[ep][1][1];	// endpoint cell 1
+		//console.log("ep", epvals, epv0, epv1, ep0, ep1);
+		// find conjugate pair of the same value with ends that can be seen by the endpoints
+		for (var cp=0; cp<cplen; ++cp) {
+			// for each value in the pair
+			var cpc0 = cpairs[cp][1][0];
+			var cpc1 = cpairs[cp][2][0];
+			// the endpoint cells can actually match the conjugate pair cells
+			if (ep0 === cpc0) continue;
+			if (ep0 === cpc1) continue;
+			if (ep1 === cpc0) continue;
+			if (ep1 === cpc1) continue;
 
+			// can the CP and ENDPOINT be in the same HOUSE ?????
+
+			for( var v=0; v<2; ++v) {
+				var cpv = cpairs[cp][0];
+				if (cpv !== epvals[v]) continue;	// not same value
+				// can each of the ends of the pair be seen by one of the endpoints
+				// two way comparison 0-0 1-1 or 0-1 1-0
+				//console.log("epc", cpv, ep0, ep1, cpc0, cpc1);
+				if (canSeeEachOther(ep0, cpc0) && canSeeEachOther(ep1, cpc1)) {
+					// check for targets
+					var tgts = findSeenTargets2(epv1, ep0, ep1)
+					//console.log("ep match0", epv1, ep, cp, ep0, cpc0, cpc1, ep1, tgts);
+					if (tgts) ww.push([epv1,[ep0, cpc0, cpc1, ep1], tgts ]);
+
+				} else if (canSeeEachOther(ep0, cpc1) && canSeeEachOther(ep1, cpc0)) {
+					var tgts = findSeenTargets2(epv1, ep0, ep1)
+					//console.log("ep match1", epv1, ep, cp, ep0, cpc1, cpc0, ep1, tgts);
+					if (tgts) ww.push([epv1, [ep0, cpc1, cpc0, ep1], tgts ]);
+				}
+			}
+		}
+	}
+
+	var wwings = [];
+	ww.forEach((w) => {
+		var val = w[0];
+		var cls = w[1];
+		var targets = w[2];
+
+		var h = {
+			type: 'wWing',
+			row: null,
+			col: null,
+			square: null,
+			cells: cls,
+			offset: null,
+			value: val,
+			targets: targets,
+			msg: `W-Wing: Cells: ${cls}, Value: ${val}`
+		}
+		wwings.push(h);
+	})
 
 	if (wwings.length === 0) return null;
 	console.log("wwings", wwings);
 	return wwings;
 }
+
+//*****************************************************************************
+// Finned X-Wing
 

@@ -1,6 +1,7 @@
 import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCells, sqRows012, sqCols012, RCS } from '/src/utilities/constants';
-import { rCounts2, cCounts2, sCounts2, rCounts3, cCounts3, rCounts23, cCounts23, sCounts23, rCounts2p, cCounts2p } from '/src/hints/hints';
+import { vRows, vCols, vSqs } from '/src/hints/hints';
 import { cells, findTargets, findInternalTargets, includesAll, includesAny } from '/src/hints/hints';
+import { rcsCounts } from './hints';
 
 
 //*****************************************************************************
@@ -87,15 +88,15 @@ function findPairTriples(pairs) {
 	return triples;
 }
 
+// for each house find the cells with 2 or 3 candidates
 function rcsPairsTriples(arr) {
 	var pt = [];
 	for (var j=0; j<9; j++) {
 		var cix = arr[j];
 		var cell = cells[cix];
+		if (cell.value > 0) continue;
 		var ac = cell.activecandidates;
-		if (cell.value > 0 || ac.length === 0) continue;
-		//var pandt = findPairsTriples(ac);
-		pt.push([j,ac]);
+		if (ac.length >= 2) pt.push([j,ac]);
 	}
 	return Array.from(pt).sort((a,b) => a-b);
 }
@@ -206,9 +207,8 @@ function findNakedTriples(arr) {
 				// the triple cells must have only 2 or 3 candidates
 				if (acj.length !== 2 && acj.length !== 3) continue
 
-				// are all of the acj values included in aci
-				var inc = includesAny(aci, acj);
-				if (!inc) continue;
+				// are any of the acj values included in aci
+				if (!includesAny(aci, acj)) continue;
 				// if both are of length 2, the cannot have identical candidates
 				if (aci.length === 2 && acj.length === 2 && includesAll(aci, acj)) continue;
 				// if both are of length 3, they must have identical candidates
@@ -226,8 +226,9 @@ function findNakedTriples(arr) {
 					var ack = ck.activecandidates;
 					if (ack.length !== 2 && ack.length !== 3) continue;
 
-					// are any of the ack values included in aci
+					// are any of the ack values included in aci or acj
 					if (!includesAny(aci, ack)) continue;
+					if (!includesAny(acj, ack)) continue;
 					// if both are of length 2, the cannot have identical candidates
 					if (aci.length === 2 && ack.length === 2 && includesAll(aci, ack)) continue;
 					// if both are of length 3, they must have identical candidates
@@ -248,9 +249,11 @@ function findNakedTriples(arr) {
 
 					var cls = [cixi, cixj, cixk];
 					var vs = new Set();
-					aci.forEach(vs.add, vs)
-					acj.forEach(vs.add, vs)
-					ack.forEach(vs.add, vs)
+					aci.forEach(vs.add, vs);
+					acj.forEach(vs.add, vs);
+					ack.forEach(vs.add, vs);
+					if (vs.size > 3) continue;	// too many candidates
+
 					var vals = Array.from(vs).sort((a,b) => a-b);
 					var tgts = findTargets(arr, vals, cls);
 					if (tgts) triples.push([cls, vals, tgts]);
@@ -285,6 +288,7 @@ export function findHiddenTriple(ptIn) {
 	var hx;
 	do {
 		var pack = packTheHouse(pt);
+		//console.log("pack", pack, pt);
 		updated = pack.updated;
 		hx = pack.house;
 		//console.log(updated, pt, hx);
@@ -372,9 +376,53 @@ export function findHiddenTriple(ptIn) {
 }
 
 //*****************************************************************************
+// Naked Triples
+
+export function nakedTriples() {
+
+	var triples = [];
+
+	for (var i=0; i<9; i++) {
+		var rt = findNakedTriples(Rows[i])
+		if (rt.length > 0) rt.forEach((t) => triples.push(['r', i].concat(t)));
+		var ct = findNakedTriples(Cols[i])
+		if (ct.length > 0) ct.forEach((t) => triples.push(['c', i].concat(t)));
+		var st = findNakedTriples(Squares[i])
+		if (st.length > 0) st.forEach((t) => triples.push(['s', i].concat(t)));
+	}
+
+	//console.log("np triples",triples)
+	var nakedTriples = [];
+	triples.forEach((npt) => {
+		var rcs = npt[0];
+		var rcsix = npt[1];
+		var cls = npt[2];
+		var vals = npt[3];
+		var tgts = npt[4]
+		//console.log(dir,trc0,cls)
+
+		var h = {
+			type: 'nakedTriple',
+			row: rcs === 'r' ? rcsix : null,
+			col: rcs === 'c' ? rcsix : null,
+			square: rcs === 's' ? rcsix : null,
+			cells: cls,
+			offset: null,
+			values: vals,
+			targets: tgts,
+			msg: `Naked Triple: Cells: ${tgts}, Values: ${vals}`
+		}
+		nakedTriples.push(h);
+	})
+
+
+	if (nakedTriples.length === 0) return null;
+	console.log("nakedTriples",nakedTriples)
+	return nakedTriples;
+}
+
+//*****************************************************************************
 // Hidden Triples
-
-
 
 export function hiddenTriples() {
 
@@ -383,19 +431,19 @@ export function hiddenTriples() {
 	var vSqPT = [];
 
 	// for each row/col/square calculate the possible triples/pairs for each cell;
-	// for (var i=0; i<9; i++) {
-	// 	var rc = rcsPairsTriples(Rows[i]);
-	// 	var cc = rcsPairsTriples(Cols[i]);
-	// 	var sc = rcsPairsTriples(Squares[i]);
-	// 	vRowPT.push([i, rc]);
-	// 	vColPT.push([i, cc]);
-	// 	vSqPT.push([i, sc]);
-	// }
+	for (var i=0; i<9; i++) {
+		var rc = rcsPairsTriples(Rows[i]);
+		var cc = rcsPairsTriples(Cols[i]);
+		var sc = rcsPairsTriples(Squares[i]);
+		vRowPT.push([i, rc]);
+		vColPT.push([i, cc]);
+		vSqPT.push([i, sc]);
+	}
 	var cc = rcsPairsTriples(Cols[4]);
 	vColPT.push([4, cc]);
 	// these are all the cells and their candidates for each row/col/sq cell that have two or more candidates
 	// [ col, [ [offset, [candidates]], [offset, [candidates], ...] ] ]
-	//console.log(vRowPT, vColPT, vSqPT);
+	//console.log("PT", vRowPT, vColPT, vSqPT);
 
 
 	// for each row/col/square find the triples
@@ -433,11 +481,15 @@ export function hiddenTriples() {
 		var row = Rows[r];
 		var cls = [ row[rc[1][0]],row[rc[1][1]],row[rc[1][2]] ];
 		var vals = rc[2];
-		var tgtvals = findInternalTargets(cls, vals);
-		if (tgtvals) {
-			// have targets
-			//console.log("r",r,cls,tgtvals[1],tgtvals[0]);
-			targets.push(["r",r,cls,tgtvals[1],tgtvals[0]]);
+		// if there are any external targets this is not a valid triple
+		var et = findTargets(row, vals, cls);
+		if (!et) {
+			var tgtvals = findInternalTargets(cls, vals);
+			if (tgtvals) {
+				// have targets
+				//console.log("r",r,cls,tgtvals[1],tgtvals[0]);
+				targets.push(["r",r,cls,tgtvals[1],tgtvals[0]]);
+			}
 		}
 	})
 
@@ -447,11 +499,14 @@ export function hiddenTriples() {
 		var cls = [ col[cc[1][0]],col[cc[1][1]],col[cc[1][2]] ];
 		var vals = cc[2];
 		//console.log("cc", c, col, cls, vals);
-		var tgtvals = findInternalTargets(cls, vals);
-		if (tgtvals) {
-			// have targets
-			//console.log("c",c,cls,tgtvals[1],tgtvals[0]);
-			targets.push(["c",c,cls,tgtvals[1],tgtvals[0]]);
+		var et = findTargets(col, vals, cls);
+		if (!et) {
+			var tgtvals = findInternalTargets(cls, vals);
+			if (tgtvals) {
+				// have targets
+				//console.log("c",c,cls,tgtvals[1],tgtvals[0]);
+				targets.push(["c",c,cls,tgtvals[1],tgtvals[0]]);
+			}
 		}
 	})
 
@@ -460,15 +515,18 @@ export function hiddenTriples() {
 		var sq = Squares[s];
 		var cls = [ sq[sc[1][0]],sq[sc[1][1]],sq[sc[1][2]] ];
 		var vals = sc[2];
-		var tgtvals = findInternalTargets(cls, vals);
-		if (tgtvals) {
-			// have targets
-			//console.log("s",s,cls,tgtvals[1],tgtvals[0]);
-			targets.push(["s",s,cls,tgtvals[1],tgtvals[0]]);
+		var et = findTargets(sq, vals, cls);
+		if (!et) {
+			var tgtvals = findInternalTargets(cls, vals);
+			if (tgtvals) {
+				// have targets
+				//console.log("s",s,cls,tgtvals[1],tgtvals[0]);
+				targets.push(["s",s,cls,tgtvals[1],tgtvals[0]]);
+			}
 		}
 	})
 
-	//console.log("targets",targets);
+	console.log("targets",targets);
 
 	var triples = [];
 	targets.forEach((tgt) => {
@@ -499,51 +557,5 @@ export function hiddenTriples() {
 	if (triples.length === 0) return null;
 	console.log("triples",triples);
 	return triples;
-}
-
-//*****************************************************************************
-// Naked Triples
-
-export function nakedTriples() {
-
-	var triples = [];
-
-	for (var i=0; i<9; i++) {
-		var rt = findNakedTriples(Rows[i])
-		if (rt.length > 0) rt.forEach((t) => triples.push(['r', i].concat(t)));
-		var ct = findNakedTriples(Cols[i])
-		if (ct.length > 0) ct.forEach((t) => triples.push(['c', i].concat(t)));
-		var st = findNakedTriples(Squares[i])
-		if (st.length > 0) st.forEach((t) => triples.push(['s', i].concat(t)));
-	}
-
-	console.log("np triples",triples)
-	var nakedTriples = [];
-	triples.forEach((npt) => {
-		var rcs = npt[0];
-		var rcsix = npt[1];
-		var cls = npt[2];
-		var vals = npt[3];
-		var tgts = npt[4]
-		//console.log(dir,trc0,cls)
-
-		var h = {
-			type: 'nakedTriple',
-			row: rcs === 'r' ? rcsix : null,
-			col: rcs === 'c' ? rcsix : null,
-			square: rcs === 's' ? rcsix : null,
-			cells: cls,
-			offset: null,
-			values: vals,
-			targets: tgts,
-			msg: `Naked Triple: Cells: ${tgts}, Values: ${vals}`
-		}
-		nakedTriples.push(h);
-	})
-
-
-	if (nakedTriples.length === 0) return null;
-	console.log("nakedTriples",nakedTriples)
-	return nakedTriples;
 }
 

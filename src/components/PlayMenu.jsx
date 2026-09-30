@@ -6,7 +6,7 @@ import { runHints } from '/src/hints/hints';
 
 export default function PlayMenu() {
 	const { selectedValue, selectedCell } = cellStore();
-	const { setCellValue, clearCellValue, setSelectedValue, clearSelectedValue, clearSelectedCell, getCell } = useCellActions();
+	const { setCellValue, clearCellValue, setSelectedValue, clearSelectedValue, clearSelectedCell } = useCellActions();
 	const { checkGameSolved, calcNumbersUsed } = useCellActions();
 	const { updateCandidates, addNonCandidate } = useCellActions();
 	const { gameComplete, numbersUsed } = cellStore();
@@ -21,9 +21,9 @@ export default function PlayMenu() {
 		if (!valid) {
 			setMessage("Invalid Board");
 		} else {
-			const solved = gameComplete;
-			console.log("solved:", solved);
-			if (solved == 1) {
+			const solved = checkGameSolved();
+			console.log("gameComplete:", solved, gameComplete);
+			if (solved === 1) {
 				console.log("game solved");
 				setMessage("Game Solved");
 			} else if (solved == 2) {
@@ -53,6 +53,7 @@ export default function PlayMenu() {
 			case "xyTriple":
 			case "xyChain":
 			case "xyzWing":
+			case 'wWing':
 			case "swordfish":
 			case "urType1":
 			case 'urType2':
@@ -61,6 +62,7 @@ export default function PlayMenu() {
 			case 'urType5':
 			case 'urType6':
 			case 'urType7':
+			case 'colorsI':
 				console.log("hint:", h);
 				var cls = h.targets;
 				cls.forEach((cix) => {

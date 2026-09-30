@@ -189,6 +189,35 @@ export default function ManualGrid() {
 		setImportGame(true)
 	}
 
+	function handleReadGame(e) {
+		e.preventDefault();
+		var input = document.createElement('input');
+		input.type = 'file';
+		input.onchange = e => {
+			// getting a hold of the file reference
+			var filename = e.target.value.split('\\').pop().split('/').pop().split('.')[0];
+			console.log("filename:", filename);
+			var file = e.target.files[0];
+			// setting up the reader
+			var reader = new FileReader();
+			reader.readAsText(file,'UTF-8');
+			// here we tell the reader what to do when it's done reading...
+			reader.onload = readerEvent => {
+				var gamecells = readerEvent.target.result; // this is the content!
+				if (gamecells.length != 81) {
+					alert("Import not correct length");
+					return;
+				}
+				var grid = linearTextToGrid(gamecells);
+				console.log(grid);
+				loadManCells("", filename, grid);
+				useManCellsStore.persist.rehydrate();
+				navigate("/manual");
+			}
+		}
+		input.click();
+	}
+
 	function loadConfirm(ix) {
 		console.log("load game", ix);
 		setLoadSavedGame(false);
@@ -254,19 +283,19 @@ export default function ManualGrid() {
 			<div>
 			{ importGame && <ImportGameModal onConfirm={importConfirm} onCancel={importCancel}/> }
 			{ loadSavedGame && <LoadGameModal onConfirm={loadConfirm} onCancel={loadCancel}/> }
-			{ saveManGame && <SaveGameModal onConfirm={saveConfirm} onCancel={saveCancel}/> }
+			{ saveManGame && <SaveGameModal description={manDescription} onConfirm={saveConfirm} onCancel={saveCancel}/> }
 			{ deleteId && <ConfirmModal title={deleteId.title} content={deleteId.content} onConfirm={deleteConfirm} onCancel={deleteCancel}/> }
 			</div>
 			<div className="mx-2 h-12 flex items-center text-lg font-semibold">
-				{manNumber && `${manNumber} : ${manDescription}`}
+				{manNumber ? `${manNumber} : ${manDescription}` :  `${manDescription}`}
 			</div>
 			<div className="px-1 grid grid-cols-3 w-full  border-black-300">
 			{
 				index.map((y, ix) => { return (<ManualGrid9 key={ix} y={y} />) })
 			}
 			</div>
-			<div className="mt-4 text-base font-semibold">
-				<div className="mx-2 flex flex-row justify-between mt-4 text-base font-semibold">
+			<div className="mt-4 text-sm font-normal">
+				<div className="mx-2 flex flex-row justify-between mt-4">
 					<button
 						type="button"
 						tabIndex={-1}
@@ -301,6 +330,14 @@ export default function ManualGrid() {
 						>
 						Import Game
 					</button>
+					<button
+						type="button"
+						tabIndex={-1}
+						onClick={(e) => handleReadGame(e)}
+						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						>
+						Read Game
+					</button>
 				</div>
 				<div className="mx-2 flex flex-row justify-between mt-4">
 					<button
@@ -317,7 +354,7 @@ export default function ManualGrid() {
 						onClick={(e) => handleLoadGame(e)}
 						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
-						Load Game
+						Load Saved Game
 					</button>
 					<button
 						type="button"

@@ -1,72 +1,6 @@
-import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCells, sqRows012, sqCols012, RCS } from '/src/utilities/constants';
-import { findTargets, findInternalTargets, includesAll, includesAny } from '/src/hints/hints';
-import { cells, vRows, vCols, vSqs } from '/src/hints/hints';
-
-
-// if the cells are in the same row, return the row number
-function sameRow(cls) {
-	var clen = cls.length;
-	for (var i=0; i<clen; ++i) {
-		for (var j=i+1; j<clen; ++j) {
-			if (RCS[cls[i]][0] !== RCS[cls[j]][0]) return null;
-		}
-	}
-	return RCS[cls[0]][0];
-}
-
-function sameCol(cls) {
-	var clen = cls.length;
-	for (var i=0; i<clen; ++i) {
-		for (var j=i+1; j<clen; ++j) {
-			if (RCS[cls[i]][1] !== RCS[cls[j]][1]) return null;
-		}
-	}
-	return RCS[cls[0]][1];
-}
-
-function sameSql(cls) {
-	var clen = cls.length;
-	for (var i=0; i<clen; ++i) {
-		for (var j=i+1; j<clen; ++j) {
-			if (RCS[cls[i]][2] !== RCS[cls[j]][2]) return null;
-		}
-	}
-	return RCS[cls[0]][2];
-}
-
-function sameRow2(c0, c1) {
-	if (RCS[c0][0] === RCS[c1][0]) return RCS[c0][0];
-	return null;
-}
-
-function sameRow3(c0, c1, c2) {
-	if (RCS[c0][0] !== RCS[c1][0]) return null;
-	if (RCS[c0][0] !== RCS[c2][0]) return null;
-	return RCS[c0][0];
-}
-
-function sameCol2(c0, c1) {
-	if (RCS[c0][1] === RCS[c1][1]) return RCS[c0][1];
-	return null;
-}
-
-function sameCol3(c0, c1, c2) {
-	if (RCS[c0][1] !== RCS[c1][1]) return null;
-	if (RCS[c0][1] !== RCS[c2][1]) return null;
-	return RCS[c0][1];
-}
-
-// get same
-function getSameIndices(arr) {
-	var rc = [];
-	var counts = [0,0,0,0,0,0,0,0,0];
-	arr.forEach((rc) => {counts[rc] += 1;});
-	counts.forEach((c, ix) => {
-		if (c>1) rc.push(ix);
-	})
-	//if (rc.length === 0) return null;
-	return rc;
-}
+import { Rows, Cols, Squares, RCS } from '/src/utilities/constants';
+import { findTargets } from '/src/hints/hints';
+import { vSqs, sameRow, sameCol } from '/src/hints/hints';
 
 //*****************************************************************************
 // lockedCandidates
@@ -75,21 +9,23 @@ export function lockedCandidates1() {
 
 	var lc = [];
 	for (var s=0; s<9; ++s) {
+		if (s !== 2) continue;	// TEST
 		var square = Squares[s];
 		for (var v=1; v<10; ++v) {
 			var vcnt = vSqs[s][v];	// number of occurances of the value in the square
 			if (vcnt > 1 && vcnt < 4) {
 				// svc: rcs, value, square, row/col, count, cells
 				var cls = findTargets(square, [v], [])
-				//console.log("vcnt", s, v, vcnt, cls);
 				var srow = sameRow(cls);
-				if (srow) {
+				//console.log("vcnt", s, v, vcnt, cls, srow);
+				if (srow !== null) {
 					var arr = Rows[srow];
 					var tgts = findTargets(arr, [v], square);
+					//console.log("tgts", tgts);
 					if (tgts) lc.push(['r', srow, v, cls, tgts, s])
 				} else {
 					var scol = sameCol(cls);
-					if (scol) {
+					if (scol !== null) {
 						var arr = Cols[scol];
 						var tgts = findTargets(arr, [v], square);
 						if (tgts) lc.push(['c', scol, v, cls, tgts, s])
@@ -98,7 +34,7 @@ export function lockedCandidates1() {
 			}
 		}
 	}
-	console.log("lc", lc);
+	//console.log("lc", lc);
 
 	var lchints = [];
 	lc.forEach((lh) => {

@@ -1,10 +1,9 @@
-import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCells, sqRows012, sqCols012, RCS } from '/src/utilities/constants';
-import { rCounts2, cCounts2, sCounts2, rCounts3, cCounts3, rCounts23, cCounts23, sCounts23, rCounts2p, cCounts2p } from '/src/hints/hints';
+import { Rows, Cols, Squares, cellRow, cellCol, RCS } from '/src/utilities/constants';
 import { cells } from '/src/hints/hints';
 import { includesAll, includesAny } from '/src/hints/hints';
-import { findAllBivalueCells, rcsContainsValue, findTargets, findSeenTargets2,  findSeenTargets3, findTargetsAll, findTargetsOnly } from '/src/hints/hints';
+import { findAllBivalueCells, rcsContainsValue, findTargets, findSeenTargets2,  findSeenTargets3, findTargetsOnly } from '/src/hints/hints';
 import { getActiveCandidates, getCandidateCells, findCandidatesWithValues } from '/src/hints/hints';
-import { countTheHouse, packTheHouse, findHiddenTriple, checkForTripleCounts } from '/src/hints/triples';
+import { countTheHouse, checkForTripleCounts } from '/src/hints/triples';
 //*****************************************************************************
 // Unique Rectangles
 
@@ -301,7 +300,7 @@ export function rectangles() {
 				var arr = Cols[cellCol[cx0]];
 
 			var virtcell = extraextras;
-			console.log("Type3", extras, nonextras, extraextras);
+			//console.log("Type3", extras, nonextras, extraextras);
 
 			if (virtcell.length === 2) {
 				// look for naked pair

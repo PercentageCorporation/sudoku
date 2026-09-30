@@ -8,6 +8,7 @@ import { lockedCandidates1 } from '/src/hints/locked';
 import { XWing, XYWing, XYZWing, WWing } from '/src/hints/wings';
 import { XYChain } from '/src/hints/chains';
 import { swordfish } from '/src/hints/swordfish';
+import { colors1 } from '/src/hints/colors';
 
 
 
@@ -46,9 +47,11 @@ export function runHints() {
 	if (result) return result[0];
 	result = XYZWing();
 	if (result) return result[0];
-	//result = wWing();
-	//if (result) return result[0];
+	result = WWing();
+	if (result) return result[0];
 	result = swordfish();
+	if (result) return result[0];
+	result = colors1();
 	if (result) return result[0];
 
 	return null;
@@ -101,6 +104,7 @@ function initCounts() {
 	cCounts2p = [[],[],[],[],[],[],[],[],[],[]];
 
 	// get the value counts for all rows/columns/squares
+	// how many of each value are in the row/col/sq
 	for (var i=0; i<9; i++) {
 		var rc = rcsCounts(Rows[i]);
 		var cc = rcsCounts(Cols[i]);
@@ -111,6 +115,9 @@ function initCounts() {
 	}
 	//console.log(vRows, vCols, vSqs);
 
+	// the Counts arrays contain the indices of the cells in a row/col/sq
+	//   with the given count(s)
+	// ex: rCounts2[x] = [0,3,5] means that offsets 0, 3, 5 contain 2 of value x
 	for (var v=1; v<10; v++) {
 		for (var i=0; i<9; i++) {
 			var rc = vRows[i][v];
@@ -149,6 +156,18 @@ export function rcsCounts(arr) {
 		candid.forEach((c) => {counts[c] += 1;});
 	}
 	return counts;
+}
+
+export function findAllCellsWithValue(value) {
+	var all = [];
+	for (var cix=0; cix<81; ++cix) {
+		var c = cells[cix];
+		var ac = c.activecandidates;
+		if ( c.value === 0 && ac.includes(value)) {
+			all.push(cix);
+		}
+	}
+	return all;
 }
 
 // find cells in the array which contain any of vals, excluding cells in ex
@@ -247,6 +266,15 @@ export function findCandidatesWithValues(can, vals) {
 		if (includesAny(c[1], vals)) candids.push(c);
 	})
 	return candids;
+}
+
+export function canSeeEachOtherRC(c0, c1) {
+	var rcs0 = RCS[c0];
+	var rcs1 = RCS[c1];
+	// they must be in the same house
+	if (rcs0[0] === rcs1[0]) return true;
+	if (rcs0[1] === rcs1[1]) return true;
+	return false;
 }
 
 export function canSeeEachOther(c0, c1) {
@@ -365,6 +393,44 @@ export function findAllBivalueCells() {
 	return bv;
 }
 
+// list all bivalue cells where there are two or more cells
+export function getBivalueList() {
+
+	var bvpairs = findAllBivalueCells();
+	var bvplen = bvpairs.length;
+	//console.log("bvpairs", bvpairs)
+	// bv: [ cix, [ac] ]
+	// pack the pairs
+	var bvpp = [];
+	var brcsi = [];
+	// first, pack the list of pairs so there is only one entry per pair
+	for (var i = 0; i < bvplen; ++i) {
+		// bvpi: [ [ac], [[cix, rcs], ... ] ]
+		var bvpi = bvpairs[i];
+		var brcsi = [bvpi[1], [bvpi[0]]];
+		for (var j = i + 1; j < bvplen; ++j) {
+			var bvpj = bvpairs[j];
+			if (includesAll(bvpi[1], bvpj[1])) {
+				brcsi[1].push(bvpj[0]);	// add cell ix to array
+			} else {
+				bvpp.push(brcsi);
+				brcsi = null;
+				//continue bvi;
+				i = j - 1;
+				break;
+			}
+		}
+		if (brcsi) bvpp.push(brcsi);
+	}
+	var bvpl = [];
+	// get all the entries with two or more cells
+	bvpp.forEach((b) => {
+		if (b[1].length >= 2) bvpl.push(b);
+	})
+	//console.log("bvpp", bvpp)
+	return bvpl;
+}
+
 export function findAllTrivalueCells() {
 	var bv = [];
 	for (var cix=0; cix<81; ++cix) {
@@ -375,16 +441,6 @@ export function findAllTrivalueCells() {
 		}
 	}
 	return bv;
-}
-
-function findAllTargets(rcs,vals) {
-	var targets = [];
-	for (var i=0; i<9; i++) {
-		var cix = rcs[i];
-		var c = cells[cix];
-		if (c.value === 0 && includesAny(c.activecandidates, vals)) targets.push(cix);
-	}
-	return targets;
 }
 
 
@@ -475,5 +531,183 @@ function oneColValues(sq, sqrc) {
 		}
 	}
 	return rv;
+}
+
+// if the cells are in the same row, return the row number
+export function sameRow(cls) {
+	var clen = cls.length;
+	for (var i=0; i<clen; ++i) {
+		for (var j=i+1; j<clen; ++j) {
+			if (RCS[cls[i]][0] !== RCS[cls[j]][0]) return null;
+		}
+	}
+	return RCS[cls[0]][0];
+}
+
+export function sameCol(cls) {
+	var clen = cls.length;
+	for (var i=0; i<clen; ++i) {
+		for (var j=i+1; j<clen; ++j) {
+			if (RCS[cls[i]][1] !== RCS[cls[j]][1]) return null;
+		}
+	}
+	return RCS[cls[0]][1];
+}
+
+export function sameSq(cls) {
+	var clen = cls.length;
+	for (var i=0; i<clen; ++i) {
+		for (var j=i+1; j<clen; ++j) {
+			if (RCS[cls[i]][2] !== RCS[cls[j]][2]) return null;
+		}
+	}
+	return RCS[cls[0]][2];
+}
+
+export function sameRow2(c0, c1) {
+	if (RCS[c0][0] === RCS[c1][0]) return RCS[c0][0];
+	return null;
+}
+
+export function sameRow3(c0, c1, c2) {
+	if (RCS[c0][0] !== RCS[c1][0]) return null;
+	if (RCS[c0][0] !== RCS[c2][0]) return null;
+	return RCS[c0][0];
+}
+
+export function sameCol2(c0, c1) {
+	if (RCS[c0][1] === RCS[c1][1]) return RCS[c0][1];
+	return null;
+}
+
+export function sameCol3(c0, c1, c2) {
+	if (RCS[c0][1] !== RCS[c1][1]) return null;
+	if (RCS[c0][1] !== RCS[c2][1]) return null;
+	return RCS[c0][1];
+}
+
+export function sameSq2(c0, c1) {
+	if (RCS[c0][2] === RCS[c1][2]) return RCS[c0][2];
+	return null;
+}
+
+// find all occurances of the value in the row/col/sq
+function findValuePairsInRCS(arr, val) {
+	var cls = [];
+	var count = 0;
+	for (var i=0; i<9; ++i) {
+		const cixi = arr[i];
+		const celli = cells[cixi];
+		if (celli.value > 0) continue;
+		var aci = celli.activecandidates;
+		if (!aci.includes(val)) continue;
+		// found one, look for the other
+		for (var j=i+1; j<9; ++j) {
+			const cixj = arr[j];
+			const cellj = cells[cixj];
+			if (cellj.value > 0) continue;
+			var acj = cellj.activecandidates;
+			if (!acj.includes(val)) continue;
+			// found two
+			// cls: [ [offset, cix, ac], [offset, cix, ac] ]
+			cls.push([i, cixi, aci],[j, cixj, acj]);
+		}
+	}
+	return cls;
+}
+
+// find conjugate pairs
+// if a value only appears twice in a row/col/sq it is a strong link conjugate pair
+export function findConjugatePairs() {
+
+	// for each row for each value of count 2 get their cell info
+	var cpairs = [];
+	for (var v=1; v<10; ++v) {
+		var vrows = rCounts2[v];
+		//console.log(v, vrows);
+		// vrows are the rows containing 2 of value v
+		vrows.forEach((r) => {
+			// vrows [ [offset1, cell1, ac1] [offset2, cell2, ac2] ]
+			// find the two cells containing value v in the row
+			var vals = findValuePairsInRCS(Rows[r], v);
+			if (vals.length === 2) {
+				var ac1 = vals[0][2]
+				var ac2 = vals[1][2]
+				var cel1 = vals[0][1];
+				var cel2 = vals[1][1];
+				// var col1 = RCS[cel1][1];
+				// var col2 = RCS[cel2][1];
+				// var sq1 = RCS[cel1][2];
+				// var sq2 = RCS[cel2][2];
+				// var rcs1 = [r, col1, sq1, cel1, ac1];
+				// var rcs2 = [r, col2, sq2, cel2, ac2];
+				var rcs1 = [cel1, ac1];
+				var rcs2 = [cel2, ac2];
+				cpairs.push([v, rcs1, rcs2]);
+			}
+		})
+
+		var vcols = cCounts2[v];
+		//console.log(v, vcols);
+		vcols.forEach((c) => {
+			// vals [ [offset1, cell1, ac1] [offset2, cell2, ac2] ]
+			var vals = findValuePairsInRCS(Cols[c], v);
+			if (vals.length === 2) {
+				var ac1 = vals[0][2]
+				var ac2 = vals[1][2]
+				var cel1 = vals[0][1];
+				var cel2 = vals[1][1];
+				// var row1 = RCS[cel1][0];
+				// var row2 = RCS[cel2][0];
+				// var sq1 = RCS[cel1][2];
+				// var sq2 = RCS[cel2][2];
+				// var rcs1 = [row1, c, sq1, cel1, ac1];
+				// var rcs2 = [row2, c, sq2, cel2, ac2];
+				var rcs1 = [cel1, ac1];
+				var rcs2 = [cel2, ac2];
+				cpairs.push([v, rcs1, rcs2]);
+			}
+		})
+
+		var vsqs = sCounts2[v];
+		//console.log(v, vsqs);
+		vsqs.forEach((s) => {
+			// vals [ [off1, cell1, ac1] [off2, cell2, ac2] ]
+			var vals = findValuePairsInRCS(Squares[s], v);
+			if (vals.length === 2) {
+				var ac1 = vals[0][2]
+				var ac2 = vals[1][2]
+				var cel1 = vals[0][1];
+				var cel2 = vals[1][1];
+				// var row1 = RCS[cel1][0];
+				// var row2 = RCS[cel2][0];
+				// var col1 = RCS[cel1][1];
+				// var col2 = RCS[cel2][1];
+				// var rcs1 = [row1, col1, s, cel1, ac1];
+				// var rcs2 = [row2, col2, s, cel2, ac2];
+				var rcs1 = [cel1, ac1];
+				var rcs2 = [cel2, ac2];
+				cpairs.push([v, rcs1, rcs2]);
+			}
+		})
+	}
+	//console.log("cpairs", cpairs);
+
+	// remove duplicates because the pair can be in two houses
+	var ncp = [];
+	cpairs.forEach((a) => {
+		// find entry in new array
+		var found = false;
+		for (var i=0; i<ncp.length; ++i) {
+			var b = ncp[i];
+			//if (a[0] === b[0] && a[1][3] === b[1][3] && a[2][3] === b[2][3]) found = true;
+			if (a[0] === b[0] && a[1][1] === b[1][1] && a[2][1] === b[2][1]) found = true;
+			if (found) break;
+		}
+		if (!found) ncp.push(a);
+	})
+
+	//console.log("ncp", ncp);
+	return ncp;
 }
 
