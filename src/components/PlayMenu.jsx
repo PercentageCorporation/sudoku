@@ -64,8 +64,8 @@ export default function PlayMenu() {
 			case 'urType7':
 			case 'colorsI':
 				console.log("hint:", h);
-				var cls = h.targets;
-				cls.forEach((cix) => {
+				var tgts = h.targets;
+				tgts.forEach((cix) => {
 					if (h.values) {
 						h.values.forEach((value) => {
 							addNonCandidate(cix, value);
@@ -74,6 +74,17 @@ export default function PlayMenu() {
 					else if (h.value) {
 						addNonCandidate(cix, h.value);
 					}
+				})
+				clearSelectedValue();
+				clearSelectedCell();
+				break;
+
+			case 'colorsII':
+				console.log("hint:", h);
+				var tgts = h.targets;
+				var v = h.value;
+				tgts.forEach((cix) => {
+					setCellValue(cix, v);
 				})
 				clearSelectedValue();
 				clearSelectedCell();

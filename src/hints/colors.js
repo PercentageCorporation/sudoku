@@ -35,9 +35,19 @@ function getValuePairs(value) {
 	return vpairs;
 }
 
+function anyInSameHouse(arr) {
+	var arrlen = arr.length;
+	for (var i=0; i<arrlen; ++i) {
+		for (var j=i+1; j<arrlen; ++j) {
+			if (canSeeEachOther(arr[i], arr[j])) return true;
+		}
+	}
+	return false;
+}
 
-export function colors1() {
-	var colors1 = [];
+
+export function colors() {
+	var colors = [];
 
 	colorpairs = findConjugatePairs();
 	// cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
@@ -48,7 +58,7 @@ export function colors1() {
 	// valpairs[value]: [cp0, cp1, ... ]
 	var redblue = [];
 	for (var value=1; value<10; ++value) {
-		//if (value !== 3) continue;	// TEST
+		//if (value !== 6) continue;	// TEST
 		var red = [];
 		var blue = [];
 		var vp = getValuePairs(value);
@@ -94,20 +104,47 @@ export function colors1() {
 			}
 		}
 
+		if ((red.length + blue.length) < 3) continue;
+
+		var redSame = anyInSameHouse(red);
+		var blueSame =  anyInSameHouse(blue);
+
+		if (redSame || blueSame) {
+			//console.log("Type II", value, red, redSame, blue, blueSame);
+			var cls = redSame ? red : blue;
+			var tgts = redSame ? blue : red;
+			//console.log(cls, tgts);
+			var h = {
+				type: 'colorsII',
+				rows: null,
+				cols: null,
+				square: null,
+				cells: cls,
+				cells0: red,
+				cells1: blue,
+				offset: null,
+				value: value,
+				targets: tgts,
+				msg: `Colors II: Cells: ${tgts}, Value: ${value}`
+			}
+			colors.push(h);
+			continue;
+		}
+
 		// are there any occurances of value in a cell not included in red and blue
 		var allvals = findAllCellsWithValue(value);
 		var outliers = allvals.filter(f => !red.includes(f) && !blue.includes(f));
 		var tgts = [];
 		outliers.forEach((o) => {
 			var seered = false;
-			red.forEach((r) => { if (canSeeEachOtherRC(o,r)) seered = true;})
+			red.forEach((r) => { if (canSeeEachOther(o,r)) seered = true;})
 			var seeblue = false;
-			blue.forEach((b) => { if (canSeeEachOtherRC(o,b)) seeblue = true;})
+			blue.forEach((b) => { if (canSeeEachOther(o,b)) seeblue = true;})
 			if (seered && seeblue) tgts.push(o);
 		})
 		//console.log(value, tgts, red, blue, outliers);
 		if (tgts.length > 0) {
-			console.log(value, tgts, red, blue, outliers);
+			//console.log(value, tgts, red, blue, outliers);
 			var cls = [...red,...blue];
 			var h = {
 				type: 'colorsI',
@@ -122,14 +159,13 @@ export function colors1() {
 				targets: tgts,
 				msg: `Colors I: Cells: ${tgts}, Value: ${value}`
 			}
-			colors1.push(h);
+			colors.push(h);
 		}
 
 	}
-	//console.log(redblue);
 
-
-	if (colors1.length === 0) return null;
-	return colors1;
+	if (colors.length === 0) return null;
+	console.log("colors", colors);
+	return colors;
 
 }

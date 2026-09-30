@@ -8,7 +8,7 @@ import { lockedCandidates1 } from '/src/hints/locked';
 import { XWing, XYWing, XYZWing, WWing } from '/src/hints/wings';
 import { XYChain } from '/src/hints/chains';
 import { swordfish } from '/src/hints/swordfish';
-import { colors1 } from '/src/hints/colors';
+import { colors } from '/src/hints/colors';
 
 
 
@@ -18,6 +18,7 @@ export function runHints() {
 	var result;
 	cells = cellStore.getState().cells;
 	initCounts();
+
 
 	result = lockedCandidates1();
 	if (result) return result[0];
@@ -51,7 +52,7 @@ export function runHints() {
 	if (result) return result[0];
 	result = swordfish();
 	if (result) return result[0];
-	result = colors1();
+	result = colors();
 	if (result) return result[0];
 
 	return null;

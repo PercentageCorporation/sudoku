@@ -91,6 +91,7 @@ function Cell({ix}) {
 	else if (hint.type) {
 		switch (hint.type) {
 			case "colorsI":
+			case "colorsII":
 				if (hint.cells0.includes(ix))
 					selMode = 8;
 				else if (hint.cells1.includes(ix))
@@ -98,13 +99,6 @@ function Cell({ix}) {
 				else if (hint.targets.includes(ix))
 						selMode = 3;
 				break;
-
-			case "colorsI":
-				if (hint.cells.includes(ix))
-					selMode = 2;
-			else if (hint.targets.includes(ix))
-				selMode = 3;
-			break;
 
 			case "pointingPairXX":
 				if (hint.cells.includes(ix))
