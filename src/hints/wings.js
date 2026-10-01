@@ -2,16 +2,11 @@ import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCel
 import { findTargets, includesAll, includesAny } from '/src/hints/hints';
 import { cells, getBivalueList, findConjugatePairs, findAllTrivalueCells, findSeenTargets2, cellHasCandidate } from '/src/hints/hints';
 import { sameRow2, sameCol2, sameSq2 } from '/src/hints/hints';
-import { canSeeEachOther } from './hints';
+import { canSeeEachOther, getCommonValues } from './hints';
 
 
 //*****************************************************************************
 // common functions
-
-function getCommonValue(ac1, ac2) {
-	// find the common value
-	return ac1.filter(item => ac2.includes(item));
-}
 
 function findXYPairs(ppiv, pivots) {
 	var pairs = [];
@@ -107,6 +102,9 @@ function findKillZone(pix, p0, p1, val) {
 
 //*****************************************************************************
 // X-Wing (Fish size 2)
+// an x-wing is when you have two conjugate pairs of the same candidate in two rows or two columns
+// in which the four values form a rectangle
+// any same candidate in the same rows/cols of the rectangle can be eliminated
 
 export function XWing() {
 
@@ -258,6 +256,9 @@ export function XWing() {
 
 //*****************************************************************************
 // XY-Wing
+// an xy-wing is three bivalue pairs where the pivot contains (x,y)
+//   and the wing cells contain (x,z) and (y,z)
+// 	 z can be eliminated from any cells that can see both wing cells
 
 export function XYWing() {
 	var pivots = [];
@@ -323,25 +324,24 @@ export function XYWing() {
 				// I think we found one
 				//console.log("xy wings", pix, z, prow, pcol, psq, pac, pi, pj)
 				// get the intersecting cells
-				var killBill = findKillZone(pix, pi, pj, z);
+				//var killBill = findKillZone(pix, pi, pj, z);
+				var tgts = findSeenTargets2(z, pi[0], pj[0]);
 				//console.log("killBill", z, killBill);
 
-				var cix0 = Rows[pi[1]][pj[2]];
-				var cix1 = Rows[pj[1]][pi[2]];
 				//console.log("xy tgts", z, cix0, cix1, killBill);
-				if (killBill.length > 0) {
+				if (tgts) {
 					//console.log("found XY", wval, piv, rp, cp);
 					var cls = [pix,pi[0],pj[0]];
 					var h = {
 						type: 'xyWing',
-						rows: [pi[1],pj[1]],
-						cols: [pi[2],pj[2]],
+						rows: null,
+						cols: null,
 						square: null,
 						cells: cls,
 						offset: null,
 						value: z,
-						targets: killBill,
-						msg: `XY-Wing: Cells: ${cls}, Value: ${z}`
+						targets: tgts,
+						msg: `XY-Wing: Cells: ${tgts}, Value: ${z}`
 					}
 					//console.log("hint", h);
 					xywings.push(h);
@@ -421,7 +421,7 @@ export function XYZWing() {
 				//console.log("wing2", cix2, w2r, w2c, w2ac);
 
 				var cls = [pix, cix1, cix2];
-				var vals = getCommonValue(w1ac, w2ac);
+				var vals = getCommonValues(w1ac, w2ac);
 				var val = vals[0];
 				// the targets are the cells in the pivot square with the same row/col as wing2
 				var targets = [];

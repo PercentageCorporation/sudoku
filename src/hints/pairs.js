@@ -296,7 +296,6 @@ export function hiddenPairs() {
 // pointingPairsSquare
 
 // find pointing pairs in square
-// only cells with just 2 candidates
 export function pointingPairsSquare() {
 	// find pairs in squares
 	const ppsHints = [];

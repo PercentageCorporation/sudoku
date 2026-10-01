@@ -4,7 +4,7 @@ import { singletons, singleCounts } from "/src/hints/singles";
 import { rectangles } from '/src/hints/rectangles';
 import { nakedPairs, pointingPairsRowCol, pointingPairsSquare, hiddenPairs } from "/src/hints/pairs";
 import { nakedTriples, hiddenTriples } from '/src/hints/triples';
-import { lockedCandidates1 } from '/src/hints/locked';
+import { als, lockedCandidates1 } from '/src/hints/locked';
 import { XWing, XYWing, XYZWing, WWing } from '/src/hints/wings';
 import { XYChain } from '/src/hints/chains';
 import { swordfish } from '/src/hints/swordfish';
@@ -18,6 +18,7 @@ export function runHints() {
 	var result;
 	cells = cellStore.getState().cells;
 	initCounts();
+
 
 
 	result = lockedCandidates1();
@@ -54,6 +55,8 @@ export function runHints() {
 	if (result) return result[0];
 	result = colors();
 	if (result) return result[0];
+	result = als();
+	if (result) return result[0];
 
 	return null;
 }
@@ -65,7 +68,7 @@ export var vRows = [];
 export var vCols = [];
 export var vSqs = [];
 
-// count the instances of each value in each row/col
+// count the instances of each value in each row/col/sq
 // we need columns[rows] containing exactly 2, and rows[columns] of 2 or more
 // we need columns[rows] containing exactly 3, and rows[columns] of 3 or more
 export var rCounts2 = [[],[],[],[],[],[],[],[],[],[]];
@@ -118,7 +121,7 @@ function initCounts() {
 
 	// the Counts arrays contain the indices of the cells in a row/col/sq
 	//   with the given count(s)
-	// ex: rCounts2[x] = [0,3,5] means that offsets 0, 3, 5 contain 2 of value x
+	// ex: rCounts2[x] = [0,3,5] means that offsets[rows] 0, 3, 5 contain 2 of value x
 	for (var v=1; v<10; v++) {
 		for (var i=0; i<9; i++) {
 			var rc = vRows[i][v];
@@ -288,6 +291,17 @@ export function canSeeEachOther(c0, c1) {
 	return false;
 }
 
+export function canAllSeeEachOther(cls) {
+	var clen = cls.length;
+	for (var i=0; i<clen; ++i) {
+		for (var j=i+1; j<clen; ++j) {
+			if (!canSeeEachOther(cls[i], cls[j])) return false;
+		}
+	}
+	return true;
+
+}
+
 // determine if cell 0 can be seen by both cell1 and cell2
 export function canBeSeen(c0, c1, c2) {
 	var rcs0 = RCS[c0];
@@ -312,6 +326,27 @@ export function canBeSeen(c0, c1, c2) {
 }
 
 // find seen targets
+// targets have to be seen by all the cells in the list
+export function findTargetsSeenByAll(val, cls, ex) {
+	var targets = [];
+	var clslen = cls.length;
+	for (var i=0; i<81; ++i) {
+		if (ex.includes(i)) continue;	// skip excluded cells
+		if (!cellHasCandidate(i, val)) continue;
+		var seenbyall = true;
+		for (var j=0; j<clslen; ++j) {
+			var cixj = cls[j];
+			if (!canSeeEachOther(i, cixj)) {
+				seenbyall = false;
+				break;
+			}
+		}
+		if (seenbyall) targets.push(i);
+	}
+	if (targets.length === 0) return null;
+	return targets;
+}
+
 // targets have to be in the same row/col or row/sq or col/sq
 export function findSeenTargets2(val, c1, c2) {
 	var targets = [];
@@ -361,6 +396,11 @@ export function includesAll(a,b) {
 export function includesAny(a,b) {
 	// if a includes any of b
 	return b.some(r => a.includes(r))
+}
+
+export function getCommonValues(ac1, ac2) {
+	// find the common value
+	return ac1.filter(item => ac2.includes(item));
 }
 
 export function cellHasCandidate(cix, z) {

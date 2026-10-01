@@ -434,7 +434,7 @@ export function swordfish() {
 	}
 
 	for (var v=1; v<10; v++) {
-		if (v !== 4) continue;	// TESTING
+		//if (v !== 4) continue;	// TESTING
 		if (cCounts3[v].length === 0) continue;
 
 		var cols3= cCounts3[v];

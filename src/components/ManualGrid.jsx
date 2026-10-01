@@ -12,10 +12,10 @@ import ImportGameModal from "./ImportGameModal";
 function ManualCell({ix}) {
 	const { getManCell, selectedCell, setManSelectedCell } = useManCellsStore();
 	const cell = getManCell(ix);
-	const val = (cell && cell > 0) ? cell : "";
+	const val = (cell && cell > 0) ? cell : null;
 	const cn = (ix === selectedCell) ? " bg-green-300" : "";
 	const bs = bstyles[ix];
-
+	const cix = ix;
 	function selectCell(e, cix) {
 		//console.log("selectCell:", cix);
 		setManSelectedCell(cix);
@@ -24,10 +24,13 @@ function ManualCell({ix}) {
 	return (
 		<div
 			id={ix}
-			className={"size-11 " + cn + bs}
+			className={"relative z-0 size-11 " + cn + bs}
 			onClick={(e)=>selectCell(e, ix)}
 			>
-			<div className={"flex justify-center items-center w-full h-full text-3xl font-bold"}>
+			<div className="py-0 pl-0.5 m-0 w-2 text-[10px]">
+				{cix}
+			</div>
+			<div className="flex justify-center items-center text-3xl font-bold absolute inset-0 z-10">
 			{val}
 			</div>
 		</div>
@@ -40,7 +43,7 @@ function ManualGrid9({y}) {
 
 	return (
 		<>
-		<div className="grid grid-cols-3 w-full  border-black-300">
+		<div className="grid grid-cols-3 w-full border-black-300 ">
 		{
 			index.map((x, ix) => {
 				const cellIx = (y*9) + x;
@@ -289,7 +292,7 @@ export default function ManualGrid() {
 			<div className="mx-2 h-12 flex items-center text-lg font-semibold">
 				{manNumber ? `${manNumber} : ${manDescription}` :  `${manDescription}`}
 			</div>
-			<div className="px-1 grid grid-cols-3 w-full  border-black-300">
+			<div className="px-1 grid grid-cols-3 w-full border-black-300 bg-white">
 			{
 				index.map((y, ix) => { return (<ManualGrid9 key={ix} y={y} />) })
 			}
@@ -363,6 +366,16 @@ export default function ManualGrid() {
 						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Delete Game
+					</button>
+				</div>
+				<div className="mx-2 flex flex-row justify-between mt-4">
+					<button
+						type="button"
+						tabIndex={-1}
+						onClick={(e) => handleNumberGrid(e)}
+						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						>
+						Number Grid
 					</button>
 				</div>
 			</div>

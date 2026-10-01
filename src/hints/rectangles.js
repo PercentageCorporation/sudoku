@@ -467,26 +467,28 @@ export function rectangles() {
 			var cx0 = extras[0];
 			var cx1 = extras[1];
 			var com = getCommonHouses(cx0, cx1);
+			var hasVal0 = false;
+			var hasVal1 = false;
 
 			if (com[0] >= 0) {
 				// common row
-				hasVal0 = rcsContainsValue(Rows[com[0]], vac0, nonextras);
-				hasVal1 = rcsContainsValue(Rows[com[0]], vac1, nonextras);
+				hasVal0 = rcsContainsValue(Rows[com[0]], vac0, extras);
+				hasVal1 = rcsContainsValue(Rows[com[0]], vac1, extras);
 				//console.log("has0", hasVal0, hasVal1);
 			}
 			if ((hasVal0 === hasVal1) && com[1] >= 0) {
 				// common col
-				hasVal0 = rcsContainsValue(Rows[com[1]], vac0, nonextras);
-				hasVal1 = rcsContainsValue(Rows[com[1]], vac1, nonextras);
+				hasVal0 = rcsContainsValue(Cols[com[1]], vac0, extras);
+				hasVal1 = rcsContainsValue(Cols[com[1]], vac1, extras);
 				//console.log("has1", hasVal0, hasVal1);
 			}
 			if ((hasVal0 === hasVal1) && com[2] >= 0) {
 				// common square
-				hasVal0 = rcsContainsValue(Rows[com[2]], vac0, nonextras);
-				hasVal1 = rcsContainsValue(Rows[com[2]], vac1, nonextras);
+				hasVal0 = rcsContainsValue(Squares[com[2]], vac0, extras);
+				hasVal1 = rcsContainsValue(Squares[com[2]], vac1, extras);
 				//console.log("has2", hasVal0, hasVal1);
 			}
-			//console.log("Type4 com rc", square, cx0, cx1, com, nonextras, hasVal0, hasVal1);
+			//console.log("Type4 com rc", square, cx0, cx1, com, extras, hasVal0, hasVal1);
 
 			if (!(hasVal0 === hasVal1)) {
 				//console.log("Type4", oneextra, numextras, extraextras, extras, val, tgts, square);

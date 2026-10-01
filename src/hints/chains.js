@@ -23,7 +23,7 @@ function cellsInSameHouse(c0,c1) {
 
 var links = [];
 
-// find the next link in a chain
+// recursive function to find the next link in a chain
 // the current cell ix curlinkix
 // the next value we are looking for is nextval
 // the starting (end) of the chain is endval
@@ -119,6 +119,8 @@ function linkPaths() {
 
 //*****************************************************************************
 // XY-Chain
+// an xy chain is a chain of bivalue cells linked by a common candidate in the same house
+// the end of the chain are the unlinked values and must match
 
 export function XYChain() {
 	bvpairs = findAllBivalueCells();

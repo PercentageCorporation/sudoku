@@ -63,6 +63,7 @@ export default function PlayMenu() {
 			case 'urType6':
 			case 'urType7':
 			case 'colorsI':
+			case 'alsXY':
 				console.log("hint:", h);
 				var tgts = h.targets;
 				tgts.forEach((cix) => {

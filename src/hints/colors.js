@@ -58,110 +58,114 @@ export function colors() {
 	// valpairs[value]: [cp0, cp1, ... ]
 	var redblue = [];
 	for (var value=1; value<10; ++value) {
-		//if (value !== 6) continue;	// TEST
-		var red = [];
-		var blue = [];
+		//if (value !== 7) continue;	// TEST
 		var vp = getValuePairs(value);
-		if (vp.length === 0) continue;
-		//console.log("vp", firstval, vp);
-		var firstval = vp[0][1][0];
 		var vplen = vp.length;
-		if (vplen === 0) {
-			redblue.push([value, red, blue]);
-			continue;
-		}
-		red.push(firstval);
-		var loop = true;
-		while (loop) {
-			var added = false;
-			red.forEach((r) => {
-				// possible next pair must come from the conjugate pair list
-				var rc = findConjugates(value, r);
-				//console.log("rcr", r, rc);
-				rc.forEach((cix) => {
-					if (!blue.includes(cix)) {
-						blue.push(cix);
-						added = true;
-					}
+		if (vplen === 0) continue;
+		//console.log("vp", vp);
+
+		for (var vpx=0; vpx<vplen; ++vpx) {
+			var firstcell = vp[vpx][1][0];
+			//console.log("vpx", vpx, firstcell);
+			var red = [];
+			var blue = [];
+
+			red.push(firstcell);
+			var loop = true;
+			while (loop) {
+				var added = false;
+				red.forEach((r) => {
+					// possible next pair must come from the conjugate pair list
+					var rc = findConjugates(value, r);
+					//console.log("rcr", r, rc);
+					rc.forEach((cix) => {
+						if (!blue.includes(cix)) {
+							blue.push(cix);
+							added = true;
+						}
+					})
 				})
-			})
-			blue.forEach((b) => {
-				// possible next pair must come from the conjugate pair list
-				var rc = findConjugates(value, b);
-				//console.log("rcc", b, rc);
-				rc.forEach((cix) => {
-					if (!red.includes(cix)) {
-						red.push(cix);
-						added = true;
-					}
+				blue.forEach((b) => {
+					// possible next pair must come from the conjugate pair list
+					var rc = findConjugates(value, b);
+					//console.log("rcc", b, rc);
+					rc.forEach((cix) => {
+						if (!red.includes(cix)) {
+							red.push(cix);
+							added = true;
+						}
+					})
 				})
-			})
-			//console.log(value, red, blue);
-			if (!added) {
 				//console.log(value, red, blue);
-				redblue.push([value, red, blue]);
-				break;
+				// end of the chain
+				if (!added) {
+					//console.log(value, red, blue);
+					redblue.push([value, red, blue]);
+					break;
+				}
+				//console.log("vpend", value, vpx, red, blue);
 			}
-		}
 
-		if ((red.length + blue.length) < 3) continue;
+			if ((red.length + blue.length) < 3) continue;
 
-		var redSame = anyInSameHouse(red);
-		var blueSame =  anyInSameHouse(blue);
+			var redSame = anyInSameHouse(red);
+			var blueSame =  anyInSameHouse(blue);
 
-		if (redSame || blueSame) {
-			//console.log("Type II", value, red, redSame, blue, blueSame);
-			var cls = redSame ? red : blue;
-			var tgts = redSame ? blue : red;
-			//console.log(cls, tgts);
-			var h = {
-				type: 'colorsII',
-				rows: null,
-				cols: null,
-				square: null,
-				cells: cls,
-				cells0: red,
-				cells1: blue,
-				offset: null,
-				value: value,
-				targets: tgts,
-				msg: `Colors II: Cells: ${tgts}, Value: ${value}`
+			if (redSame || blueSame) {
+				//console.log("Type II", value, red, redSame, blue, blueSame);
+				var cls = redSame ? red : blue;
+				var tgts = redSame ? blue : red;
+				//console.log(cls, tgts);
+				var h = {
+					type: 'colorsII',
+					rows: null,
+					cols: null,
+					square: null,
+					cells: cls,
+					cells0: red,
+					cells1: blue,
+					offset: null,
+					value: value,
+					targets: tgts,
+					msg: `Colors II: Cells: ${tgts}, Value: ${value}`
+				}
+				colors.push(h);
+				continue;
 			}
-			colors.push(h);
-			continue;
-		}
 
-		// are there any occurances of value in a cell not included in red and blue
-		var allvals = findAllCellsWithValue(value);
-		var outliers = allvals.filter(f => !red.includes(f) && !blue.includes(f));
-		var tgts = [];
-		outliers.forEach((o) => {
-			var seered = false;
-			red.forEach((r) => { if (canSeeEachOther(o,r)) seered = true;})
-			var seeblue = false;
-			blue.forEach((b) => { if (canSeeEachOther(o,b)) seeblue = true;})
-			if (seered && seeblue) tgts.push(o);
-		})
-		//console.log(value, tgts, red, blue, outliers);
-		if (tgts.length > 0) {
+			// are there any occurances of value in a cell not included in red and blue
+			var allvals = findAllCellsWithValue(value);
+			var outliers = allvals.filter(f => !red.includes(f) && !blue.includes(f));
+			var tgts = [];
+			outliers.forEach((o) => {
+				var seered = false;
+				red.forEach((r) => { if (canSeeEachOther(o,r)) seered = true;})
+				var seeblue = false;
+				blue.forEach((b) => { if (canSeeEachOther(o,b)) seeblue = true;})
+				if (seered && seeblue) tgts.push(o);
+			})
 			//console.log(value, tgts, red, blue, outliers);
-			var cls = [...red,...blue];
-			var h = {
-				type: 'colorsI',
-				rows: null,
-				cols: null,
-				square: null,
-				cells: cls,
-				cells0: red,
-				cells1: blue,
-				offset: null,
-				value: value,
-				targets: tgts,
-				msg: `Colors I: Cells: ${tgts}, Value: ${value}`
+			if (tgts.length > 0) {
+				//console.log(value, tgts, red, blue, outliers);
+				var cls = [...red,...blue];
+				var h = {
+					type: 'colorsI',
+					rows: null,
+					cols: null,
+					square: null,
+					cells: cls,
+					cells0: red,
+					cells1: blue,
+					offset: null,
+					value: value,
+					targets: tgts,
+					msg: `Colors I: Cells: ${tgts}, Value: ${value}`
+				}
+				colors.push(h);
 			}
-			colors.push(h);
+			if (colors.length > 0) break;
 		}
-
+		if (colors.length > 0) break;
 	}
 
 	if (colors.length === 0) return null;
