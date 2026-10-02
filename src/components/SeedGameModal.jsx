@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getGameList } from "../utilities/games";
 
-export default function ImportGameModal({ onConfirm, onCancel }) {
+export default function SeedGameModal({ title, onConfirm, onCancel }) {
 
 	useEffect(() => {
 
@@ -30,7 +30,7 @@ export default function ImportGameModal({ onConfirm, onCancel }) {
 			<div id="save-game-modal" className="modal-overlay" >
 				<div className="modal">
 					<div className="flex flex-col w-full">
-						<div className='text-lg font-bold'>Paste Game</div>
+						<div className='text-lg font-bold'>{title}</div>
 						<textarea id="game-cells"
 							rows="4"
 							cols="1"

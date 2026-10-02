@@ -7,12 +7,14 @@ import LoadGameModal from "/src/components/LoadGameModal";
 import { deleteGame, getGame, saveGame, linearTextToGrid } from "../utilities/games";
 import SaveGameModal from "./SaveGameModal";
 import ConfirmModal from "./ConfirmModal";
-import ImportGameModal from "./ImportGameModal";
+import SeedGameModal from "./SeedGameModal";
 
 function ManualCell({ix}) {
-	const { getManCell, selectedCell, setManSelectedCell } = useManCellsStore();
+	const { getManCell, getManSolutionCell, selectedCell, setManSelectedCell } = useManCellsStore();
 	const cell = getManCell(ix);
+	const solution = getManSolutionCell(ix);
 	const val = (cell && cell > 0) ? cell : null;
+	const sol = (solution && solution > 0) ? solution : null;
 	const cn = (ix === selectedCell) ? " bg-green-300" : "";
 	const bs = bstyles[ix];
 	const cix = ix;
@@ -27,11 +29,14 @@ function ManualCell({ix}) {
 			className={"relative z-0 size-11 " + cn + bs}
 			onClick={(e)=>selectCell(e, ix)}
 			>
-			<div className="py-0 pl-0.5 m-0 w-2 text-[10px]">
+			<div className="flex pl-0.5 text-[10px]">
 				{cix}
 			</div>
-			<div className="flex justify-center items-center text-3xl font-bold absolute inset-0 z-10">
-			{val}
+			<div className="absolute right-0 bottom-0 pr-0.5 text-[10px]">
+				{sol}
+			</div>
+			<div className="flex justify-center items-center text-3xl font-bold absolute inset-0">
+				{val}
 			</div>
 		</div>
 	);
@@ -59,13 +64,14 @@ export default function ManualGrid() {
 	const navigate = useNavigate();
 	const { initialized, initialize } = useManCellsStore();
 	const { number: manNumber, description: manDescription } = useManCellsStore();
-	const { setManSelectedCell, setManCellValue, getManCells, setManId, loadManCells, getManCellsLinear } = useManCellsStore();
+	const { setManSelectedCell, setManCellValue, getManCells, getManSolution, setManId, loadManCells, loadManSolution, getManCellsLinear } = useManCellsStore();
 	const { resetHint } = useHintStore();
 	const { loadGame } = useCellActions();
 
 	const [ loadSavedGame, setLoadSavedGame ] = useState(false);
-	const [ importGame, setImportGame ] = useState(false);
+	const [ seedGame, setSeedGame ] = useState(false);
 	const [ saveManGame, setSaveManGame ] = useState(false);
+	const [ addSolution, setAddSolution ] = useState(false);
 	const [ deleteId, setDeleteId ] = useState(null);
 	//console.log("ManGrid", selectedCell);
 
@@ -164,8 +170,9 @@ export default function ManualGrid() {
 		e.preventDefault();
 		console.log("handlePlay");
 		const mc = getManCells();
+		const sc = getManSolution();
 		//console.log("handlePlay", mc);
-		loadGame(mc, manDescription);	// load live game
+		loadGame(mc, sc,  manDescription);	// load live game
 		resetHint();
 		navigate('/');
 	}
@@ -187,9 +194,9 @@ export default function ManualGrid() {
 		setDeleteId({number: manNumber, title: "Delete Game", content: content})
 	}
 
-	function handleImportGame(e) {
+	function handleSeedGame(e) {
 		e.preventDefault();
-		setImportGame(true)
+		setSeedGame(true)
 	}
 
 	function handleReadGame(e) {
@@ -213,12 +220,50 @@ export default function ManualGrid() {
 				}
 				var grid = linearTextToGrid(gamecells);
 				console.log(grid);
-				loadManCells("", filename, grid);
+				loadManCells("", filename, grid, null);
 				useManCellsStore.persist.rehydrate();
 				navigate("/manual");
 			}
 		}
 		input.click();
+	}
+
+	function handleExportGames(e) {
+		e.preventDefault();
+		var filename = "sudoku.games";
+		var lcgames = localStorage.getItem('sudoku-games');
+		var file = new Blob([lcgames], {type: 'text/plain'});
+		var a = document.createElement("a"),
+			url = URL.createObjectURL(file);
+		a.href = url;
+		a.download = filename;
+		document.body.appendChild(a);
+		a.click();
+		setTimeout(function() {
+			document.body.removeChild(a);
+			window.URL.revokeObjectURL(url);
+		}, 0); 	}
+
+	function handleAddSolution(e) {
+		e.preventDefault();
+		setAddSolution(true);
+	}
+
+	function solutionCancel() {
+		setAddSolution(false);
+	}
+
+	function solutionConfirm(solution) {
+		console.log("seedGame");
+		console.log(solution);
+		setAddSolution(false);
+		var grid = linearTextToGrid(solution);
+		console.log(grid);
+		loadManSolution(grid);
+		useManCellsStore.persist.rehydrate();
+		navigate("/manual");
+
+		setAddSolution(false);
 	}
 
 	function loadConfirm(ix) {
@@ -229,7 +274,7 @@ export default function ManualGrid() {
 		console.log(game.game);
 		if (game) {
 			console.log("load game", ix, game.description);
-			loadManCells(game.number, game.description, game.game);
+			loadManCells(game.number, game.description, game.game, game.solution);
 			useManCellsStore.persist.rehydrate();
 			//console.log(getManCellsLinear());
 		}
@@ -238,15 +283,16 @@ export default function ManualGrid() {
 
 	function loadCancel() {
 		setLoadSavedGame(false);
-
 	}
+
 	function saveConfirm(description) {
 		//lcSaveGame(description);
 		setSaveManGame(false);
 		var cls = getManCells();
-		console.log("save game", description, cls);
+		var solution = getManSolution();
+		console.log("save game", description, cls, solution);
 
-		var number = saveGame(description, cls);
+		var number = saveGame(description, cls, solution);
 		setManId(number, description);
 		useManCellsStore.persist.rehydrate();
 	}
@@ -266,25 +312,26 @@ export default function ManualGrid() {
 		setDeleteId(null);
 	}
 
-	function importConfirm(gamecells) {
-		console.log("importGame");
+	function seedConfirm(gamecells) {
+		console.log("seedGame");
 		console.log(gamecells);
-		setImportGame(false);
+		setSeedGame(false);
 		var grid = linearTextToGrid(gamecells);
 		console.log(grid);
-		loadManCells("", "Imported Game", grid);
+		loadManCells("", "Imported Game", grid, null);
 		useManCellsStore.persist.rehydrate();
 		navigate("/manual");
 	}
 
-	function importCancel() {
-		setImportGame(false);
+	function seedCancel() {
+		setSeedGame(false);
 	}
 
 	return (
 		<div className="max-w-[412px] mx-2 ">
 			<div>
-			{ importGame && <ImportGameModal onConfirm={importConfirm} onCancel={importCancel}/> }
+			{ seedGame && <SeedGameModal title="Paste Game" onConfirm={seedConfirm} onCancel={seedCancel}/> }
+			{ addSolution && <SeedGameModal title="Paste Solution" onConfirm={solutionConfirm} onCancel={solutionCancel}/> }
 			{ loadSavedGame && <LoadGameModal onConfirm={loadConfirm} onCancel={loadCancel}/> }
 			{ saveManGame && <SaveGameModal description={manDescription} onConfirm={saveConfirm} onCancel={saveCancel}/> }
 			{ deleteId && <ConfirmModal title={deleteId.title} content={deleteId.content} onConfirm={deleteConfirm} onCancel={deleteCancel}/> }
@@ -328,10 +375,10 @@ export default function ManualGrid() {
 					<button
 						type="button"
 						tabIndex={-1}
-						onClick={(e) => handleImportGame(e)}
+						onClick={(e) => handleSeedGame(e)}
 						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
-						Import Game
+						Seed Game
 					</button>
 					<button
 						type="button"
@@ -366,6 +413,32 @@ export default function ManualGrid() {
 						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Delete Game
+					</button>
+				</div>
+				<div className="mx-2 flex flex-row justify-between mt-4">
+					<button
+						type="button"
+						tabIndex={-1}
+						onClick={(e) => handleExportGames(e)}
+						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						>
+						Export Games
+					</button>
+					<button
+						type="button"
+						tabIndex={-1}
+						onClick={(e) => handleImportGame(e)}
+						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						>
+						Import Games
+					</button>
+					<button
+						type="button"
+						tabIndex={-1}
+						onClick={(e) => handleAddSolution(e)}
+						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						>
+						Add Solution
 					</button>
 				</div>
 				<div className="mx-2 flex flex-row justify-between mt-4">

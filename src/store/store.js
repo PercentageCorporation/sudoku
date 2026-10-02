@@ -14,6 +14,7 @@ export const useManCellsStore = create (
 	persist (
 		(set, get) => ({
 			cells: new Array(81).fill(0),
+			solution: new Array(81).fill(0),
 			number: 0,
 			description: "",
 			selectedCell: -1,
@@ -21,8 +22,10 @@ export const useManCellsStore = create (
 
 			initialize: () => {
 				var init = new Array(81).fill(0);
+				var solution = new Array(81).fill(0);
 				set({
 					cells: init,
+					solution: solution,
 					number: null,
 					description: "New Game",
 					selectedCell: -1,
@@ -30,9 +33,11 @@ export const useManCellsStore = create (
 				})
 			},
 
-			loadManCells: (num, descr, cls) => {
+			loadManCells: (num, descr, cls, solution) => {
+				if (!solution) solution = new Array(81).fill(0);
 				set({
 					cells: cls,
+					solution: solution,
 					number: num,
 					description: descr,
 					selectedCell: -1,
@@ -40,8 +45,20 @@ export const useManCellsStore = create (
 				})
 			},
 
+			loadManSolution: (solution) => {
+				set({
+					solution: solution,
+					selectedCell: -1,
+					initialized: true
+				})
+			},
+
 			getManCells: () => {
 				return get().cells
+			},
+
+			getManSolution: () => {
+				return get().solution
 			},
 
 			getManCellsLinear: () => {
@@ -53,6 +70,12 @@ export const useManCellsStore = create (
 
 			getManCell: (ix) => {
 				return get().cells[ix]
+			},
+
+			getManSolutionCell: (ix) => {
+				var solution = get().solution;
+				if (!solution) return null;
+				return solution[ix]
 			},
 
 			setManCellValue: (ix, value) => {
@@ -185,7 +208,7 @@ export const cellStore = create(
 					//console.log("cells:", get().cells);
 				},
 
-				loadGame: (values, gameId) => {
+				loadGame: (values, solution, gameId) => {
 					const initcells = [];
 					//console.log("values:", values);
 					for (var i = 0; i < 81; ++i) initcells.push(
@@ -195,7 +218,7 @@ export const cellStore = create(
 						square: RCS[i][2],
 						value: values[i],
 						originalValue: values[i],
-						solutionValue: 0,
+						solutionValue: solution ? solution[i] : 0,
 						candidates: [],
 						noncandidates: [],
 						activecandidates: [],

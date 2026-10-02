@@ -59,7 +59,7 @@ export function getGame(ix) {
 
 }
 
-export function saveGame(description, cells) {
+export function saveGame(description, cells, solution) {
 
 	var lcgames = localStorage.getItem('sudoku-games');
 	if (!lcgames) {lcgames = `{"games": []}`;};
@@ -73,12 +73,13 @@ export function saveGame(description, cells) {
 	var newgame = {
 		number: gnum,
 		description: description,
-		game: cells
+		game: cells,
+		solution: solution
 	}
 	games["games"].push(newgame);
 	//console.log(games);
 	var sgames = JSON.stringify(games);
-	//console.log(sgames);
+	console.log(sgames);
 
 	localStorage.setItem('sudoku-games', sgames);
 	//console.log("game saved")
@@ -99,6 +100,13 @@ export function deleteGame(ix) {
 
 	localStorage.setItem('sudoku-games', sgames);
 	//console.log("game deleted",games)
+
+}
+
+export function exportGames() {
+	var lcgames = localStorage.getItem('sudoku-games');
+	if (!lcgames) return null;
+
 
 }
 

@@ -144,7 +144,8 @@ function initCounts() {
 	}
 	//console.log(rCounts2,cCounts2);
 	//console.log(rCounts3,cCounts3);
-	//console.log(rCounts23,cCounts23,sCounts23);
+	//console.log(rCounts23,cCounts23);
+	//console.log(rCounts2p,cCounts2p);
 }
 
 // count the occurances of the active candidates in a row/col/sq
