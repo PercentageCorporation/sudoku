@@ -159,6 +159,7 @@ export const Cell = {
 	row: 0,
 	col: 0,
 	square: 0,
+	pairity: 0,				// 0-none, 1-grp 1 odd, 2-grp 1 even, 3-grp 2 odd, 4-grp 2 even
 	value: 0,
 	originalValue: 0,
 	solutionValue: 0,
@@ -195,6 +196,7 @@ export const cellStore = create(
 						row: RCS[i][0],
 						col: RCS[i][1],
 						square: RCS[i][2],
+						parity: 0,
 						value: values[i],
 						originalValue: values[i],
 						solutionValue: solutionValues[i],
@@ -233,6 +235,7 @@ export const cellStore = create(
 						row: RCS[i][0],
 						col: RCS[i][1],
 						square: RCS[i][2],
+						parity: 0,
 						value: values[i],
 						originalValue: values[i],
 						solutionValue: solution ? solution[i] : 0,
@@ -550,6 +553,31 @@ export const cellStore = create(
 						get().actions.updateCandidates()
 						return { cells }
 					})
+				},
+
+				setCellParity: (ix, parity) => {
+					set((state) => {
+						const cells = [...state.cells]
+						cells[ix] = { ...cells[ix], parity }
+						return { cells }
+					})
+				},
+
+				clearCellParity: (ix) => {
+					set((state) => {
+						const cells = [...state.cells]
+						cells[ix] = { ...cells[ix], parity: 0 }
+						return { cells }
+					})
+				},
+
+				clearParity: () => {
+					set((state) => ({
+						cells: state.cells.map((c) => ({
+							...c,
+							parity: 0
+						})),
+					}))
 				},
 
 				// cells[(y*9)+x].value = value;

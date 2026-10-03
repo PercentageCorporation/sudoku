@@ -87,8 +87,24 @@ function Cell({ix}) {
 
 		// check for invalid value
 		if (cell.value > 0 && cell.solutionValue > 0 && cell.value !== cell.solutionValue) selMode = 4;
-	}
-	else if (hint.type) {
+	} else if (cell.parity > 0) {
+		switch (cell.parity) {
+			case 0:
+				break;
+			case 1:
+				selMode = 10;
+				break;
+			case 2:
+				selMode = 11;
+				break;
+			case 3:
+				selMode = 12;
+				break;
+			case 4:
+				selMode = 13;
+				break;
+		}
+	} else if (hint.type) {
 		switch (hint.type) {
 			case "colorsI":
 			case "colorsII":
@@ -163,6 +179,7 @@ function Cell({ix}) {
 				}
 				break;
 		}
+
 	} else {
 		if (selectedCell === ix) selMode = 2;
 	}
@@ -196,6 +213,18 @@ function Cell({ix}) {
 			break;
 		case 9:
 			cn = "bg-blue-200";
+			break;
+		case 10:
+			cn = "bg-yellow-200";
+			break;
+		case 11:
+			cn = "bg-yellow-400";
+			break;
+		case 12:
+			cn = "bg-blue-200";
+			break;
+		case 13:
+			cn = "bg-blue-400";
 			break;
 	}
 	const bs = bstyles[ix];

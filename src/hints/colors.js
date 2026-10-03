@@ -1,6 +1,7 @@
 import { canSeeEachOther } from './hints';
 //import { cells, rCounts2, vRows, vCols, vSqs } from '/src/hints/hints';
 import { findConjugatePairs, findAllCellsWithValue, includesAll, includesAny } from '/src/hints/hints';
+import { cellStore, useCellActions } from '../store/store';
 
 
 //*****************************************************************************
@@ -126,6 +127,40 @@ function canSeeEachOtherPairs(p0, p1) {
 	return false;
 }
 
+function makeBipartite(pairs) {
+	if (!pairs.length) return [];
+
+	const links = new Map();
+
+	for (const [a, b] of pairs) {
+		if (!links.has(a)) links.set(a, []);
+		if (!links.has(b)) links.set(b, []);
+
+		links.get(a).push(b);
+		links.get(b).push(a);
+	}
+
+	const parity = new Map();
+	const start = pairs[0][0];
+
+	parity.set(start, 0);
+
+	const queue = [start];
+
+	while (queue.length) {
+		const value = queue.shift();
+
+		for (const linked of links.get(value)) {
+			if (!parity.has(linked)) {
+				parity.set(linked, 1 - parity.get(value));
+				queue.push(linked);
+			}
+		}
+	}
+
+	return [...parity.entries()].sort((a, b) => a[0] - b[0]);
+}
+
 //*****************************************************************************
 //
 
@@ -135,7 +170,7 @@ export function colorWing() {
 	//console.log("cpairs", colorpairs);
 
 	for (var v=1; v<10; ++v) {
-		//if (v !== 2) continue;	// TEST
+		if (v !== 2) continue;	// TEST
 		var vp = getValuePairs(v);
 		var vplen = vp.length;
 		if (vplen < 2) continue;
@@ -179,6 +214,13 @@ export function colorWing() {
 				var epj = getEndpoints(clj);
 				if (epi.length < 2 || epj.length < 2) continue;		// one of them is an x-wing or a weird circular cluster
 				console.log("ep", v, i, j, epi, epj);
+
+				var bi = makeBipartite(cli);
+				var bj = makeBipartite(clj);
+				console.log("bp", v, i, j, bi, bj);
+				bi.forEach((e) => cellStore.getState().actions.setCellParity(e[0], e[1]+1));
+				bj.forEach((e) => cellStore.getState().actions.setCellParity(e[0], e[1]+3));
+
 				if (canSeeEachOtherPairs(epi, epj)) {
 					console.log("canSee", v, i, j, epi, epj);
 
