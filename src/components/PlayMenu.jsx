@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { cellStore, useHintStore, useCellActions } from "../store/store";
-import { validateMove, validateBoard } from "../utilities/utilities";
+import { validateMove } from "../utilities/utilities";
 import { runHints } from '/src/hints/hints';
 //import Spinner from "./Spinner";
 
 export default function PlayMenu() {
 	const { selectedValue, selectedCell } = cellStore();
-	const { setCellValue, clearCellValue, setSelectedValue, clearSelectedValue, clearSelectedCell } = useCellActions();
+	const { setCellValue, clearCellValue, setSelectedValue, clearSelectedValue, clearSelectedCell, validateGame } = useCellActions();
 	const { checkGameSolved, calcNumbersUsed } = useCellActions();
 	const { updateCandidates, addNonCandidate } = useCellActions();
 	const { gameComplete, numbersUsed } = cellStore();
@@ -17,7 +17,7 @@ export default function PlayMenu() {
 	useEffect(() => {
 		console.log("PlayMenu UE");
 		calcNumbersUsed();
-		const valid = validateBoard();
+		const valid = validateGame()
 		if (!valid) {
 			setMessage("Invalid Board");
 		} else {
@@ -105,7 +105,7 @@ export default function PlayMenu() {
 		}
 
 		clearSelectedValue();
-		if (!validateBoard()) {
+		if (!validateGame()) {
 			setMessage("Invalid Board");
 			resetHint();
 		} else {
@@ -178,7 +178,7 @@ export default function PlayMenu() {
 					updateCandidates();
 				}
 			}
-			if (!validateBoard()) {
+			if (!validateGame()) {
 				msg = "Invalid Board";
 			}
 		} else { // s === 0

@@ -1,8 +1,10 @@
-import { canSeeEachOther, canSeeEachOtherRC, findTargets } from './hints';
-import { cells, rCounts2, vRows, vCols, vSqs } from '/src/hints/hints';
-import { findConjugatePairs, findAllCellsWithValue } from '/src/hints/hints';
+import { canSeeEachOther } from './hints';
+//import { cells, rCounts2, vRows, vCols, vSqs } from '/src/hints/hints';
+import { findConjugatePairs, findAllCellsWithValue, includesAll, includesAny } from '/src/hints/hints';
 
 
+//*****************************************************************************
+// common functions
 
 var colorpairs;
 
@@ -25,6 +27,7 @@ function findConjugates(val, cix) {
 	return mates;
 }
 
+// get all (conjugate) pairs for a given value
 function getValuePairs(value) {
 	var vpairs = [];
 	colorpairs.forEach((cp) => {
@@ -35,6 +38,7 @@ function getValuePairs(value) {
 	return vpairs;
 }
 
+// can any of the cells in the array see each other
 function anyInSameHouse(arr) {
 	var arrlen = arr.length;
 	for (var i=0; i<arrlen; ++i) {
@@ -45,6 +49,153 @@ function anyInSameHouse(arr) {
 	return false;
 }
 
+// does either cell matche a cell in the cluster
+function matchesCluster(cluster, cx) {
+	if (cluster.length === 0) return true;	// alwasy matches empty cluster
+	for (var i=0; i<cluster.length; ++i) {
+		// for each pair in the cluster
+		var cp = cluster[i];
+		if (includesAny(cp, cx)) return true;
+	}
+	return false;
+}
+
+// is the cell in the cluster
+function inCluster(cluster, cx) {
+	if (cluster.length === 0) return false;	// cannot be in empty cluster
+	for (var i=0; i<cluster.length; ++i) {
+		// for each pair in the cluster
+		var cp = cluster[i];
+		if (includesAll(cp, cx)) return true;
+	}
+	return false;
+}
+
+// does the cell appear in any of the clusters
+function inAnyCluster(clusters, cx) {
+	if (clusters.length === 0) return false;	// cannot be in empty cluster
+	for (var i=0; i<clusters.length; ++i) {
+		// for each cluster in clusters
+		var cl = clusters[i];
+		if (inCluster(cl, cx)) return true;
+	}
+	return false;
+}
+
+// get the values that only occur once in the array
+function getUniqueValues(arr) {
+	var ep = [];
+	var dup = false;
+	arr.sort((a,b) => a-b);
+	var alen = arr.length;
+	var i = 1;
+	while (i<alen) {
+		if (arr[i-1] === arr[i]) {
+			if (dup) {
+			} else {
+				dup = true;
+			}
+		} else {
+			if (dup) {
+				dup = false;
+			} else {
+				ep.push(arr[i-1]);
+			}
+		}
+		++i;
+	}
+	if (!dup) ep.push(arr[alen-1]);
+	return ep;
+}
+
+// get the endpoints of the cluster (cells not linked)
+function getEndpoints(cluster) {
+	var clen = cluster.length;
+	if (clen === 1) return ([cluster[0][0], cluster[0][1]]);
+
+	var cls = [];
+	cluster.forEach((c) => cls.push(c[0], c[1]));
+
+	var uv = getUniqueValues(cls);
+	return uv;
+}
+
+function canSeeEachOtherPairs(p0, p1) {
+	if (canSeeEachOther(p0[0],p1[0]) && canSeeEachOther(p0[1],p1[1])) return true;
+	if (canSeeEachOther(p0[0],p1[1]) && canSeeEachOther(p0[1],p1[0])) return true;
+	return false;
+}
+
+//*****************************************************************************
+//
+
+export function colorWing() {
+	colorpairs = findConjugatePairs();
+	//cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
+	//console.log("cpairs", colorpairs);
+
+	for (var v=1; v<10; ++v) {
+		//if (v !== 2) continue;	// TEST
+		var vp = getValuePairs(v);
+		var vplen = vp.length;
+		if (vplen < 2) continue;
+
+		//console.log("vp", vp);
+		var clusters = [];
+		for (var vpx=0; vpx<vplen; ++vpx) {
+			var cx0 = vp[vpx][1][0];
+			var cx1 = vp[vpx][2][0];
+			var cx = [cx0, cx1];
+			if (inAnyCluster(clusters, cx)) continue;
+
+			var cluster = [cx];
+			var added = true;
+			while (added) {
+				added = false;
+				for (var i=0; i<vplen; ++i) {
+					var cx0 = vp[i][1][0];
+					var cx1 = vp[i][2][0];
+					var cx = [cx0, cx1];
+					//console.log("check", cluster, cx);
+					if (!inCluster(cluster, cx) && matchesCluster(cluster, cx)) {
+						cluster.push(cx)
+						//console.log("add", cluster, cx);
+						added = true;
+					}
+				}
+			}
+
+			//console.log("cluster", cluster);
+			clusters.push(cluster);
+		}
+		console.log("clusters", v, clusters);
+
+		var clen = clusters.length;
+		for (var i=0; i<clen; ++i) {
+			var cli = clusters[i];
+			var epi = getEndpoints(cli);
+			for (var j=i+1; j<clen; ++j) {
+				var clj = clusters[j];
+				var epj = getEndpoints(clj);
+				if (epi.length < 2 || epj.length < 2) continue;		// one of them is an x-wing or a weird circular cluster
+				console.log("ep", v, i, j, epi, epj);
+				if (canSeeEachOtherPairs(epi, epj)) {
+					console.log("canSee", v, i, j, epi, epj);
+
+				}
+			}
+		}
+
+	}
+
+	var colors = [];
+	if (colors.length === 0) return null;
+	console.log("colors", colors);
+	return colors;
+}
+
+//*****************************************************************************
+// colors
 
 export function colors() {
 	var colors = [];
@@ -173,3 +324,4 @@ export function colors() {
 	return colors;
 
 }
+

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { findCandidates } from "../utilities/utilities";
+import { findCandidates, validateBoard, validateManBoard } from "../utilities/utilities";
 import { RCS, LinearToGrid } from "../utilities/constants";
 
 // export const ManCell = {
@@ -18,6 +18,7 @@ export const useManCellsStore = create (
 			number: 0,
 			description: "",
 			selectedCell: -1,
+			manGameValid: true,
 			initialized: false,
 
 			initialize: () => {
@@ -29,6 +30,7 @@ export const useManCellsStore = create (
 					number: null,
 					description: "New Game",
 					selectedCell: -1,
+					manGameValid: true,
 					initialized: true
 				})
 			},
@@ -41,6 +43,7 @@ export const useManCellsStore = create (
 					number: num,
 					description: descr,
 					selectedCell: -1,
+					manGameValid: validateManBoard(cls),
 					initialized: true
 				})
 			},
@@ -51,6 +54,15 @@ export const useManCellsStore = create (
 					selectedCell: -1,
 					initialized: true
 				})
+			},
+
+			validateManGame: () => {
+				var cls = get().cells
+				var val = validateManBoard(cls);
+				set({
+					manGameValid: val
+				})
+				return val;
 			},
 
 			getManCells: () => {
@@ -82,7 +94,10 @@ export const useManCellsStore = create (
 				set((state) => {
 					const cells = [...state.cells]
 					cells[ix] = value
-					return { cells }
+					return {
+						cells,
+						manGameValid: validateManBoard(cells)
+					}
 				})
 			},
 
@@ -167,6 +182,7 @@ export const cellStore = create(
 			difficulty: "",
 			gameId: "",
 			numbersUsed: [0,0,0,0,0,0,0,0,0,0],
+			gameValid: true,
 			gameComplete: 0,
 			gameLoaded: false,
 
@@ -201,6 +217,7 @@ export const cellStore = create(
 						editCandidates: -1,
 						difficulty: difficulty,
 						gameId: gameid,
+						gameValid: validateBoard(initcells),
 						gameComplete: 0,
 						numbersUsed: [0,0,0,0,0,0,0,0,0,0],
 						gameLoaded: true
@@ -238,6 +255,7 @@ export const cellStore = create(
 						currentValue: -1,
 						difficulty: "",
 						gameId: gameId,
+						gameValid: validateBoard(initcells),
 						gameComplete: 0,
 						gameLoaded: true,
 						hint: {...Hint}
@@ -267,6 +285,7 @@ export const cellStore = create(
 						}
 						return {
 							cells,
+							gameValid: validateBoard(cells),
 							gameComplete: 0,
 							gameLoaded: true,
 						}
@@ -299,6 +318,15 @@ export const cellStore = create(
 					get().actions.clearSelectedValue(),
 					get().actions.resetCandidates(),
 					get().actions.calcNumbersUsed()
+				},
+
+				validateGame: () => {
+					var cls = get().cells
+					var val = validateBoard(cls);
+					set ({
+						gameValid: val
+					})
+					return val;
 				},
 
 				calcNumbersUsed: () => {
@@ -565,6 +593,7 @@ export const cellStore = create(
 				difficulty: state.difficulty,
 				gameId: state.gameId,
 				numbersUsed: state.numbersUsed,
+				gameValid: state.gameValid,
 				gameComplete: state.gameComplete,
 				gameLoaded: state.gameLoaded
 			}),

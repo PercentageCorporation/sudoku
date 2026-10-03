@@ -132,8 +132,8 @@ export function valueInRowColSq(cellIx, value) {
 	return included;
 }
 
-export function validateBoard() {
-	const cells = cellStore.getState().cells;
+export function validateBoard(cells) {
+	//const cells = cellStore.getState().cells;
 	// check for empty candidates
 	for (var i=0; i<81; ++i) {
 		const c = cells[i];
@@ -172,6 +172,52 @@ export function validateBoard() {
 		for (var j=0; j<9; ++j) {
 			const cix = sq[j];
 			const val = cells[cix].value;
+			if (val > 0) {
+				if (vals.includes(val)) return false;
+				vals.push(val);
+			}
+		}
+	}
+
+	return true;
+}
+
+export function validateManBoard(cells) {
+	//const cells = cellStore.getState().cells;
+	// check for empty candidates
+	// check each row for duplicates
+	for (var i=0; i<9; ++i) {
+		const row = Rows[i];
+		var vals = [];
+		for (var j=0; j<9; ++j) {
+			const cix = row[j];
+			const val = cells[cix];
+			if (val > 0) {
+				if (vals.includes(val)) return false;
+				vals.push(val);
+			}
+		}
+	}
+	// check each col for duplicates
+	for (var i=0; i<9; ++i) {
+		const col = Cols[i];
+		var vals = [];
+		for (var j=0; j<9; ++j) {
+			const cix = col[j];
+			const val = cells[cix];
+			if (val > 0) {
+				if (vals.includes(val)) return false;
+				vals.push(val);
+			}
+		}
+	}
+	// check each square for duplicates
+	for (var i=0; i<9; ++i) {
+		const sq = Squares[i];
+		var vals = [];
+		for (var j=0; j<9; ++j) {
+			const cix = sq[j];
+			const val = cells[cix];
 			if (val > 0) {
 				if (vals.includes(val)) return false;
 				vals.push(val);

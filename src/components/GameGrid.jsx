@@ -102,10 +102,10 @@ function Cell({ix}) {
 				break;
 
 			case "swordfish":
-				if (hint.rows.includes(rcs[0]))
-					selMode = 8;
-				else if (hint.targets.includes(ix))
+				if (hint.targets.includes(ix))
 					selMode = 3;
+				else if (hint.rows.includes(rcs[0]))
+					selMode = 8;
 				else if (hint.cols.includes(rcs[1]))
 					selMode = 9;
 				break;

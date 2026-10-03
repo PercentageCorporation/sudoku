@@ -79,7 +79,7 @@ export function saveGame(description, cells, solution) {
 	games["games"].push(newgame);
 	//console.log(games);
 	var sgames = JSON.stringify(games);
-	console.log(sgames);
+	//console.log(sgames);
 
 	localStorage.setItem('sudoku-games', sgames);
 	//console.log("game saved")

@@ -62,9 +62,9 @@ function ManualGrid9({y}) {
 
 export default function ManualGrid() {
 	const navigate = useNavigate();
-	const { initialized, initialize } = useManCellsStore();
+	const { initialized, manGameValid } = useManCellsStore();
 	const { number: manNumber, description: manDescription } = useManCellsStore();
-	const { setManSelectedCell, setManCellValue, getManCells, getManSolution, setManId, loadManCells, loadManSolution, getManCellsLinear } = useManCellsStore();
+	const { setManSelectedCell, setManCellValue, getManCells, getManSolution, setManId, loadManCells, loadManSolution,  initialize  } = useManCellsStore();
 	const { resetHint } = useHintStore();
 	const { loadGame } = useCellActions();
 
@@ -73,7 +73,8 @@ export default function ManualGrid() {
 	const [ saveManGame, setSaveManGame ] = useState(false);
 	const [ addSolution, setAddSolution ] = useState(false);
 	const [ deleteId, setDeleteId ] = useState(null);
-	//console.log("ManGrid", selectedCell);
+	const [ message, setMessage] = useState(manGameValid ? null : "Invalid Board");
+	console.log("ManGrid", manGameValid);
 
 	const index = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 	const modalOpen = loadSavedGame || saveManGame || deleteId !== null;
@@ -144,11 +145,12 @@ export default function ManualGrid() {
 	useEffect(() => {
 		if (!modalOpen) {addEventListener("keydown", handleKeyDown)};
 		if (!initialized) initialize();
+		setMessage(manGameValid ? null : "Invalid Board");
 
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [modalOpen]);
+	}, [modalOpen, manGameValid]);
 
 	function returnToGame(e) {
 		e.preventDefault();
@@ -163,6 +165,7 @@ export default function ManualGrid() {
 	function handleClear(e) {
 		e.preventDefault();
 		console.log("handleClear");
+		setMessage(null);
 		initialize();
 	}
 
@@ -452,6 +455,10 @@ export default function ManualGrid() {
 					</button>
 				</div>
 			</div>
+			<div className="mt-4 flex text-lg font-bold text-red-600">
+				{message}
+			</div>
+
 		</div>
 	);
 }

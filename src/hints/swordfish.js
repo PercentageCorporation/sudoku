@@ -249,6 +249,7 @@ function rowsInCommon23(c1, c2, c3, v) {
 		// all or nothing
 		if (rows.length > 1) ric.push(rows);
 	}
+
 	if (rowsix.size !== 3) return null;	// must be 3
 
 	//console.log("ric", v, ric, empty);
@@ -290,7 +291,7 @@ function columnsInCommon23(r1, r2, r3, v) {
 
 	if (colsix.size !== 3) return null;	// must be 3
 
-	console.log("cic", v, cic, colsix);
+	//console.log("cic", v, cic, colsix);
 	return [cic, Array.from(colsix)];
 }
 
@@ -473,9 +474,9 @@ export function swordfish() {
 	var cc = [];	// candidate col swordfish
 	// first check rows/cols with three of the same value
 	for (var v=1; v<10; v++) {
-		if (v !== 4) continue;	// TESTING
+		//if (v !== 4) continue;	// TESTING
 		if (rCounts23[v].length >= 3) {
-			console.log("row23", v, rCounts23[v]);
+			//console.log("row23", v, rCounts23[v]);
 			var r23len = rCounts23[v].length
 			for (var i=0; i<r23len; ++i) {
 				for (var j=i+1; j<r23len; ++j) {
@@ -485,7 +486,7 @@ export function swordfish() {
 						var rc23k = rCounts23[v][k];
 						var cicr = columnsInCommon23(rc23i,rc23j,rc23k, v);
 						if (cicr) {
-							console.log("cicr", v, [rc23i, rc23j, rc23k], cicr[1], cicr[0]);
+							//console.log("cicr", v, [rc23i, rc23j, rc23k], cicr[1], cicr[0]);
 							cr.push([v, [rc23i, rc23j, rc23k], cicr[1], cicr[0]])
 						}
 					}
@@ -494,7 +495,7 @@ export function swordfish() {
 		}
 
 		if (cCounts23[v].length >= 3) {
-			console.log("col23", v, cCounts23[v]);
+			//console.log("col23", v, cCounts23[v]);
 			var c23len = cCounts23[v].length
 			for (var i=0; i<c23len; ++i) {
 				for (var j=i+1; j<c23len; ++j) {
@@ -504,7 +505,7 @@ export function swordfish() {
 						var cc23k = cCounts23[v][k];
 						var cicc = rowsInCommon23(cc23i,cc23j,cc23k, v);
 						if (cicc) {
-							console.log("cicc", v, [cc23i, cc23j, cc23k], cicc[1], cicc[0]);
+							//console.log("cicc", v, [cc23i, cc23j, cc23k], cicc[1], cicc[0]);
 							if (cicc[1].length > 3) {
 
 							} else {
@@ -517,12 +518,13 @@ export function swordfish() {
 		}
 	}
 
-	console.log("sf?", cr, cc);
+	//console.log("sf?", cr, cc);
 
+	// look for row targets
 	cr.forEach((crx) => {
-		console.log("crx", crx);
+		//console.log("crx", crx);
 		var val = crx[0];
-		var rows = crx[1];
+		var rows = crx[1];	// row indices
 		var cols = crx[2];	// column indices
 		var ccls = crx[3];	// cells in columns
 		// find targets in the three columns
@@ -531,9 +533,28 @@ export function swordfish() {
 			var t = findTargets(Cols[cols[i]], [val], ccls[i]);
 			if (t) tgts.push(...t);
 		}
-		console.log("cicrT", tgts);
+		//console.log("cicrT", tgts);
 		if (tgts.length > 0) {
 			sfcandidates.push([val, rows, cols, ccls, tgts ])
+		}
+	})
+
+	// look for column targets
+	cc.forEach((ccx) => {
+		//console.log("ccx", ccx);
+		var val = ccx[0];
+		var cols = ccx[1];	// col indices
+		var rows = ccx[2];	// row indices
+		var rcls = ccx[3];	// cells in rows
+		// find targets in the three rows
+		var tgts = [];
+		for (var i=0; i<3; ++i) {
+			var t = findTargets(Rows[rows[i]], [val], rcls[i]);
+			if (t) tgts.push(...t);
+		}
+		//console.log("ciccT", tgts);
+		if (tgts.length > 0) {
+			sfcandidates.push([val, rows, cols, rcls, tgts ])
 		}
 	})
 
@@ -542,7 +563,7 @@ export function swordfish() {
 	var swordfish = [];
 
 	sfcandidates.forEach((sfc) => {
-		console.log("sfc", sfc)
+		//console.log("sfc", sfc)
 		//var dir = sfc[0];
 		var val = sfc[0];
 		var rows = sfc[1];
