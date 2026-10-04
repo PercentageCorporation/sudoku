@@ -179,8 +179,10 @@ export function XWing() {
 				if (sameSq2(r0c0, r1c0)) continue;
 
 				// check the columns for possible targets
+				//console.log(Cols[cellCol[r0c0]], Cols[cellCol[r0c1]]);
 				var t0 = findTargets(Cols[cellCol[r0c0]], [value], [r0c0,r1c0]);
 				var t1 = findTargets(Cols[cellCol[r0c1]], [value], [r0c1,r1c1]);
+				//console.log("targets", value, r0c0, r0c1, r1c0, r1c1, t0, t1)
 				var tgts = [];
 				if (t0) tgts = tgts.concat(t0);
 				if (t1) tgts = tgts.concat(t1);

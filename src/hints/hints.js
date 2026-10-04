@@ -1,7 +1,7 @@
 import { cellStore, useCellActions } from "/src/store/store";
 import {Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCells, sqRows012, sqCols012, RCS} from '/src/utilities/constants';
 import { singletons, singleCounts } from "/src/hints/singles";
-import { rectangles } from '/src/hints/rectangles';
+import { uniqueRectangles, emptyRectangles } from '/src/hints/rectangles';
 import { nakedPairs, pointingPairsRowCol, pointingPairsSquare, hiddenPairs } from "/src/hints/pairs";
 import { nakedTriples, hiddenTriples } from '/src/hints/triples';
 import { als, lockedCandidates1 } from '/src/hints/locked';
@@ -19,9 +19,8 @@ export function runHints() {
 	cells = cellStore.getState().cells;
 	initCounts();
 
-	result = colorWing();
+	result = emptyRectangles();
 	if (result) return result[0];
-
 
 	result = lockedCandidates1();
 	if (result) return result[0];
@@ -41,7 +40,7 @@ export function runHints() {
 	if (result) return result[0];
 	result = hiddenTriples();
 	if (result) return result[0];
-	result = rectangles();
+	result = uniqueRectangles();
 	if (result) return result[0];
 	result = XWing();
 	if (result) return result[0];
@@ -56,6 +55,8 @@ export function runHints() {
 	result = swordfish();
 	if (result) return result[0];
 	result = colors();
+	if (result) return result[0];
+	result = colorWing();
 	if (result) return result[0];
 	result = als();
 	if (result) return result[0];

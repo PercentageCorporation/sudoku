@@ -167,6 +167,7 @@ function Cell({ix}) {
 			case 'urType5':
 			case 'urType6':
 			case 'urType7':
+			case 'emptyRectangle':
 				if (hint.cells.includes(ix))
 					selMode = 2;
 				if (hint.targets.includes(ix))

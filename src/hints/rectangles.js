@@ -1,24 +1,31 @@
-import { Rows, Cols, Squares, cellRow, cellCol, RCS } from '/src/utilities/constants';
-import { cells } from '/src/hints/hints';
+import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRows012, sqCols012, RCS } from '/src/utilities/constants';
+import { sameRow2, sameCol2 } from '/src/hints/hints';
+import { cells, vSqs } from '/src/hints/hints';
 import { includesAll, includesAny } from '/src/hints/hints';
 import { findAllBivalueCells, rcsContainsValue, findTargets, findSeenTargets2,  findSeenTargets3, findTargetsOnly } from '/src/hints/hints';
-import { getActiveCandidates, getCandidateCells, findCandidatesWithValues } from '/src/hints/hints';
+import { getActiveCandidates, getCandidateCells, findCandidatesWithValues, cellHasCandidate, findConjugatePairs } from '/src/hints/hints';
 import { countTheHouse, checkForTripleCounts } from '/src/hints/triples';
-//*****************************************************************************
-// Unique Rectangles
 
+//*****************************************************************************
+// common functions
+
+// are the two cells in the same row
 function commonRow(c0, c1) {
 	return ((RCS[c0][0] === RCS[c1][0]));
 }
 
+// are the two cells in the same column
 function commonColumn(c0, c1) {
 	return ((RCS[c0][1] === RCS[c1][1]));
 }
+
+// are the two cells in the same square
 function commonSquare(c0, c1) {
 	return ((RCS[c0][2] === RCS[c1][2]));
 }
 
-
+// return an array [ row, colun square] containing the index of the common row/col/sq
+// if not in common return -1
 function getCommonHouses(c0, c1) {
 	var common = [];
 	var rcs0 = RCS[c0];
@@ -29,13 +36,16 @@ function getCommonHouses(c0, c1) {
 	return common;
 }
 
+// get the active candidates for the cell
 function getCellCandidates(cix) {
 	var cell = cells[cix];
 	if (cell.value > 0) return [];
 	return cell.activecandidates;
 }
 
-function findDiagonalCorner(c0, cls) {
+// find a cell not in the same row/col
+// assuming the [cls] arrau os a square, this would be the diagonal cell
+function findDiagonalCornerOfSquare(c0, cls) {
 	for (var i = 0; i < cls.length; ++i) {
 		var cx = cls[i];
 		if (!commonRow(c0, cx) && !commonColumn(c0, cx)) return cx;
@@ -43,7 +53,189 @@ function findDiagonalCorner(c0, cls) {
 	return null;
 }
 
-export function rectangles() {
+function findIntersection(grid) {
+	for (let row = 0; row < 3; row++) {
+		for (let col = 0; col < 3; col++) {
+			let valid = true;
+
+			for (let r = 0; r < 3 && valid; r++) {
+				for (let c = 0; c < 3; c++) {
+					if (grid[r][c] && r !== row && c !== col) {
+						valid = false;
+						break;
+					}
+				}
+			}
+
+			if (valid) {
+				return [row, col];
+			}
+		}
+	}
+
+	return null;
+}
+
+// find conjugate pairs for the value with one end matching the row or column specified
+// however the endpoints cannot be in the same square
+// return the endpoints indicating which endpoint matched the rectangle
+function findMatchingConjugatePairs(cpairs, v, r, c, s) {
+	var pairs = [];
+	var cplen = cpairs.length;
+	for (var i=0; i<cplen; ++i) {
+		var cp = cpairs[i];
+		if (cp[0] !== v) continue;
+
+		var ep0 = cp[1][0];
+		var ep1 = cp[2][0];
+		// the endpoints cannot be in the same square
+		if (cellSquare[ep0] === cellSquare[ep1]) continue;
+		// neither endpoint can be in the same square as the rectangle
+		if (cellSquare[ep0] === s || cellSquare[ep1] === s) continue;
+
+		var ep0r = cellRow[ep0];
+		var ep0c = cellCol[ep0];
+		var ep1r = cellRow[ep1];
+		var ep1c = cellCol[ep1];
+
+		if (ep0r === r) pairs.push(['r', ep1r, ep1c, ep0, ep1]);
+		else if (ep0c === c) pairs.push(['c', ep1r, ep1c, ep0, ep1]);
+		else if (ep1r === r) pairs.push(['r', ep0r, ep0c, ep1, ep0]);
+		else if (ep1c === c) pairs.push(['c', ep0r, ep0c, ep1, ep0]);
+	}
+	return pairs;
+}
+//*****************************************************************************
+// Empty Rectangles
+
+export function emptyRectangles() {
+	var rectangles = [];
+	var cpairs = findConjugatePairs();
+	// cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
+	//console.log("cpairs", cpairs);
+
+	//console.log("vSqs", vSqs);
+	// for each value, for each square find those that are only in one row and one col
+	for (var s=0; s<9; ++s) {
+		for (var value=1; value<10; ++value) {
+			var sv = vSqs[s][value];
+			// for each cell in the square count the empty column and rows
+			var rowcol = [[0,0,0],[0,0,0],[0,0,0]];
+			var sqcells = [];
+			var sq = Squares[s];
+			for (var i=0; i<9; ++i) {
+				var cix = sq[i];
+				if (!cellHasCandidate(cix, value)) continue;
+				sqcells.push(cix);
+				var r = Math.floor(i / 3);
+				var c = i % 3;
+				++rowcol[r][c];
+			}
+
+			var cps = null;
+			var vrcs = [];
+			if (sv === 2) {
+				var c0 = sqcells[0];
+				var c1 = sqcells[1];
+				if (sameRow2(c0, c1) !== null) continue;
+				if (sameCol2(c0, c1) !== null) continue;
+				//console.log("er2", s, value, c0, c1, is)
+				// since there are only two cells not in the same row or col
+				// we can use either row/col combination as possibilities
+				var c0r = cellRow[c0];
+				var c0c = cellCol[c0];
+				var c1r = cellRow[c1];
+				var c1c = cellCol[c1];
+
+				vrcs.push([s, value, c0r, c1c]);
+				vrcs.push([s, value, c1r, c0c]);
+
+
+
+			} else if (sv < 3 || sv > 5) {
+				// only one row and one column can have more than one count
+				// at least one row and one column must be greater than zero
+				var is = findIntersection(rowcol);
+				if (!is) continue;
+
+				var rc = is[0];
+				var cc = is[1];
+				var row = sqRows012[s][rc];
+				var col = sqCols012[s][cc];
+				//console.log("er", s, value, is, rc, cc, row, col, rowcol);
+				vrcs.push([s, value, row, col]);
+
+			}
+
+			if (!vrcs) continue;
+			//console.log("cps", cps);
+			for (var vx=0; vx<vrcs.length; ++vx) {
+				var vr = vrcs[vx];
+				var row = vr[2];
+				var col = vr[3];
+				//console.log("vr", s, value, row, col, rowcol);
+
+				// find a conjugate pairs for value with one end in the same row or column (but not same square) as the empty rectangle
+				cps = findMatchingConjugatePairs(cpairs, value, row, col, s);
+				cps.forEach((cp) => {
+					//console.log("cp", cp);
+					// see if there are any candidates at the intersecting cell
+					var target = null;
+					if (cp[0] === 'c') {
+						// get the intersecting cell at row rc, column cps[1][1]
+						var ccol = cp[2];
+						var ccix = Rows[row][ccol];
+						//console.log("checking c", row, ccol, ccix);
+						if (cellHasCandidate(ccix, value)) {
+							target = ccix;
+						}
+					} else if (cp[0] === 'r') {
+						// get the intersecting cell at row cps[1][0] column cc
+						var crow = cp[1];
+						var rcix = Rows[crow][col];
+						//console.log("checking r", crow, col, rcix);
+						if (cellHasCandidate(rcix, value)) {
+							target = rcix;
+						}
+					}
+
+					if (target) {
+						//console.log("target", s, sqcells, value, cp[3], target)
+						var cls = [...sqcells];
+						cls.push(cp[3]);
+						cls.push(cp[4]);
+						//console.log("h", cls, target, value);
+						var h = {
+							type: 'emptyRectangle',
+							rows: null,
+							cols: null,
+							square: null,
+							cells: cls,
+							offset: null,
+							value: value,
+							targets: [target],
+							msg: `Empty Rect: Cells: ${target}, Value: ${value}`
+						}
+						rectangles.push(h);
+					}
+				})
+			}
+
+
+		}
+	}
+
+
+	if (rectangles.length === 0) return null;
+	console.log("rectangles", rectangles);
+	return rectangles;
+}
+
+
+//*****************************************************************************
+// Unique Rectangles
+
+export function uniqueRectangles() {
 	var bvpairs = findAllBivalueCells();
 	//console.log("bvpairs", bvpairs)
 	// bv: [ cix, [ac] ]
@@ -186,7 +378,7 @@ export function rectangles() {
 	var rectangles = [];
 	//return null;	// TEST
 	for (var si = 0; si < squares.length; ++si) {
-		if (rectangles.length > 0) break;	// found one
+		if (rectangles.length > 0) break;	// found one, no use finding them as things will change
 		// square: [ [ac], [c0,c1,c2,c3] ]
 		var square = squares[si]
 		var sqac = square[0];		// original bivalue pair
@@ -520,7 +712,7 @@ export function rectangles() {
 			} else if (numextras === 3) {
 				// or one bivalue cell with three cells with extra candidates
 				// corner0 should be the cell diagonally opposite the bivalue cell
-				var corner0 = findDiagonalCorner(nonextras[0], extras);
+				var corner0 = findDiagonalCornerOfSquare(nonextras[0], extras);
 				var corner1 = null;
 			}
 

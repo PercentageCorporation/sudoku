@@ -65,6 +65,7 @@ export default function PlayMenu() {
 			case 'colorsI':
 			case 'alsXY':
 			case 'colorWing':
+			case 'emptyRectangle':
 				console.log("hint:", h);
 				var tgts = h.targets;
 				tgts.forEach((cix) => {

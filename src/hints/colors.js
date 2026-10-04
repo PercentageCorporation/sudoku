@@ -259,7 +259,7 @@ export function colorWing() {
 			//console.log("cluster", cluster);
 			clusters.push(cluster);
 		}
-		console.log("clusters", v, clusters);
+		//console.log("clusters", v, clusters);
 
 		var clen = clusters.length;
 		for (var i=0; i<clen; ++i) {
@@ -302,10 +302,10 @@ export function colorWing() {
 					var bcj = br[0][1][0];		// bridge cell
 					var ccopj = getBipartiteCellsWithOppositeParity(bj, bcpj);
 
-					console.log("ccop", bci, bcpi, ccopi, bcj, bcpj, ccopj);
+					//console.log("ccop", bci, bcpi, ccopi, bcj, bcpj, ccopj);
 					var targets = findTargetsSeenByBoth(v, ccopi, ccopj);
-					console.log("targets 1", targets);
 					if (targets) {
+						console.log("targets 1", targets);
 						candidates.push([v, targets, parity1, parity2, parity3, parity4])
 					}
 					// colors.push(???)
