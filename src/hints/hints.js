@@ -180,8 +180,8 @@ export function findAllCellsWithValue(value) {
 // find cells in the array which contain any of vals, excluding cells in ex
 export function findTargets(arr,vals,ex) {
 	var targets = [];
-
-	for (var i=0; i<9; ++i) {
+	var alen = arr.length;
+	for (var i=0; i<alen; ++i) {
 		var cix = arr[i];
 		var cel = cells[cix];
 		if (!ex.includes(cix)) {
@@ -198,7 +198,8 @@ export function findTargets(arr,vals,ex) {
 export function findTargetsAll(arr,vals,ex) {
 	var targets = [];
 
-	for (var i=0; i<9; ++i) {
+	var alen = arr.length;
+	for (var i=0; i<alen; ++i) {
 		var cix = arr[i];
 		var cel = cells[cix];
 		if (!ex.includes(cix)) {
@@ -216,8 +217,8 @@ export function findTargetsOnly(arr,vals,ex) {
 	var targets = [];
 
 	var varlen = vals.length;	// number of values
-
-	for (var i=0; i<9; ++i) {
+	var alen = arr.length;
+		for (var i=0; i<alen; ++i) {
 		var cix = arr[i];
 		var cel = cells[cix];
 		if (!ex.includes(cix)) {
@@ -229,6 +230,25 @@ export function findTargetsOnly(arr,vals,ex) {
 	}
 	if (targets.length === 0) return null;
 	return targets;
+}
+
+// find all cells that can be seen by any combination of cls0 and cls1
+export function findTargetsSeenByBoth(v, cls0, cls1) {
+	var cls = new Set();
+	for (var cix=0; cix<81; ++cix) {
+		cls0.forEach((c0) => {
+			if (canSeeEachOther(c0, cix)) {
+				cls1.forEach((c1) => {
+					if (canSeeEachOther(c1, cix)) {
+						var cel = cells[cix];
+						if (cel.value === 0 && cel.activecandidates.includes(v)) cls.add(cix);
+					}
+				})
+			}
+		})
+	}
+	if (cls.size === 0) return null;
+	return Array.from(cls);
 }
 
 // find any values in the cells that are not in the vals list
@@ -254,7 +274,8 @@ export function findInternalTargets(cls,vals) {
 // get all cells with candidates from array excluding cells in ex
 export function getCandidateCells(arr, ex) {
 	var targets = [];
-	for (var i=0; i<9; ++i) {
+	var alen = arr.length;
+	for (var i=0; i<alen; ++i) {
 		var cix = arr[i];
 		var cel = cells[cix];
 		if (!ex.includes(cix)) {

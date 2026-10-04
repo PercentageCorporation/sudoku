@@ -1,6 +1,6 @@
-import { canSeeEachOther } from './hints';
+import { canSeeEachOther, canSeeEachOtherRC } from './hints';
 //import { cells, rCounts2, vRows, vCols, vSqs } from '/src/hints/hints';
-import { findConjugatePairs, findAllCellsWithValue, includesAll, includesAny } from '/src/hints/hints';
+import { findConjugatePairs, findAllCellsWithValue, includesAll, includesAny, findTargetsSeenByBoth, findTargets } from '/src/hints/hints';
 import { cellStore, useCellActions } from '../store/store';
 
 
@@ -127,6 +127,7 @@ function canSeeEachOtherPairs(p0, p1) {
 	return false;
 }
 
+// make a list of cells with parity from the pairs
 function makeBipartite(pairs) {
 	if (!pairs.length) return [];
 
@@ -161,16 +162,71 @@ function makeBipartite(pairs) {
 	return [...parity.entries()].sort((a, b) => a[0] - b[0]);
 }
 
+function findBridges(c0, c1) {
+	var bridges = [];
+	c0.forEach((p0) => {
+		c1.forEach((p1) => {
+			if (canSeeEachOther(p0[0], p1[0])) {
+				bridges.push([p0, p1]);
+			}
+		})
+	})
+	return bridges;
+}
+
+function getBipartiteCellsWithOppositeParity(c, p) {
+	var cls = [];
+	c.forEach((cp) => {
+		if (cp[1] !== p) cls.push(cp[0])
+	})
+	return cls;
+}
+
+// get the bridge cells of the same parity
+// bipartite cells: [ [cix,parity], [cix,parity], [cix,parity], ... ]
+function getClusterCellsByParity(bp) {
+	var br0 = [];
+	var br1 = [];
+
+	bp.forEach((b) => {
+		(b[1] === 0) ? br0.push(b[0]) : br1.push(b[0]);
+	})
+
+	return ([br0, br1]);
+}
+
+//          bridge0     bridge1         bridge0     bridge1
+// br: [ [ [cix0, p0], [cix1, p1] ], [ [cix0, p0], [cix1, p1] ], ... ]
+function bridgeCellsSameParity(br) {
+	var same0 = br[0][0][1];
+	var same1 = br[0][1][1];
+	var brlen = br.length;
+	for (var i=1; i<brlen; ++i) {
+		if (same0 !== br[i][0][1]) {
+			same0 = -1;
+			break;
+		}
+	}
+	for (var i=1; i<brlen; ++i) {
+		if (same1 !== br[i][1][1]) {
+			same1 = -1;
+			break;
+		}
+	}
+	return ([same0, same1]);
+}
+
 //*****************************************************************************
 //
 
 export function colorWing() {
+	var candidates = [];
 	colorpairs = findConjugatePairs();
 	//cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
 	//console.log("cpairs", colorpairs);
 
 	for (var v=1; v<10; ++v) {
-		if (v !== 2) continue;	// TEST
+		//if (v !== 2) continue;	// TEST
 		var vp = getValuePairs(v);
 		var vplen = vp.length;
 		if (vplen < 2) continue;
@@ -213,24 +269,100 @@ export function colorWing() {
 				var clj = clusters[j];
 				var epj = getEndpoints(clj);
 				if (epi.length < 2 || epj.length < 2) continue;		// one of them is an x-wing or a weird circular cluster
-				console.log("ep", v, i, j, epi, epj);
-
+				//console.log("ep", v, i, j, epi, epj);
+				// check the cluster pair
 				var bi = makeBipartite(cli);
 				var bj = makeBipartite(clj);
-				console.log("bp", v, i, j, bi, bj);
-				bi.forEach((e) => cellStore.getState().actions.setCellParity(e[0], e[1]+1));
-				bj.forEach((e) => cellStore.getState().actions.setCellParity(e[0], e[1]+3));
+				//console.log("bp", v, i, j, bi, bj);
+				//bi.forEach((e) => cellStore.getState().actions.setCellParity(e[0], e[1]+1));
+				//bj.forEach((e) => cellStore.getState().actions.setCellParity(e[0], e[1]+3));
 
-				if (canSeeEachOtherPairs(epi, epj)) {
-					console.log("canSee", v, i, j, epi, epj);
+				// this returns cell/parity pairs where the first pair is Pairs I and the second is Pairs J
+				var br = findBridges(bi, bj);
+				//console.log("bridges", v, i, j, br);
+				var brlen = br.length;
+				if (brlen === 0) continue;	// nothing to do
+
+				var parity = getClusterCellsByParity(bi)
+				var parity1 = parity[0];
+				var parity2 = parity[1];
+				var parity = getClusterCellsByParity(bj)
+				var parity3 = parity[0];
+				var parity4 = parity[1];
+				var targets = [];
+
+				if (brlen === 1) {
+					// one bridge
+					// get the cells of pairs I with the parity opposite the bridge cell parity
+					var bcpi = br[0][0][1];		// pairity of bridge cell
+					var bci = br[0][0][0];		// bridge cell
+					var ccopi = getBipartiteCellsWithOppositeParity(bi, bcpi);
+
+					var bcpj = br[0][1][1];		// pairity of bridge cell
+					var bcj = br[0][1][0];		// bridge cell
+					var ccopj = getBipartiteCellsWithOppositeParity(bj, bcpj);
+
+					console.log("ccop", bci, bcpi, ccopi, bcj, bcpj, ccopj);
+					var targets = findTargetsSeenByBoth(v, ccopi, ccopj);
+					console.log("targets 1", targets);
+					if (targets) {
+						candidates.push([v, targets, parity1, parity2, parity3, parity4])
+					}
+					// colors.push(???)
+				} else	{	// more than one bridge
+					// check if all the bridge cells are of the same parity
+					var bp = bridgeCellsSameParity(br);
+					//console.log("parity", parity1, parity2, parity3, parity4);
+					if (bp[0] !== -1 && bp[1] === -1) {
+						// all cluster 0 bridge cells are the same parity
+						// therefore all cluster cells of that parity are elimination targets
+						var parity1 = getClusterCellsByParity(bi)[bp[0]]
+						var parity2 = getClusterCellsByParity(bi)[bp[0] === 0 ? 1 : 0]
+						targets = findTargets(parity1, [v], []);
+						if (targets) {
+							console.log("targets 2+", bp, targets);
+							candidates.push([v, targets, parity1, parity2, parity3, parity4])
+						}
+					} else if (bp[1] !== -1 && bp[0] === -1) {
+						targets = findTargets(parity2, [v], []);
+					}
 
 				}
 			}
 		}
 
 	}
-
 	var colors = [];
+
+	candidates.forEach((c) => {
+		var value = c[0];
+		var tgts = c[1];
+		var p1 = c[2];
+		var p2 = c[3];
+		var p3 = c[4];
+		var p4 = c[5];
+
+		var h = {
+			type: 'colorWing',
+			rows: null,
+			cols: null,
+			square: null,
+			cells: [],
+			cells0: null,
+			cells1: null,
+			parity1: p1,
+			parity2: p2,
+			parity3: p3,
+			parity4: p4,
+			offset: null,
+			value: value,
+			targets: tgts,
+			msg: `Color Wing: Cells: ${tgts}, Value: ${value}`
+		}
+		colors.push(h);
+
+	})
+
 	if (colors.length === 0) return null;
 	console.log("colors", colors);
 	return colors;

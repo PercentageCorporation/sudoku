@@ -281,10 +281,11 @@ export const cellStore = create(
 				},
 
 				resetGame: () => {
+					const parity = 0;
 					set((state) => {
 						const cells = [...state.cells]
 						for (var ix = 0; ix < 81; ++ix) {
-							cells[ix] = {...cells[ix], value: cells[ix].originalValue, noncandidates: [] }
+							cells[ix] = {...cells[ix], value: cells[ix].originalValue, noncandidates: [], parity }
 						}
 						return {
 							cells,
