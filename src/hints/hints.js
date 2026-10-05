@@ -6,7 +6,7 @@ import { nakedPairs, pointingPairsRowCol, pointingPairsSquare, hiddenPairs } fro
 import { nakedTriples, hiddenTriples } from '/src/hints/triples';
 import { als, lockedCandidates1 } from '/src/hints/locked';
 import { XWing, XYWing, XYZWing, WWing } from '/src/hints/wings';
-import { XYChain } from '/src/hints/chains';
+import { XChain, XYChain } from '/src/hints/chains';
 import { swordfish } from '/src/hints/swordfish';
 import { colors, colorWing } from '/src/hints/colors';
 
@@ -19,7 +19,7 @@ export function runHints() {
 	cells = cellStore.getState().cells;
 	initCounts();
 
-	result = emptyRectangles();
+	result = XChain();
 	if (result) return result[0];
 
 	result = lockedCandidates1();
@@ -41,6 +41,8 @@ export function runHints() {
 	result = hiddenTriples();
 	if (result) return result[0];
 	result = uniqueRectangles();
+	if (result) return result[0];
+	result = emptyRectangles();
 	if (result) return result[0];
 	result = XWing();
 	if (result) return result[0];

@@ -1,7 +1,10 @@
-import { cells, findAllBivalueCells, findSeenTargets2 } from '/src/hints/hints';
+import { includesAny } from './hints';
+import { cells, findAllBivalueCells, findConjugatePairs, findSeenTargets2, findTargetsSeenByBoth } from '/src/hints/hints';
+import { sameRow2, sameCol2 } from '/src/hints/hints';
 import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, RCS } from '/src/utilities/constants';
 
-var bvpairs;
+//*****************************************************************************
+// common functions
 
 // links: [ cix, prevlink, [nextlinks] ]
 // check link chain to see if we already have this cell
@@ -21,12 +24,224 @@ function cellsInSameHouse(c0,c1) {
 	return false;
 }
 
-var links = [];
+function conjugatePairsForValue(cpairs, v) {
+	var vp = [];
+	cpairs.forEach((cp) => {
+		if (cp[0] === v) vp.push(cp);
+	})
+	return vp;
+}
+
+//cvp: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
+// starting with an endpoint, find a link to another cp
+function findLinkedPairs(cvp, epx) {
+	var lp = [];
+	var clen = cvp.length;
+	for (var i=0; i<clen; ++i) {
+		var cvpi = cvp[i];
+		var epi0 = cvpi[1][0];
+		var epi1 = cvpi[2][0];
+		for (var j=i+1; j<clen; ++j) {
+			var cvpj = cvp[j];
+			var epj0 = cvpj[1][0];
+			var epj1 = cvpj[2][0];
+
+			if (sameRow2(epi0, epj0)) lp.push([i, j, 0, 0, epi0, epj0]);
+			else if (sameRow2(epi0, epj1)) lp.push([i, j, 0, 1, epi0, epj1]);
+			else if (sameRow2(epi1, epj0)) lp.push([i, j, 1, 0, epi1, epj0]);
+			else if (sameRow2(epi1, epj1)) lp.push([i, j, 1, 1, epi1, epj1]);
+			else if (sameCol2(epi0, epj0)) lp.push([i, j, 0, 0, epi0, epj0]);
+			else if (sameCol2(epi0, epj1)) lp.push([i, j, 0, 1, epi0, epj1]);
+			else if (sameCol2(epi1, epj0)) lp.push([i, j, 1, 0, epi1, epj0]);
+			else if (sameCol2(epi1, epj1)) lp.push([i, j, 1, 1, epi1, epj1]);
+		}
+	}
+	return lp;
+}
+
+//*****************************************************************************
+// X-Chain
+
+// chain [ [cvpix, ep0, ep1, previous link, [next links]]]
+var chain;
+
+function pairInChain(ix) {
+	var clen = chain.length;
+	for (var i=0; i<clen; ++i) {
+		if (ix === chain[i][0]) return true;
+	}
+	return false;
+}
+
+function endpointsInPath(cix, ep0, ep1) {
+	var j = cix;
+	while (j >= 0) {
+		var cp0 = chain[j][1];
+		var cp1 = chain[j][2];
+		if (ep0 === cp0 || ep1 === cp1 || ep1 === cp0 || ep0 === cp1) return true;
+		j = chain[j][3];
+	}
+	return false;
+}
+
+// find next link
+// current link index is cix
+// the next link is to cell in the same row/col/sq as ep1
+// chain: [ [cvpix, ep0, ep1, previous link, [next links]]]
+// cvp: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
+
+function findNextXLink(cvp, cix) {
+	var curlink = chain[cix];	// current link in the chain
+	var epx = curlink[2];		// next endpoint to link to
+	var epz = curlink[1];		// other endpoint
+	//console.log("nl", cix, epx, curlink);
+
+	var clen = cvp.length;
+	// we can start at 1 because the chain always starts with one entry
+	for (var i=1; i<clen; ++i) {
+		if (pairInChain(i)) continue;
+		var cp = cvp[i];
+		var ep0 = cp[1][0];
+		var ep1 = cp[2][0];
+		if (epx === ep0 || epx === ep1 || epz === ep0 || epz === ep1) continue;
+		if (endpointsInPath(cix, ep0, ep1)) continue;
+		var curix = i;
+		if (sameRow2(epx, ep0)) chain.push([i, ep0, ep1, cix, []]);
+		else if (sameRow2(epx, ep1)) chain.push([i, ep1, ep0, cix, []]);
+		else if (sameCol2(epx, ep0)) chain.push([i, ep0, ep1, cix, []]);
+		else if (sameCol2(epx, ep1)) chain.push([i, ep1, ep0, cix, []]);
+		else { curix = -1; }
+
+		if (curix >= 0) {
+			var lcl = chain.length-1;
+			curlink[4].push(lcl)
+			findNextXLink(cvp, lcl);
+		}
+	}
+}
+
+// construct the list of path cells from the links
+// going from bottom up
+// chain: [ [cvpix, ep0, ep1, prev link, [next links]]]
+function getXPaths() {
+	// link: [ val, cix, prevlink, [nextlinks] ]
+	var paths = [];
+	var end = chain.length - 1;
+	if (end === 0) return paths;
+
+	for (var i=end; i >= 0; --i) {
+		// find the first link with the start value
+		var path = [];
+		// follow the path up
+		var j = i;
+		while (j >= 0) {
+			var linkj = chain[j];
+			path.push(j);
+			j = linkj[3];	// back up the chain
+			//console.log("prev link", j, chain[j]);
+		}
+		// the long enough and odd number of links
+		if (path.length >= 3 && (path.length % 2) === 0) {
+			path.reverse();
+			var cpath = [];
+			path.forEach((p) => {
+				cpath.push([chain[p][1],chain[p][2]]);
+			})
+			paths.push(cpath);
+		}
+	}
+	return paths;
+}
+
+
+export function XChain() {
+	var xchain = [];
+
+	var cpairs = findConjugatePairs();
+	//cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
+	//console.log("cpairs", cpairs);
+
+	for (var value=1; value<10; ++value) {
+		var cvp = conjugatePairsForValue(cpairs, value);
+		if (cvp.length === 0) continue;
+		//console.log("cvp", value, cvp);
+
+		// find two conjugate pairs with an endpoint in the same row/col/sq
+		// pick a starting endpoint
+		var sep0 = cvp[0][1][0];
+		var sep1 = cvp[0][2][0];
+		chain = [];
+		chain.push([0, sep0, sep1, -1, []]);
+		//console.log("chain start", value, chain);
+		findNextXLink(cvp, 0);
+		//console.log("chain end", value, chain);
+		var x0paths = getXPaths();
+
+		// now start with the other endpoint
+		chain = [];
+		chain.push([0, sep1, sep0, -1, []]);
+		//console.log("chain start", value, chain);
+		findNextXLink(cvp, 0);
+		//console.log("chain end", value, chain);
+
+		var x1paths = getXPaths();
+		var zpaths = [...x0paths, ...x1paths] ;
+		//console.log("xpaths", x0paths, x1paths, zpaths);
+
+		zpaths.forEach((p) => {
+			// see if there are targets for the endpointsInPath
+			var ep0 = p[0][0];
+			var ep1 = p[p.length-1][1];
+			var targets = findTargetsSeenByBoth(value, [ep0], [ep1]);
+			console.log("eps", value, targets, ep0, ep1, p);
+			if (targets) {
+				var parity1 = [];
+				var parity2 = [];
+				p.forEach((px) => {
+					parity2.push(px[0]);
+					parity1.push(px[1]);
+				})
+				if (includesAny(parity1, targets) || includesAny(parity2, targets)) targets = null;
+			}
+
+			if (targets) {
+				var h = {
+					type: 'xChain',
+					rows: null,
+					cols: null,
+					square: null,
+					cells: [ep0, ep1],
+					parity1: parity1,
+					parity2: parity2,
+					offset: null,
+					value: value,
+					targets: targets,
+					msg: `X-Chain: Cells: ${targets}, Value: ${value}`
+				}
+				xchain.push(h);
+
+			}
+
+		})
+
+	}
+
+	if (xchain.length === 0) return null;
+	console.log("xchain", xchain);
+	return xchain;
+}
+
+//*****************************************************************************
+// XY-Chain
+// an xy chain is a chain of bivalue cells linked by a common candidate in the same house
+// the end of the chain are the unlinked values and must match
 
 // recursive function to find the next link in a chain
 // the current cell ix curlinkix
 // the next value we are looking for is nextval
 // the starting (end) of the chain is endval
+var bvpairs;
+var links = [];
 function findLink(curlinkix, nextval, endval ) {
 	// link: [ val, cix, prevlink, [nextlink-indices] ]
 	var curlink = links[curlinkix];
@@ -116,11 +331,6 @@ function linkPaths() {
 	}
 	return paths;
 }
-
-//*****************************************************************************
-// XY-Chain
-// an xy chain is a chain of bivalue cells linked by a common candidate in the same house
-// the end of the chain are the unlinked values and must match
 
 export function XYChain() {
 	bvpairs = findAllBivalueCells();

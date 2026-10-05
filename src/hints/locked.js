@@ -164,7 +164,7 @@ export function als() {
 					var Zcells = candidateValueCells(Z, alsi[2], alsj[2] );
 					var tgts = findTargetsSeenByAll(Z, Zcells, allcells);
 					if (tgts) {
-						console.log("als", X, Z, alsi, alsj);
+						//console.log("als", X, Z, alsi, alsj);
 						//console.log("Zcells", Zcells, allcells, tgts);
 						var h = {
 							type: 'alsXY',

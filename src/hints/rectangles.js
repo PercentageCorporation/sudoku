@@ -119,7 +119,9 @@ export function emptyRectangles() {
 	for (var s=0; s<9; ++s) {
 		for (var value=1; value<10; ++value) {
 			var sv = vSqs[s][value];
-			// for each cell in the square count the empty column and rows
+			if (sv < 2 || sv > 5) continue;
+
+			// get the pattern of the value in the square
 			var rowcol = [[0,0,0],[0,0,0],[0,0,0]];
 			var sqcells = [];
 			var sq = Squares[s];
@@ -132,14 +134,13 @@ export function emptyRectangles() {
 				++rowcol[r][c];
 			}
 
-			var cps = null;
 			var vrcs = [];
 			if (sv === 2) {
 				var c0 = sqcells[0];
 				var c1 = sqcells[1];
 				if (sameRow2(c0, c1) !== null) continue;
 				if (sameCol2(c0, c1) !== null) continue;
-				//console.log("er2", s, value, c0, c1, is)
+				//console.log("er2", s, value, c0, c1, sv)
 				// since there are only two cells not in the same row or col
 				// we can use either row/col combination as possibilities
 				var c0r = cellRow[c0];
@@ -149,10 +150,7 @@ export function emptyRectangles() {
 
 				vrcs.push([s, value, c0r, c1c]);
 				vrcs.push([s, value, c1r, c0c]);
-
-
-
-			} else if (sv < 3 || sv > 5) {
+			} else {
 				// only one row and one column can have more than one count
 				// at least one row and one column must be greater than zero
 				var is = findIntersection(rowcol);
@@ -162,9 +160,8 @@ export function emptyRectangles() {
 				var cc = is[1];
 				var row = sqRows012[s][rc];
 				var col = sqCols012[s][cc];
-				//console.log("er", s, value, is, rc, cc, row, col, rowcol);
+				//console.log("er35", s, value, is, rc, cc, row, col, sv, rowcol);
 				vrcs.push([s, value, row, col]);
-
 			}
 
 			if (!vrcs) continue;
@@ -176,7 +173,7 @@ export function emptyRectangles() {
 				//console.log("vr", s, value, row, col, rowcol);
 
 				// find a conjugate pairs for value with one end in the same row or column (but not same square) as the empty rectangle
-				cps = findMatchingConjugatePairs(cpairs, value, row, col, s);
+				var cps = findMatchingConjugatePairs(cpairs, value, row, col, s);
 				cps.forEach((cp) => {
 					//console.log("cp", cp);
 					// see if there are any candidates at the intersecting cell

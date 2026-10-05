@@ -107,15 +107,16 @@ function Cell({ix}) {
 	} else if (hint.type) {
 		switch (hint.type) {
 			case "colorWing":
+			case "xChain":
 				if (hint.targets.includes(ix))
 					selMode = 3;
 				else if (hint.parity1.includes(ix))
 					selMode = 10;
 				else if (hint.parity2.includes(ix))
 					selMode = 11;
-				else if (hint.parity3.includes(ix))
+				else if (hint.parity3 && hint.parity3.includes(ix))
 					selMode = 12;
-				else if (hint.parity4.includes(ix))
+				else if (hint.parity4 && hint.parity4.includes(ix))
 					selMode = 13;
 
 				break;
