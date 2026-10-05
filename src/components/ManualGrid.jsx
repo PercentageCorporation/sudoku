@@ -10,12 +10,12 @@ import ConfirmModal from "./ConfirmModal";
 import SeedGameModal from "./SeedGameModal";
 
 function ManualCell({ix}) {
-	const { getManCell, getManSolutionCell, selectedCell, setManSelectedCell } = useManCellsStore();
+	const { getManCell, getManSolutionCell, manSelectedCell, setManSelectedCell } = useManCellsStore();
 	const cell = getManCell(ix);
 	const solution = getManSolutionCell(ix);
 	const val = (cell && cell > 0) ? cell : null;
 	const sol = (solution && solution > 0) ? solution : null;
-	const cn = (ix === selectedCell) ? " bg-green-300" : "";
+	const cn = (ix === manSelectedCell) ? " bg-green-300" : "";
 	const bs = bstyles[ix];
 	const cix = ix;
 	function selectCell(e, cix) {
@@ -62,7 +62,7 @@ function ManualGrid9({y}) {
 
 export default function ManualGrid() {
 	const navigate = useNavigate();
-	const { initialized, manGameValid } = useManCellsStore();
+	const { initialized, manGameValid, manSelectedCell } = useManCellsStore();
 	const { number: manNumber, description: manDescription } = useManCellsStore();
 	const { setManSelectedCell, setManCellValue, getManCells, getManSolution, setManId, loadManCells, loadManSolution,  initialize  } = useManCellsStore();
 	const { resetHint } = useHintStore();
@@ -80,7 +80,7 @@ export default function ManualGrid() {
 	const modalOpen = loadSavedGame || saveManGame || deleteId !== null;
 
 	function handleKeyDown(e)  {
-		const sel = useManCellsStore.getState().selectedCell;
+		const sel = manSelectedCell;
 		var char = null;
 		var lrud = sel >= 0 ? LRUD[sel] : -1;
 		var next = -1;

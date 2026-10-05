@@ -1,19 +1,20 @@
-import { cellStore, useCellActions, useCells, useHintStore } from "../store/store";
+import { cellStore, useCellActions, useGameStateStore, useHintStore } from "../store/store";
 import { getRemainingValues } from "../utilities/utilities";
 import { RCS, bstyles } from "../utilities/constants";
 import CandidatesModal from "./CandidatesModal";
-import Spinner from "./Spinner";
 import "/src/styles/borders.css";
 
 function Candidates({ix}) {
-	const selectedValue = cellStore.getState().selectedValue;
+	const selectedValue = useGameStateStore.getState().selectedValue;
 	const can = cellStore.getState().cells[ix].candidates;
 	const noncan = cellStore.getState().cells[ix].noncandidates;
+	const { cellContainsCandidate } = useCellActions();
 	//console.log(ix, can, noncan);
 	const clist = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+	const bg = cellContainsCandidate(ix, selectedValue) ? " bg-green-100" : "";
 
 	return (
-		<div className="grid grid-cols-3 leading-none pt-0.5">
+		<div className={"grid grid-cols-3 h-full leading-none py-0.5" + bg}>
 			{clist.map((c) => {
 				var val = c.toString();
 				var cn = " font-normal";
@@ -38,7 +39,7 @@ function Candidates({ix}) {
 function Cell({ix}) {
 	const { getCell, setCellValue, setSelectedValue, clearSelectedValue, setSelectedCell, clearSelectedCell } = useCellActions();
 	const { setEditCandidates, updateCandidates, calcNumbersUsed } = useCellActions();
-	const { selectedValue, selectedCell } = cellStore();
+	const { selectedValue, selectedCell } = useGameStateStore();
 
 	const { hint, resetHint } = useHintStore();
 	const cell = cellStore.getState().cells[ix];

@@ -46,6 +46,8 @@ export function runHints() {
 	if (result) return result[0];
 	result = XWing();
 	if (result) return result[0];
+	result = XChain();
+	if (result) return result[0];
 	result = XYChain();
 	if (result) return result[0];
 	result = XYWing();
@@ -599,6 +601,15 @@ function oneColValues(sq, sqrc) {
 		}
 	}
 	return rv;
+}
+
+export function sameHouse(c0,c1) {
+	var rcs = [-1, -1, -1];
+	if (cellRow[c0] === cellRow[c1]) rcs[0] = cellRow[c0];
+	if (cellCol[c0] === cellCol[c1]) rcs[1] = cellCol[c0];
+	if (cellSquare[c0] === cellSquare[c1]) rcs[2] = cellSquare[c0];
+	if (rcs[0] === -1 && rcs[1] === -1 && rcs[2] === -1) return null;
+	return rcs;
 }
 
 // if the cells are in the same row, return the row number

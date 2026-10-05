@@ -17,7 +17,7 @@ export const useManCellsStore = create (
 			solution: new Array(81).fill(0),
 			number: 0,
 			description: "",
-			selectedCell: -1,
+			manSelectedCell: -1,
 			manGameValid: true,
 			initialized: false,
 
@@ -154,6 +154,72 @@ export const useHintStore = create (
 	})
 );
 
+export const useGameStateStore = create(
+	persist(
+		(set, get) => ({
+			selectedCell: -1,
+			selectedValue: -1,
+			editCandidates: -1,
+			numbersUsed: [0,0,0,0,0,0,0,0,0,0],
+
+			resetState: () => {
+				set({
+					selectedCell: -1,
+					selectedValue: -1,
+					editCandidates: -1,
+					numbersUsed: [0,0,0,0,0,0,0,0,0,0]
+				})
+			},
+
+			setSelectedValue: (sel) => {
+				set({ selectedValue: sel})
+			},
+
+			clearSelectedValue: () => {
+				set({ selectedValue: -1})
+			},
+
+			setSelectedCell: (sel) => {
+				set({ selectedCell: sel})
+			},
+
+			setEditCandidates: (cix) => {
+				set({ editCandidates: cix})
+			},
+
+			clearSelectedCell: () => {
+				set({ selectedCell: -1})
+			},
+
+			calcNumbersUsed: () => {
+				//console.log("calcNumbersUsed");
+				var complete = false;
+				var nines = 0;
+				var selVal = get().selectedValue;
+				const used = [0,0,0,0,0,0,0,0,0,0];
+				for (var i = 0; i < 81; ++i) {
+					const num = cellStore.get().cells[i].value;
+					if (num > 0) used[num] += 1;
+					if (used[num] === 9) nines += 1;
+				};
+					used[0] = nines;
+					if (nines == 9) {
+						selVal = -1;
+						complete = true;
+					}
+					set({
+						numbersUsed: used,
+						gameComplete: 0,
+						selectedValue: selVal
+					})
+			},
+		})
+	),
+	{
+		name: 'sudoku-game-state', // Unique name for the storage item
+		storage: createJSONStorage(() => sessionStorage), // Use session storage
+	}
+);
 
 export const Cell = {
 	row: 0,
@@ -176,13 +242,8 @@ export const cellStore = create(
 		(set, get) => ({
 			cells: [],
 			saved: [],
-			selectedCell: -1,
-			selectedValue: -1,
-			currentValue: -1,
-			editCandidates: -1,
 			difficulty: "",
 			gameId: "",
-			numbersUsed: [0,0,0,0,0,0,0,0,0,0],
 			gameValid: true,
 			gameComplete: 0,
 			gameLoaded: false,
@@ -210,18 +271,14 @@ export const cellStore = create(
 						initcells[i].activecandidates = c;
 						};
 					//console.log("initcells:", initcells);
+					useGameStateStore.getState().resetState();
 					set({
 						cells: initcells,
 						saved: [],
-						selectedValue: -1,
-						selectedCell: -1,
-						currentValue: -1,
-						editCandidates: -1,
 						difficulty: difficulty,
 						gameId: gameid,
 						gameValid: validateBoard(initcells),
 						gameComplete: 0,
-						numbersUsed: [0,0,0,0,0,0,0,0,0,0],
 						gameLoaded: true
 					});
 					//console.log("cells:", get().cells);
@@ -250,31 +307,30 @@ export const cellStore = create(
 							initcells[i].activecandidates = initcells[i].candidates;
 						}
 					};
+					useGameStateStore.getState().resetState();
+					useHintStore.getState().resetHint();
 					set({
 						cells: initcells,
 						saved: [],
-						selectedCell: -1,
-						selectedValue: -1,
-						currentValue: -1,
 						difficulty: "",
 						gameId: gameId,
 						gameValid: validateBoard(initcells),
 						gameComplete: 0,
 						gameLoaded: true,
-						hint: {...Hint}
 					}),
-					get().actions.clearSelectedCell(),
-					get().actions.clearSelectedValue(),
+					useGameStateStore.getState().clearSelectedCell(),
+					useGameStateStore.getState().clearSelectedValue(),
 					get().actions.resetCandidates()
 				},
 
 				newGame: () => {
+					useGameStateStore.getState().resetState();
+					useHintStore.getState().resetHint();
 					set({
 						cells: [],
 						saved: [],
 						selectedCell: -1,
 						selectedValue: -1,
-						currentValue: -1,
 						gameComplete: 0,
 						gameLoaded: false
 					})
@@ -294,9 +350,9 @@ export const cellStore = create(
 							gameLoaded: true,
 						}
 					}),
-					get().actions.clearSelectedCell(),
-					get().actions.clearSelectedValue(),
+					useHintStore.getState().resetHint();
 					get().actions.resetCandidates()
+					useGameStateStore.getState().resetState()
 				},
 
 				saveState: () => {
@@ -318,10 +374,8 @@ export const cellStore = create(
 							}
 						}
 					}),
-					get().actions.clearSelectedCell(),
-					get().actions.clearSelectedValue(),
 					get().actions.resetCandidates(),
-					get().actions.calcNumbersUsed()
+					useGameStateStore.getState().resetState()
 				},
 
 				validateGame: () => {
@@ -394,6 +448,10 @@ export const cellStore = create(
 						cells[ix] = { ...cells[ix], candidates, activecandidates, noncandidates }
 						return { cells }
 					})
+				},
+
+				cellContainsCandidate: (ix, c) => {
+					return get().cells[ix].activecandidates.includes(c);
 				},
 
 				getActiveCandidates: (ix) => {
@@ -502,26 +560,6 @@ export const cellStore = create(
 					set({ gameComplete: tf ? 1 : 0})
 				},
 
-				setEditCandidates: (cix) => {
-					set({ editCandidates: cix})
-				},
-
-				setSelectedValue: (sel) => {
-					set({ selectedValue: sel})
-				},
-
-				clearSelectedValue: () => {
-					set({ selectedValue: -1})
-				},
-
-				setSelectedCell: (sel) => {
-					set({ selectedCell: sel})
-				},
-
-				clearSelectedCell: () => {
-					set({ selectedCell: -1})
-				},
-
 				setCellCandidates: (ix, candidates) => {
 					set((state) => {
 						const cells = [...state.cells]
@@ -615,13 +653,8 @@ export const cellStore = create(
 			partialize: (state) => ({ 
 				cells: state.cells,
 				saved: state.saved,
-				selectedCell: state.selectedCell,
-				selectedValue: state.selectedValue,
-				currentValue: state.currentValue,
-				editCandidates: state.editCandidates,
 				difficulty: state.difficulty,
 				gameId: state.gameId,
-				numbersUsed: state.numbersUsed,
 				gameValid: state.gameValid,
 				gameComplete: state.gameComplete,
 				gameLoaded: state.gameLoaded

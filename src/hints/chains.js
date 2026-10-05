@@ -1,6 +1,6 @@
 import { includesAny } from './hints';
-import { cells, findAllBivalueCells, findConjugatePairs, findSeenTargets2, findTargetsSeenByBoth } from '/src/hints/hints';
-import { sameRow2, sameCol2 } from '/src/hints/hints';
+import { cells, findAllBivalueCells, findConjugatePairs, findSeenTargets2, findTargetsSeenByAll, findTargets } from '/src/hints/hints';
+import { sameRow2, sameCol2, canSeeEachOther, sameHouse } from '/src/hints/hints';
 import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, RCS } from '/src/utilities/constants';
 
 //*****************************************************************************
@@ -17,46 +17,12 @@ function haveCellInLinks(links, cix) {
 	return false;
 }
 
-function cellsInSameHouse(c0,c1) {
-	if (cellRow[c0] === cellRow[c1]) return true;	// same row
-	if (cellCol[c0] === cellCol[c1]) return true;	// same col
-	if (cellSquare[c0] === cellSquare[c1]) return true;	// same sq
-	return false;
-}
-
 function conjugatePairsForValue(cpairs, v) {
 	var vp = [];
 	cpairs.forEach((cp) => {
 		if (cp[0] === v) vp.push(cp);
 	})
 	return vp;
-}
-
-//cvp: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
-// starting with an endpoint, find a link to another cp
-function findLinkedPairs(cvp, epx) {
-	var lp = [];
-	var clen = cvp.length;
-	for (var i=0; i<clen; ++i) {
-		var cvpi = cvp[i];
-		var epi0 = cvpi[1][0];
-		var epi1 = cvpi[2][0];
-		for (var j=i+1; j<clen; ++j) {
-			var cvpj = cvp[j];
-			var epj0 = cvpj[1][0];
-			var epj1 = cvpj[2][0];
-
-			if (sameRow2(epi0, epj0)) lp.push([i, j, 0, 0, epi0, epj0]);
-			else if (sameRow2(epi0, epj1)) lp.push([i, j, 0, 1, epi0, epj1]);
-			else if (sameRow2(epi1, epj0)) lp.push([i, j, 1, 0, epi1, epj0]);
-			else if (sameRow2(epi1, epj1)) lp.push([i, j, 1, 1, epi1, epj1]);
-			else if (sameCol2(epi0, epj0)) lp.push([i, j, 0, 0, epi0, epj0]);
-			else if (sameCol2(epi0, epj1)) lp.push([i, j, 0, 1, epi0, epj1]);
-			else if (sameCol2(epi1, epj0)) lp.push([i, j, 1, 0, epi1, epj0]);
-			else if (sameCol2(epi1, epj1)) lp.push([i, j, 1, 1, epi1, epj1]);
-		}
-	}
-	return lp;
 }
 
 //*****************************************************************************
@@ -141,7 +107,7 @@ function getXPaths() {
 			//console.log("prev link", j, chain[j]);
 		}
 		// the long enough and odd number of links
-		if (path.length >= 3 && (path.length % 2) === 0) {
+		if (path.length >= 3 && (path.length % 2) === 1) {
 			path.reverse();
 			var cpath = [];
 			path.forEach((p) => {
@@ -155,80 +121,126 @@ function getXPaths() {
 
 
 export function XChain() {
-	var xc = [];
 
 	var cpairs = findConjugatePairs();
 	//cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
 	//console.log("cpairs", cpairs);
 
 	for (var value=1; value<10; ++value) {
+		if (value !== 2) continue;	// TEST
+
+		var xc = [];
 		var cvp = conjugatePairsForValue(cpairs, value);
 		var cvplen = cvp.length;
 		if (cvplen === 0) continue;
-		//console.log("cvp", value, cvp);
+		console.log("cvp", value, cvp);
 
 		// for each conjugate pair start the chains with their endpoints
 		for (var cv=0; cv<cvplen; ++cv) {
 		// pick a starting endpoint
+
 			var sep0 = cvp[cv][1][0];
 			var sep1 = cvp[cv][2][0];
 
 			// find two conjugate pairs with an endpoint in the same row/col/sq
 			chain = [];
 			chain.push([0, sep0, sep1, -1, []]);
-			//console.log("chain start", value, chain);
+			//console.log("chain start 0", value, chain);
 			findNextXLink(cvp, 0);
-			//console.log("chain end", value, chain);
+			//console.log("chain end 0", value, chain);
 			var x0paths = getXPaths();
 
 			// now start with the other endpoint
 			chain = [];
 			chain.push([0, sep1, sep0, -1, []]);
-			//console.log("chain start", value, chain);
+			//console.log("chain start 1", value, chain);
 			findNextXLink(cvp, 0);
-			//console.log("chain end", value, chain);
+			//console.log("chain end 1", value, chain);
 
 			var x1paths = getXPaths();
 			var zpaths = [...x0paths, ...x1paths] ;
-			//console.log("xpaths", x0paths, x1paths, zpaths);
+			console.log("xpaths", x0paths, x1paths, zpaths);
 
-			zpaths.forEach((p) => {
+			for (var zp=0; zp<zpaths.length; ++zp) {
+				var p = zpaths[zp]
 				// see if there are targets for the endpointsInPath
 				var ep0 = p[0][0];
 				var ep1 = p[p.length-1][1];
-				var targets = findTargetsSeenByBoth(value, [ep0], [ep1]);
-				console.log("eps", value, targets, ep0, ep1, p);
-				if (targets) {
-					var parity1 = [];
-					var parity2 = [];
-					p.forEach((px) => {
-						parity2.push(px[0]);
-						parity1.push(px[1]);
-					})
-					if (!includesAny(parity1, targets) && !includesAny(parity2, targets)) {
-						xc.push([value, ep0, ep1, parity1, parity2, targets])
-					}
+				var targets = findTargetsSeenByAll(value, [ep0,ep1], [ep0, ep1]);
+				console.log("eps", value, cv. ep0, ep1, targets, p);
+
+				// collect the alternating link cells and the full path
+				var fullpath = [];
+				var parity1 = [];
+				var parity2 = [];
+				p.forEach((px) => {
+					fullpath.push(px[0], px[1]);
+					parity2.push(px[0]);
+					parity1.push(px[1]);
+				})
+
+				console.log("eps", value, ep0, ep1, targets, fullpath, parity1, parity2, p);
+
+				if (targets !== null) {
+					// if targets are in the chain I think something is wrong
+					if (includesAny(fullpath, targets)) continue;
 				}
 
-			})
+				// if no targets are in the chain we have a vailid chain.
+				// are the endpoints in the same house?
+				var rcs = sameHouse(ep0, ep1);
+				var tgtset = new Set(targets);
+				console.log("xc targets", targets, tgtset, rcs);
+				if (rcs) {
+					console.log("ep same house", value, ep0, ep1, rcs, p);
+					// because the endpoints are in the samehouse
+					// eliminations can take place in all the houses of the links between the pairs
+					// the links between the pairs are from ep0 -> ep1
+					for (var lp=1; lp<p.length; ++lp) {
+						var lp0 = p[lp-1][1];
+						var lp1 = p[lp][0];
+						var rcs = sameHouse(lp0, lp1);
+						var rcstgts = [];
+						if (rcs) {
+							// I don't think they can be in more than one house
+							if (rcs[0] >= 0)
+								rcstgts = findTargets(Rows[rcs[0]], [value], fullpath);
+							else if (rcs[1] >= 0)
+								rcstgts = findTargets(Cols[rcs[1]], [value], fullpath);
+							else if (rcs[1] >= 0)
+								rcstgts = findTargets(Squares[rcs[2]], [value], fullpath);
+
+							if (rcstgts) rcstgts.forEach(tgtset.add, tgtset);
+							console.log("rcstgts", rcstgts, tgtset);
+						}
+					}
+
+					console.log("targets", targets, tgtset.size);
+					if (tgtset.size > 0) {
+						var tgts = Array.from(tgtset);
+						console.log("found", value, fullpath, parity1, parity2, tgts);
+						xc.push([value, [ep0, ep1], parity1, parity2, tgts]);
+						break;	// one is enough for now
+					}
+				}
+			}
 		}
 	}
 
 	var xchain = [];
 	xc.forEach((x) => {
 		var val = x[0];
-		var ep0 = x[1];
-		var ep1 = x[2];
-		var parity1 = x[3];
-		var parity2 = x[4];
-		var tgts =x[5];
+		var cls = x[1];
+		var parity1 = x[2];
+		var parity2 = x[3];
+		var tgts =x[4];
 
 		var h = {
 			type: 'xChain',
 			rows: null,
 			cols: null,
 			square: null,
-			cells: [ep0, ep1],
+			cells: cls,
 			parity1: parity1,
 			parity2: parity2,
 			offset: null,
@@ -275,7 +287,7 @@ function findLink(curlinkix, nextval, endval ) {
 		if (bvcell.value > 0) continue;
 		var bvac = bvcell.activecandidates;
 		if (!bvac.includes(nextval)) continue;	// not what we are looking for
-		if (!cellsInSameHouse(curcix, bvix)) continue;	// not in the same house
+		if (!canSeeEachOther(curcix, bvix)) continue;	// not in the same house
 		// check to see if we already have this cell in the links
 		if (haveCellInLinks(links,bvix)) {
 			// we already have this cell in the chain so if we add it we will create a loop

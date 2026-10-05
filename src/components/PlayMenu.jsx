@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
-import { cellStore, useHintStore, useCellActions } from "../store/store";
+import { cellStore, useHintStore, useCellActions, useGameStateStore } from "../store/store";
 import { validateMove } from "../utilities/utilities";
 import { runHints } from '/src/hints/hints';
 //import Spinner from "./Spinner";
 
 export default function PlayMenu() {
-	const { selectedValue, selectedCell } = cellStore();
-	const { setCellValue, clearCellValue, setSelectedValue, clearSelectedValue, clearSelectedCell, validateGame } = useCellActions();
+	const { selectedValue, selectedCell, setSelectedValue, clearSelectedValue, clearSelectedCell, numbersUsed } = useGameStateStore();
+	const { setCellValue, clearCellValue, validateGame } = useCellActions();
 	const { checkGameSolved, calcNumbersUsed } = useCellActions();
 	const { updateCandidates, addNonCandidate } = useCellActions();
-	const { gameComplete, numbersUsed } = cellStore();
+	const { gameComplete } = cellStore();
 	const { hint, getHint, setHint, setHintMsg, resetHint } = useHintStore();
 	const [message, setMessage] = useState(gameComplete ? "Game Complete" : null);
 	const selection = [1,2,3,4,5,6,7,8,9];
@@ -147,6 +147,10 @@ export default function PlayMenu() {
 		calcNumbersUsed();
 	}
 
+	function bivalue(e) {
+		e.preventDefault();
+	}
+
 	function doSelect(s) {
 		// s: -1 - clear selected value
 		// s:  0 - if selectedCell
@@ -219,18 +223,25 @@ export default function PlayMenu() {
 					cn = " bg-green-500";
 
 				return (
-					<div key={s} className={"flex justify-center size-8 text-xl font-bold rounded-md hover:cursor-pointer " + cn} onClick={(e) => select(e,s)} >
+					<div key={s} className={"flex justify-center size-8 text-xl font-bold rounded-md hover:cursor-pointer " + cn}
+						onClick={(e) => select(e,s)} >
 					{s}
 					</div>
 				)})
 			}
-				<div className="flex justify-center size-8 text-xl font-bold rounded-md hover:cursor-pointer bg-green-300" onClick={(e) => select(e,-1)} >
+				<div className="flex justify-center size-8 text-xl font-bold rounded-md hover:cursor-pointer bg-green-300"
+					onClick={(e) => select(e,-1)} >
 					&nbsp;
 				</div>
 			</div>
 			<div className="flex flex-row mt-4">
-				<div className="flex justify-center mr-4 size-8 text-xl font-bold rounded-md bg-green-400 hover:cursor-pointer " onClick={(e) => select(e,0)} >
+				<div className="flex justify-center mr-4 size-8 text-xl font-bold rounded-md bg-green-400 hover:cursor-pointer "
+					onClick={(e) => select(e,0)} >
 				C
+				</div>
+				<div className="flex justify-center mr-4 size-8 text-xl font-bold rounded-md bg-green-400 hover:cursor-pointer "
+					onClick={(e) => bivalue(e)} >
+				BV
 				</div>
 				<div className="flex flex-row">
 					<div

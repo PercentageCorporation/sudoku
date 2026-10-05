@@ -23,7 +23,6 @@ export default function LoadGameModal({ onConfirm, onCancel }) {
 		if (onConfirm) onConfirm(ix);
 	}
 
-	//console.log(editCandidates, candidates);
 	return (
 		<div>
 			<div id="confirm-modal" className="modal-overlay" >

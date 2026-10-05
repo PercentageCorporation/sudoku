@@ -24,7 +24,6 @@ export default function SeedGameModal({ title, onConfirm, onCancel }) {
 		if (onCancel) onCancel();
 	}
 
-	//console.log(editCandidates, candidates);
 	return (
 		<div>
 			<div id="save-game-modal" className="modal-overlay" >
