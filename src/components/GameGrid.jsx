@@ -111,9 +111,9 @@ function Cell({ix}) {
 				if (hint.targets.includes(ix))
 					selMode = 3;
 				else if (hint.parity1.includes(ix))
-					selMode = 10;
+					(hint.cells.includes(ix)) ? selMode = 14 : selMode = 10;
 				else if (hint.parity2.includes(ix))
-					selMode = 11;
+					(hint.cells.includes(ix)) ? selMode = 15 : selMode = 11;
 				else if (hint.parity3 && hint.parity3.includes(ix))
 					selMode = 12;
 				else if (hint.parity4 && hint.parity4.includes(ix))
@@ -240,6 +240,12 @@ function Cell({ix}) {
 			break;
 		case 13:
 			cn = "bg-blue-400";
+			break;
+		case 14:
+			cn = "bg-pink-200";
+			break;
+		case 15:
+			cn = "bg-pink-400";
 			break;
 	}
 	const bs = bstyles[ix];

@@ -155,7 +155,7 @@ function getXPaths() {
 
 
 export function XChain() {
-	var xchain = [];
+	var xc = [];
 
 	var cpairs = findConjugatePairs();
 	//cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
@@ -163,68 +163,81 @@ export function XChain() {
 
 	for (var value=1; value<10; ++value) {
 		var cvp = conjugatePairsForValue(cpairs, value);
-		if (cvp.length === 0) continue;
+		var cvplen = cvp.length;
+		if (cvplen === 0) continue;
 		//console.log("cvp", value, cvp);
 
-		// find two conjugate pairs with an endpoint in the same row/col/sq
+		// for each conjugate pair start the chains with their endpoints
+		for (var cv=0; cv<cvplen; ++cv) {
 		// pick a starting endpoint
-		var sep0 = cvp[0][1][0];
-		var sep1 = cvp[0][2][0];
-		chain = [];
-		chain.push([0, sep0, sep1, -1, []]);
-		//console.log("chain start", value, chain);
-		findNextXLink(cvp, 0);
-		//console.log("chain end", value, chain);
-		var x0paths = getXPaths();
+			var sep0 = cvp[cv][1][0];
+			var sep1 = cvp[cv][2][0];
 
-		// now start with the other endpoint
-		chain = [];
-		chain.push([0, sep1, sep0, -1, []]);
-		//console.log("chain start", value, chain);
-		findNextXLink(cvp, 0);
-		//console.log("chain end", value, chain);
+			// find two conjugate pairs with an endpoint in the same row/col/sq
+			chain = [];
+			chain.push([0, sep0, sep1, -1, []]);
+			//console.log("chain start", value, chain);
+			findNextXLink(cvp, 0);
+			//console.log("chain end", value, chain);
+			var x0paths = getXPaths();
 
-		var x1paths = getXPaths();
-		var zpaths = [...x0paths, ...x1paths] ;
-		//console.log("xpaths", x0paths, x1paths, zpaths);
+			// now start with the other endpoint
+			chain = [];
+			chain.push([0, sep1, sep0, -1, []]);
+			//console.log("chain start", value, chain);
+			findNextXLink(cvp, 0);
+			//console.log("chain end", value, chain);
 
-		zpaths.forEach((p) => {
-			// see if there are targets for the endpointsInPath
-			var ep0 = p[0][0];
-			var ep1 = p[p.length-1][1];
-			var targets = findTargetsSeenByBoth(value, [ep0], [ep1]);
-			console.log("eps", value, targets, ep0, ep1, p);
-			if (targets) {
-				var parity1 = [];
-				var parity2 = [];
-				p.forEach((px) => {
-					parity2.push(px[0]);
-					parity1.push(px[1]);
-				})
-				if (includesAny(parity1, targets) || includesAny(parity2, targets)) targets = null;
-			}
+			var x1paths = getXPaths();
+			var zpaths = [...x0paths, ...x1paths] ;
+			//console.log("xpaths", x0paths, x1paths, zpaths);
 
-			if (targets) {
-				var h = {
-					type: 'xChain',
-					rows: null,
-					cols: null,
-					square: null,
-					cells: [ep0, ep1],
-					parity1: parity1,
-					parity2: parity2,
-					offset: null,
-					value: value,
-					targets: targets,
-					msg: `X-Chain: Cells: ${targets}, Value: ${value}`
+			zpaths.forEach((p) => {
+				// see if there are targets for the endpointsInPath
+				var ep0 = p[0][0];
+				var ep1 = p[p.length-1][1];
+				var targets = findTargetsSeenByBoth(value, [ep0], [ep1]);
+				console.log("eps", value, targets, ep0, ep1, p);
+				if (targets) {
+					var parity1 = [];
+					var parity2 = [];
+					p.forEach((px) => {
+						parity2.push(px[0]);
+						parity1.push(px[1]);
+					})
+					if (!includesAny(parity1, targets) && !includesAny(parity2, targets)) {
+						xc.push([value, ep0, ep1, parity1, parity2, targets])
+					}
 				}
-				xchain.push(h);
 
-			}
-
-		})
-
+			})
+		}
 	}
+
+	var xchain = [];
+	xc.forEach((x) => {
+		var val = x[0];
+		var ep0 = x[1];
+		var ep1 = x[2];
+		var parity1 = x[3];
+		var parity2 = x[4];
+		var tgts =x[5];
+
+		var h = {
+			type: 'xChain',
+			rows: null,
+			cols: null,
+			square: null,
+			cells: [ep0, ep1],
+			parity1: parity1,
+			parity2: parity2,
+			offset: null,
+			value: val,
+			targets: tgts,
+			msg: `X-Chain: Cells: ${tgts}, Value: ${val}`
+		}
+		xchain.push(h);
+	})
 
 	if (xchain.length === 0) return null;
 	console.log("xchain", xchain);

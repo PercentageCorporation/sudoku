@@ -51,6 +51,7 @@ export default function PlayMenu() {
 			case "xWing":
 			case "xyWing":
 			case "xyTriple":
+			case "xChain":
 			case "xyChain":
 			case "xyzWing":
 			case 'wWing':
