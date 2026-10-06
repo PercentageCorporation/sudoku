@@ -160,6 +160,8 @@ export const useGameStateStore = create(
 			selectedCell: -1,
 			selectedValue: -1,
 			editCandidates: -1,
+			showBivalue: false,
+			showConjugates: false,
 			numbersUsed: [0,0,0,0,0,0,0,0,0,0],
 
 			resetState: () => {
@@ -167,6 +169,8 @@ export const useGameStateStore = create(
 					selectedCell: -1,
 					selectedValue: -1,
 					editCandidates: -1,
+					showBivalue: false,
+					showConjugates: false,
 					numbersUsed: [0,0,0,0,0,0,0,0,0,0]
 				})
 			},
@@ -183,12 +187,20 @@ export const useGameStateStore = create(
 				set({ selectedCell: sel})
 			},
 
+			clearSelectedCell: () => {
+				set({ selectedCell: -1})
+			},
+
 			setEditCandidates: (cix) => {
 				set({ editCandidates: cix})
 			},
 
-			clearSelectedCell: () => {
-				set({ selectedCell: -1})
+			setShowBivalue: (tf) => {
+				set({ showBivalue: tf})
+			},
+
+			setShowConjugates: (tf) => {
+				set({ showConjugates: tf})
 			},
 
 			calcNumbersUsed: () => {

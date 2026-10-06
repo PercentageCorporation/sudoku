@@ -1,6 +1,6 @@
 import { canSeeEachOther, canSeeEachOtherRC } from './hints';
 //import { cells, rCounts2, vRows, vCols, vSqs } from '/src/hints/hints';
-import { findConjugatePairs, findAllCellsWithValue, includesAll, includesAny, findTargetsSeenByBoth, findTargets } from '/src/hints/hints';
+import { getConjugatePairs, findAllCellsWithValue, includesAll, includesAny, findTargetsSeenByBoth, findTargets } from '/src/hints/hints';
 import { cellStore, useCellActions } from '../store/store';
 
 
@@ -221,7 +221,7 @@ function bridgeCellsSameParity(br) {
 
 export function colorWing() {
 	var candidates = [];
-	colorpairs = findConjugatePairs();
+	colorpairs = getConjugatePairs();
 	//cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
 	//console.log("cpairs", colorpairs);
 
@@ -374,7 +374,7 @@ export function colorWing() {
 export function colors() {
 	var colors = [];
 
-	colorpairs = findConjugatePairs();
+	colorpairs = getConjugatePairs();
 	// cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
 	//console.log("cpairs", colorpairs);
 	//if (cpairs.length === 0) return null;

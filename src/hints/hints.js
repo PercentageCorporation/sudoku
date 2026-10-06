@@ -9,17 +9,20 @@ import { XWing, XYWing, XYZWing, WWing } from '/src/hints/wings';
 import { XChain, XYChain } from '/src/hints/chains';
 import { swordfish } from '/src/hints/swordfish';
 import { colors, colorWing } from '/src/hints/colors';
+import { loops } from "./loops";
 
 
 
 export var cells = [];
+export var conjugatePairs = [];
+let conjugateCells = null;
 
 export function runHints() {
 	var result;
 	cells = cellStore.getState().cells;
 	initCounts();
 
-	result = XChain();
+	result = loops();
 	if (result) return result[0];
 
 	result = lockedCandidates1();
@@ -695,9 +698,40 @@ function findValuePairsInRCS(arr, val) {
 	return cls;
 }
 
+
+// get the conjugate pairs for the given value
+export function getConjugatePairsForValue(cpairs, v) {
+	var vp = [];
+	cpairs.forEach((cp) => {
+		if (cp[0] === v) vp.push(cp);
+	})
+	return vp;
+}
+
+// get the conjugate pairs that contain the cell [cix]
+export function getConjugatePairsWithCell(cpairs, cix) {
+	var cp = [];
+	cpairs.forEach((cp) => {
+		if (cp[1][0] === cix || cp[2][0] === cix) vp.push(cp);
+	})
+	return cp;
+}
+
+
+export function getConjugatePairs() {
+	if (cells !== conjugateCells) {
+		conjugatePairs = calculateConjugatePairs();
+		conjugateCells = cells;
+		console.log("conjugate pairs updated");
+	}
+
+	return conjugatePairs;
+}
+
 // find conjugate pairs
+// cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
 // if a value only appears twice in a row/col/sq it is a strong link conjugate pair
-export function findConjugatePairs() {
+function calculateConjugatePairs() {
 
 	// for each row for each value of count 2 get their cell info
 	var cpairs = [];

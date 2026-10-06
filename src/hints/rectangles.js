@@ -3,7 +3,7 @@ import { sameRow2, sameCol2 } from '/src/hints/hints';
 import { cells, vSqs } from '/src/hints/hints';
 import { includesAll, includesAny } from '/src/hints/hints';
 import { findAllBivalueCells, rcsContainsValue, findTargets, findSeenTargets2,  findSeenTargets3, findTargetsOnly } from '/src/hints/hints';
-import { getActiveCandidates, getCandidateCells, findCandidatesWithValues, cellHasCandidate, findConjugatePairs } from '/src/hints/hints';
+import { getActiveCandidates, getCandidateCells, findCandidatesWithValues, cellHasCandidate, getConjugatePairs } from '/src/hints/hints';
 import { countTheHouse, checkForTripleCounts } from '/src/hints/triples';
 
 //*****************************************************************************
@@ -110,7 +110,7 @@ function findMatchingConjugatePairs(cpairs, v, r, c, s) {
 
 export function emptyRectangles() {
 	var rectangles = [];
-	var cpairs = findConjugatePairs();
+	var cpairs = getConjugatePairs();
 	// cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
 	//console.log("cpairs", cpairs);
 

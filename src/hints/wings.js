@@ -1,6 +1,6 @@
 import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCells, sqRows012, sqCols012, RCS } from '/src/utilities/constants';
 import { findTargets, includesAll, includesAny } from '/src/hints/hints';
-import { cells, getBivalueList, findConjugatePairs, findAllTrivalueCells, findSeenTargets2, cellHasCandidate } from '/src/hints/hints';
+import { cells, getBivalueList, getConjugatePairs, findAllTrivalueCells, findSeenTargets2, cellHasCandidate } from '/src/hints/hints';
 import { sameRow2, sameCol2, sameSq2 } from '/src/hints/hints';
 import { canSeeEachOther, getCommonValues } from './hints';
 
@@ -473,7 +473,7 @@ export function XYZWing() {
 
 export function WWing() {
 
-	var cpairs = findConjugatePairs();
+	var cpairs = getConjugatePairs();
 	//console.log("cpairs", cpairs);
 	if (cpairs.length === 0) return null;
 

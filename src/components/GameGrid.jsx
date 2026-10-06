@@ -11,7 +11,8 @@ function Candidates({ix}) {
 	const { cellContainsCandidate } = useCellActions();
 	//console.log(ix, can, noncan);
 	const clist = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-	const bg = cellContainsCandidate(ix, selectedValue) ? " bg-green-100" : "";
+	//const bg = cellContainsCandidate(ix, selectedValue) ? " bg-green-100" : "";
+	const bg = "";
 
 	return (
 		<div className={"grid grid-cols-3 h-full leading-none py-0.5" + bg}>
@@ -39,7 +40,7 @@ function Candidates({ix}) {
 function Cell({ix}) {
 	const { getCell, setCellValue, setSelectedValue, clearSelectedValue, setSelectedCell, clearSelectedCell } = useCellActions();
 	const { setEditCandidates, updateCandidates, calcNumbersUsed } = useCellActions();
-	const { selectedValue, selectedCell } = useGameStateStore();
+	const { selectedValue, selectedCell, showBivalue } = useGameStateStore();
 
 	const { hint, resetHint } = useHintStore();
 	const cell = cellStore.getState().cells[ix];
@@ -88,6 +89,15 @@ function Cell({ix}) {
 
 		// check for invalid value
 		if (cell.value > 0 && cell.solutionValue > 0 && cell.value !== cell.solutionValue) selMode = 4;
+	} else if (showBivalue ) {
+		if (cell.activecandidates.length === 2) {
+			if (selectedValue >= 0)
+			{
+				if (cell.activecandidates.includes(selectedValue)) selMode = 1;
+			}
+			else
+				selMode = 1;
+		}
 	} else if (cell.parity > 0) {
 		switch (cell.parity) {
 			case 0:
@@ -197,7 +207,10 @@ function Cell({ix}) {
 		}
 
 	} else {
-		if (selectedCell === ix) selMode = 2;
+		if (selectedCell === ix)
+			selMode = 2;
+		else if (showBivalue && cell.activecandidates.length === 2)
+			selMode = 1;
 	}
 
 	var cn = "bg-white";

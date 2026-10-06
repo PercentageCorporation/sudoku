@@ -5,7 +5,7 @@ import { runHints } from '/src/hints/hints';
 //import Spinner from "./Spinner";
 
 export default function PlayMenu() {
-	const { selectedValue, selectedCell, setSelectedValue, clearSelectedValue, clearSelectedCell, numbersUsed } = useGameStateStore();
+	const { selectedValue, selectedCell, setSelectedValue, clearSelectedValue, clearSelectedCell, numbersUsed, setShowBivalue, setShowConjugates, resetState } = useGameStateStore();
 	const { setCellValue, clearCellValue, validateGame } = useCellActions();
 	const { checkGameSolved, calcNumbersUsed } = useCellActions();
 	const { updateCandidates, addNonCandidate } = useCellActions();
@@ -149,6 +149,14 @@ export default function PlayMenu() {
 
 	function bivalue(e) {
 		e.preventDefault();
+		console.log("bivalue", selectedValue);
+		setShowBivalue(true);
+	}
+
+	function conjugates(e) {
+		e.preventDefault();
+		console.log("conjugates", selectedValue);
+		setShowConjugates(true);
 	}
 
 	function doSelect(s) {
@@ -161,6 +169,7 @@ export default function PlayMenu() {
 			// clear all selctions
 			clearSelectedCell();
 			clearSelectedValue();
+			resetState();
 		}
 		else if (s > 0) {
 			if (selectedCell < 0) {
@@ -200,6 +209,7 @@ export default function PlayMenu() {
 				clearSelectedValue();
 				clearSelectedCell();
 			}
+			resetState();
 		}
 	setMessage(msg);
 	//updateCandidates();
@@ -242,6 +252,10 @@ export default function PlayMenu() {
 				<div className="flex justify-center mr-4 size-8 text-xl font-bold rounded-md bg-green-400 hover:cursor-pointer "
 					onClick={(e) => bivalue(e)} >
 				BV
+				</div>
+				<div className="flex justify-center mr-4 size-8 text-xl font-bold rounded-md bg-green-400 hover:cursor-pointer "
+					onClick={(e) => conjugates(e)} >
+				CP
 				</div>
 				<div className="flex flex-row">
 					<div
