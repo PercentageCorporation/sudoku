@@ -173,6 +173,8 @@ function calculateConjugatePairs() {
 // return array sorted by candidate pairs
 // bv: [ cix, [ac] ]
 export function findAllBivalueCells() {
+	cells = cellStore.getState().cells;
+
 	var bv = [];
 	for (var cix=0; cix<81; ++cix) {
 		var c = cells[cix];

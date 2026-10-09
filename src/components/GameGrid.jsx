@@ -144,7 +144,7 @@ function Cell({ix}) {
 				break;
 			case "colorsI":
 			case "colorsII":
-			case "alsXY":
+			case "alsXZ":
 				if (hint.cells0.includes(ix))
 					selMode = 8;
 				else if (hint.cells1.includes(ix))

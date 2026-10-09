@@ -7,12 +7,37 @@ import { canSeeEachOther, canAllSeeEachOther, findTargetsSeenByAll, getActiveCan
 //*****************************************************************************
 // ALS
 
+// const als = [
+// 	[1, 2, 3, 4],
+//	[1, 2, 3, 4],
+// 	[1, 2, 3, 4]
+// 	];
+
+function isALS(als) {
+	const union = new Set(als.flat());
+	const isALS = union.size === als.length + 1;
+	return isALS;
+}
+
+// ax: [ [ac0], [ac1], ... ]
+// return a list of unique candidates from the ac lists
 function getUnique(ax) {
 	var s = new Set();
 	ax.forEach(a => a.forEach(s.add, s));
 	return Array.from(s);
 }
 
+function allIncluded(ax) {
+	var allincluded = true;
+	var maxcandidates = ax.length + 1;
+	ax.forEach(a => {if (a.length !== maxcandidates) allincluded = false;});
+	if (allincluded) console.log("allincluded", ax);
+	return allincluded;
+}
+
+// get all unsolved cells in a house that have
+// return an array of cells with their candidates
+// and an array of all candidates in the house
 function getHouseCells(house) {
 	var hc = [];
 	var hac = new Set();
@@ -32,11 +57,11 @@ function getHouseCells(house) {
 
 function candidateValueCells(val, cls0, cls1 ) {
 	var cls = [];
-	cls0.forEach((c) => {
-		if (c[1].includes(val)) cls.push(c[0]);
+	cls0.forEach((c0) => {
+		if (c0[1].includes(val)) cls.push(c0[0]);
 	})
-	cls1.forEach((c) => {
-		if (c[1].includes(val)) cls.push(c[0]);
+	cls1.forEach((c1) => {
+		if (c1[1].includes(val)) cls.push(c1[0]);
 	})
 	return cls;
 }
@@ -44,9 +69,10 @@ function candidateValueCells(val, cls0, cls1 ) {
 // find all ALS combinations
 function findALS(arr) {
 	var als = [];
+	var alsall = [];	// all cells have all candidates
 	var ghc = getHouseCells(arr);
-	var hc = ghc[0];	// cells in house
-	var allac = ghc[1];
+	var hc = ghc[0];		// cells in the house
+	var allac = ghc[1];		// all candidates in the thouse
 	//console.log("als", hc, allac);
 	var numc = hc.length;		// total cells in house
 	var numac = allac.length;	// total candidates in house
@@ -61,6 +87,7 @@ function findALS(arr) {
 			// for two cells how many candidates
 			var tc = getUnique([hci[1], hcj[1]]);
 			if (tc.length === 3) {
+				//allIncluded([hci[1], hcj[1]]);
 				//console.log("als2", i, j, cixi, cixj, tc);
 				// two cells with three candidates
 				als.push([tc, [cixi, cixj], [hci, hcj]])
@@ -71,6 +98,7 @@ function findALS(arr) {
 				// for three cells how many candidates
 				var tc = getUnique([hci[1], hcj[1], hck[1]]);
 				if (tc.length === 4) {
+					//allIncluded([hci[1], hcj[1], hck[1]]);
 					//console.log("als3", i, j, cixi, cixj, tc);
 					// three cells with four candidates
 					als.push([tc, [cixi, cixj, cixk], [hci, hcj, hck]]);
@@ -81,6 +109,7 @@ function findALS(arr) {
 					// for four cells how many candidates
 					var tc = getUnique([hci[1], hcj[1], hck[1], hcl[1]]);
 					if (tc.length === 5) {
+						//allIncluded([hci[1], hcj[1], hck[1], hcl[1]]);
 						//console.log("als3", i, j, cixi, cixj, tc);
 						// four cells with five candidates
 						als.push([tc, [cixi, cixj, cixk, cixl], [hci, hcj, hck, hcl]]);
@@ -120,6 +149,7 @@ export function als() {
 	}
 
 	//console.log("als", als);
+
 	// als: [ [candidates], [cells], [ [cix0, [ac0]], [cix1, [ac1]], ...] ] ]
 	// for each pair of ALS find a common candidate that is in the same house
 	var alslen = als.length;
@@ -130,7 +160,7 @@ export function als() {
 		//console.log("alsi", i, alsi);
 		for (var j=i+1; j<alslen; ++j) {
 			var alsj = als[j];
-			if (includesAny(alsi[1],alsj[1])) continue;		// skip overlapping ALS
+			if (includesAny(alsi[1],alsj[1])) continue;		// skip ALS with cells in common
 			// can the ALSs see each other
 			// can any of the cells in ALS0 see any of the cells in ALS1
 			if (!canSeeOtherALS(alsi[1], alsj[1])) continue;
@@ -146,16 +176,18 @@ export function als() {
 			for (var cv=0; cv<comvals.length; ++cv) {
 				// get the cells containing the value
 				var val = comvals[cv];
+				// get all the cells containing the candidate from both ALS
 				var valcells = candidateValueCells(val, alsi[2], alsj[2] )
+				// can all those cells see each other
 				var canallsee = canAllSeeEachOther(valcells);
 				if (!canallsee) continue;
-				//console.log("canallsee", val, comvals, valcells, alsi[2], alsj[2]);
+				//console.log("canallsee2", canallsee, val, comvals, valcells, alsi[2], alsj[2]);
 				// at this point val is the required common candidate Z
 				var X = val;
 				// now we look for the Z value to be used for elimination
 				var zvals = comvals.filter(e => e !== X);	// remove X from the common values
 				//console.log("xvals", val, xvals, comvals);
-				// I think there can be more than on Z val but I am not sure
+				// I think there can be more than one Z val but I am not sure
 				var allcells = [];
 				allcells.push(...alsi[1]);
 				allcells.push(...alsj[1]);
@@ -166,8 +198,9 @@ export function als() {
 					if (tgts) {
 						//console.log("als", X, Z, alsi, alsj);
 						//console.log("Zcells", Zcells, allcells, tgts);
+						//console.log("cansee", comvals, valcells, alsi[2], alsj[2]);
 						var h = {
-							type: 'alsXY',
+							type: 'alsXZ',
 							row: null,
 							col: null,
 							square: null,
@@ -177,15 +210,17 @@ export function als() {
 							offset: null,
 							value: Z,
 							targets: tgts,
-							msg: `ALS XY: Cells: ${tgts}, Value: ${Z}`
+							msg: `ALS XZ: Cells: ${tgts}, Value: ${Z}`
 						}
 						//console.log(h.msg);
 						alshints.push(h);
 					}
 				})
-
+			if (alshints.length > 0) break;
 			}
+			if (alshints.length > 0) break;
 		}
+		if (alshints.length > 0) break;
 	}
 
 	if (alshints.length === 0) return null;

@@ -67,7 +67,7 @@ export default function PlayMenu() {
 			case 'urType6':
 			case 'urType7':
 			case 'colorsI':
-			case 'alsXY':
+			case 'alsXZ':
 			case 'aicI':
 			case 'colorWing':
 			case 'emptyRectangle':
