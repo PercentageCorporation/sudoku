@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useCellActions, cellStore } from "../store/store";
+import { useCellActions, cellStore, useGameStateStore } from "../store/store";
 import { useRef } from "react";
 
 export default function CandidatesModal({ onConfirm, onCancel }) {
-	const { editCandidates } = cellStore();
-	const { setEditCandidates, getNonCandidates, setNonCandidates, getCell } = useCellActions();
+	const { setNonCandidates, getCell } = useCellActions();
+	const { editCandidates, setEditCandidates } = useGameStateStore();
 	const [candidates, setCandidates] = useState([]);
 	const [noncandidates, setNoncandidates] = useState([]);
 	const clist = [1,2,3,4,5,6,7,8,9];

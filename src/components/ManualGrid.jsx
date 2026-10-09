@@ -10,17 +10,19 @@ import ConfirmModal from "./ConfirmModal";
 import SeedGameModal from "./SeedGameModal";
 
 function ManualCell({ix}) {
-	const { getManCell, getManSolutionCell, manSelectedCell, setManSelectedCell } = useManCellsStore();
+	const { getManCell, getManSolutionCell, setManSelectedCell, getManSelectedCell } = useManCellsStore();
 	const cell = getManCell(ix);
 	const solution = getManSolutionCell(ix);
 	const val = (cell && cell > 0) ? cell : null;
-	const sol = (solution && solution > 0) ? solution : null;
-	const cn = (ix === manSelectedCell) ? " bg-green-300" : "";
+	const sol = (solution && solution > 0) ? solution : null;3
+	const sel = getManSelectedCell();
+	const cn = (ix === sel) ? " bg-green-300" : "";
 	const bs = bstyles[ix];
-	const cix = ix;
-	function selectCell(e, cix) {
-		//console.log("selectCell:", cix);
-		setManSelectedCell(cix);
+
+	function selectCell(e, six) {
+		e.preventDefault();
+		setManSelectedCell(six);
+		console.log("selectCell:", six, getManSelectedCell());
 	}
 
 	return (
@@ -30,7 +32,7 @@ function ManualCell({ix}) {
 			onClick={(e)=>selectCell(e, ix)}
 			>
 			<div className="flex pl-0.5 text-[10px]">
-				{cix}
+				{ix}
 			</div>
 			<div className="absolute right-0 bottom-0 pr-0.5 text-[10px]">
 				{sol}
@@ -64,7 +66,7 @@ export default function ManualGrid() {
 	const navigate = useNavigate();
 	const { initialized, manGameValid, manSelectedCell } = useManCellsStore();
 	const { number: manNumber, description: manDescription } = useManCellsStore();
-	const { setManSelectedCell, setManCellValue, getManCells, getManSolution, setManId, loadManCells, loadManSolution,  initialize  } = useManCellsStore();
+	const { setManCellValue, setManSelectedCell, getManSelectedCell, getManCells, getManSolution, setManId, loadManCells, loadManSolution,  initialize  } = useManCellsStore();
 	const { resetHint } = useHintStore();
 	const { loadGame } = useCellActions();
 
@@ -74,20 +76,22 @@ export default function ManualGrid() {
 	const [ addSolution, setAddSolution ] = useState(false);
 	const [ deleteId, setDeleteId ] = useState(null);
 	const [ message, setMessage] = useState(manGameValid ? null : "Invalid Board");
-	console.log("ManGrid", manGameValid);
+
+	console.log("ManGrid", manGameValid, manSelectedCell);
+	console.log("ManGrid1");
 
 	const index = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 	const modalOpen = loadSavedGame || saveManGame || deleteId !== null;
 
 	function handleKeyDown(e)  {
-		const sel = manSelectedCell;
+		const sel = getManSelectedCell();
 		var char = null;
 		var lrud = sel >= 0 ? LRUD[sel] : -1;
 		var next = -1;
 		const key = e.key;
 		if (key.length === 1) char = key[0];
 
-		//console.log("key:", key);
+		console.log("key:", key, sel);
 		switch (e.key) {
 			case " ":
 				if (sel >= 0) setManCellValue(sel, 0);
@@ -139,7 +143,10 @@ export default function ManualGrid() {
 				}
 				break;
 		}
-		if (next >= 0) setManSelectedCell(next);
+		if (next >= 0) {
+			console.log("next", next);
+			setManSelectedCell(next);
+		}
 	};
 
 	useEffect(() => {

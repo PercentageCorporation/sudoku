@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { cellStore, useCellActions, useHintStore, useManCellsStore } from "./store/store";
+import { cellStore, useCellActions, useHintStore, useGameStateStore } from "./store/store";
 import { getSSGame } from "./utilities/sudoku-solutions";
 import LoadGameModal from "/src/components/LoadGameModal";
 import GameGrid from "/src/components/GameGrid";
@@ -9,7 +9,8 @@ import Spinner from "/src/components/Spinner";
 import { getGame } from "./utilities/games";
 
 export default function App() {
-	const { newGame, resetGame, initGame, loadGame, updateCandidates, saveState, restoreState, getLinearText } = useCellActions();
+	const { newGame, resetGame, initGame, loadGame, updateCandidates, resetCandidates, saveState, restoreState, getLinearText } = useCellActions();
+	const { resetState } = useGameStateStore();
 	const { gameLoaded, difficulty, gameId, saved } = cellStore();
 	const [ loadSavedGame, setLoadSavedGame ] = useState(false);
 	const { resetHint } = useHintStore();
@@ -59,7 +60,10 @@ export default function App() {
 
 	function handleRefreshCandidates(e) {
 		e.preventDefault();
-		updateCandidates();
+		//updateCandidates();
+		resetCandidates();
+		resetState();
+		resetHint();
 		navigate("/", { replace: true });
 	}
 
@@ -169,7 +173,7 @@ export default function App() {
 						onClick={(e) => handleRefreshCandidates(e)}
 						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
 					>
-						Refresh Candidates
+						Reset Candidates
 					</button>
 				</div>
 				<div className="flex flex-row justify-between mt-2">

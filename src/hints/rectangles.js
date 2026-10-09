@@ -2,9 +2,11 @@ import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRows012, sqCols012
 import { sameRow2, sameCol2 } from '/src/hints/hints';
 import { cells, vSqs } from '/src/hints/hints';
 import { includesAll, includesAny } from '/src/hints/hints';
-import { findAllBivalueCells, rcsContainsValue, findTargets, findSeenTargets2,  findSeenTargets3, findTargetsOnly } from '/src/hints/hints';
-import { getActiveCandidates, getCandidateCells, findCandidatesWithValues, cellHasCandidate, getConjugatePairs } from '/src/hints/hints';
+import { rcsContainsValue, findTargets, findSeenTargets2,  findSeenTargets3, findTargetsOnly } from '/src/hints/hints';
+import { getActiveCandidates, getCandidateCells, findCandidatesWithValues, cellHasCandidate } from '/src/hints/hints';
+import { findAllBivalueCells } from '/src/hints/conjugates';
 import { countTheHouse, checkForTripleCounts } from '/src/hints/triples';
+import { getConjugatePairs } from "./conjugates";
 
 //*****************************************************************************
 // common functions

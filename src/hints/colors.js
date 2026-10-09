@@ -1,7 +1,7 @@
 import { canSeeEachOther, canSeeEachOtherRC } from './hints';
 //import { cells, rCounts2, vRows, vCols, vSqs } from '/src/hints/hints';
-import { getConjugatePairs, findAllCellsWithValue, includesAll, includesAny, findTargetsSeenByBoth, findTargets } from '/src/hints/hints';
-import { cellStore, useCellActions } from '../store/store';
+import { findAllCellsWithValue, includesAll, includesAny, findTargetsSeenByBoth, findTargets } from '/src/hints/hints';
+import { getConjugatePairs } from "/src/hints/conjugates";
 
 
 //*****************************************************************************

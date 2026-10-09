@@ -1,7 +1,8 @@
 import { includesAny } from './hints';
-import { cells, findAllBivalueCells, getConjugatePairs, getConjugatePairsForValue, findSeenTargets2, findTargetsSeenByAll, findTargets } from '/src/hints/hints';
+import { cells, findSeenTargets2, findTargetsSeenByAll, findTargets } from '/src/hints/hints';
 import { sameRow2, sameCol2, canSeeEachOther, sameHouse } from '/src/hints/hints';
 import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, RCS } from '/src/utilities/constants';
+import { getConjugatePairs, getConjugatePairsForValue, findAllBivalueCells } from "/src/hints/conjugates";
 
 //*****************************************************************************
 // common functions

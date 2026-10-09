@@ -1,8 +1,10 @@
-import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCells, sqRows012, sqCols012, RCS } from '/src/utilities/constants';
+import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCells, sqRows012, sqCols012 } from '/src/utilities/constants';
 import { findTargets, includesAll, includesAny } from '/src/hints/hints';
-import { cells, getBivalueList, getConjugatePairs, findAllTrivalueCells, findSeenTargets2, cellHasCandidate } from '/src/hints/hints';
+import { cells, findSeenTargets2, cellHasCandidate } from '/src/hints/hints';
+import { getBivalueList } from '/src/hints/conjugates';
 import { sameRow2, sameCol2, sameSq2 } from '/src/hints/hints';
 import { canSeeEachOther, getCommonValues } from './hints';
+import { getConjugatePairs } from "./conjugates";
 
 
 //*****************************************************************************
@@ -98,6 +100,18 @@ function findKillZone(pix, p0, p1, val) {
 	}
 
 	return targets;
+}
+
+function findAllTrivalueCells() {
+	var bv = [];
+	for (var cix=0; cix<81; ++cix) {
+		var c = cells[cix];
+		var ac = c.activecandidates;
+		if ( c.value === 0 && ac.length === 3) {
+			bv.push([cix, cellRow[cix], cellCol[cix], cellSquare[cix],  ac]);
+		}
+	}
+	return bv;
 }
 
 //*****************************************************************************

@@ -1,17 +1,16 @@
 import { cellStore, useCellActions, useGameStateStore, useHintStore } from "../store/store";
+import { RCS, bstyles } from "/src/utilities/constants";
 import { getRemainingValues } from "../utilities/utilities";
-import { RCS, bstyles } from "../utilities/constants";
-import CandidatesModal from "./CandidatesModal";
+import { cellInConjugatePair } from '/src/hints/conjugates';
+import CandidatesModal from "/src/components/CandidatesModal";
 import "/src/styles/borders.css";
 
 function Candidates({ix}) {
 	const selectedValue = useGameStateStore.getState().selectedValue;
 	const can = cellStore.getState().cells[ix].candidates;
 	const noncan = cellStore.getState().cells[ix].noncandidates;
-	const { cellContainsCandidate } = useCellActions();
 	//console.log(ix, can, noncan);
 	const clist = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-	//const bg = cellContainsCandidate(ix, selectedValue) ? " bg-green-100" : "";
 	const bg = "";
 
 	return (
@@ -38,9 +37,9 @@ function Candidates({ix}) {
 }
 
 function Cell({ix}) {
-	const { getCell, setCellValue, setSelectedValue, clearSelectedValue, setSelectedCell, clearSelectedCell } = useCellActions();
-	const { setEditCandidates, updateCandidates, calcNumbersUsed } = useCellActions();
-	const { selectedValue, selectedCell, showBivalue } = useGameStateStore();
+	const { getCell, setCellValue } = useCellActions();
+	const { updateCandidates, calcNumbersUsed, candidatesValid } = useCellActions();
+	const { selectedValue, selectedCell, showBivalue, showConjugates, setSelectedValue, clearSelectedValue, setSelectedCell, clearSelectedCell, setEditCandidates } = useGameStateStore();
 
 	const { hint, resetHint } = useHintStore();
 	const cell = cellStore.getState().cells[ix];
@@ -81,6 +80,13 @@ function Cell({ix}) {
 	// set highlighting
 	var rcs = RCS[ix];
 	var selMode = 0;
+	var cip = 0;
+	if (showConjugates) {
+		cip = cellInConjugatePair(ix,selectedValue);
+		//console.log("cellInConjugatePair", ix, selectedValue, cip);
+	}
+
+
 	if (cell.value > 0 ) {
 		if (selectedCell === ix)
 			selMode = 2;
@@ -89,6 +95,10 @@ function Cell({ix}) {
 
 		// check for invalid value
 		if (cell.value > 0 && cell.solutionValue > 0 && cell.value !== cell.solutionValue) selMode = 4;
+	} else if (!candidatesValid(ix)) {
+		selMode = 99;
+	} else if (showConjugates && (cip = cellInConjugatePair(ix, selectedValue)) > 0 )  {
+			selMode = (cip === 1) ? 10 : 11;
 	} else if (showBivalue ) {
 		if (cell.activecandidates.length === 2) {
 			if (selectedValue >= 0)
@@ -119,6 +129,7 @@ function Cell({ix}) {
 		switch (hint.type) {
 			case "colorWing":
 			case "xChain":
+			case 'aicI':
 				if (hint.targets.includes(ix))
 					selMode = 3;
 				else if (hint.parity1.includes(ix))
@@ -261,6 +272,9 @@ function Cell({ix}) {
 		case 15:
 			cn = "bg-pink-400";
 			break;
+		case 99:
+			cn = "bg-red-500";
+			break;
 	}
 	const bs = bstyles[ix];
 
@@ -302,8 +316,8 @@ function Grid9({y}) {
 }
 
 export default function GameGrid() {
-	const { clearSelectedCell } = useCellActions();
-	//console.log("GameGrid");
+	const { clearSelectedCell } = useGameStateStore();
+	console.log("GameGrid");
 	const index = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
 	function modalConfirm() {

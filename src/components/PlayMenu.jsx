@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { cellStore, useHintStore, useCellActions, useGameStateStore } from "../store/store";
 import { validateMove } from "../utilities/utilities";
 import { runHints } from '/src/hints/hints';
@@ -12,6 +13,8 @@ export default function PlayMenu() {
 	const { gameComplete } = cellStore();
 	const { hint, getHint, setHint, setHintMsg, resetHint } = useHintStore();
 	const [message, setMessage] = useState(gameComplete ? "Game Complete" : null);
+
+	const navigate = useNavigate();
 	const selection = [1,2,3,4,5,6,7,8,9];
 
 	useEffect(() => {
@@ -65,6 +68,7 @@ export default function PlayMenu() {
 			case 'urType7':
 			case 'colorsI':
 			case 'alsXY':
+			case 'aicI':
 			case 'colorWing':
 			case 'emptyRectangle':
 				console.log("hint:", h);
@@ -157,6 +161,7 @@ export default function PlayMenu() {
 		e.preventDefault();
 		console.log("conjugates", selectedValue);
 		setShowConjugates(true);
+		navigate('/');
 	}
 
 	function doSelect(s) {

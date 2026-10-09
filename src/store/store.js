@@ -29,7 +29,7 @@ export const useManCellsStore = create (
 					solution: solution,
 					number: null,
 					description: "New Game",
-					selectedCell: -1,
+					manSelectedCell: -1,
 					manGameValid: true,
 					initialized: true
 				})
@@ -42,7 +42,7 @@ export const useManCellsStore = create (
 					solution: solution,
 					number: num,
 					description: descr,
-					selectedCell: -1,
+					manSelectedCell: -1,
 					manGameValid: validateManBoard(cls),
 					initialized: true
 				})
@@ -51,7 +51,7 @@ export const useManCellsStore = create (
 			loadManSolution: (solution) => {
 				set({
 					solution: solution,
-					selectedCell: -1,
+					manSelectedCell: -1,
 					initialized: true
 				})
 			},
@@ -102,7 +102,13 @@ export const useManCellsStore = create (
 			},
 
 			setManSelectedCell: (ix) => {
-				set({ selectedCell: ix })
+				const sel = get().manSelectedCell;
+				console.log("setManSelectedCell", sel, ix);
+				set({ manSelectedCell: ix })
+			},
+
+			getManSelectedCell: () => {
+				return get().manSelectedCell
 			},
 
 			setManId: (number, description) => {
@@ -114,7 +120,7 @@ export const useManCellsStore = create (
 
 		}),
 		{
-			name: 'sudoku-game', // Unique name for the storage item
+			name: 'sudoku-man-game', // Unique name for the storage item
 			storage: createJSONStorage(() => sessionStorage), // Use session storage
 		}
 	)
@@ -428,8 +434,10 @@ export const cellStore = create(
 						for (var ix = 0; ix < 81; ++ix) {
 							const candidates = findCandidates(ix, cells);
 							// remove any noncandidates not in the actual candidates list
-							const noncandidates = cells[ix].noncandidates.filter(c => candidates.includes(c));
-							const activecandidates = candidates.filter(c => noncandidates.indexOf(c) < 0);
+							//const noncandidates = cells[ix].noncandidates.filter(c => candidates.includes(c));
+							//const activecandidates = candidates.filter(c => noncandidates.indexOf(c) < 0);
+							const noncandidates = [];
+							const activecandidates = candidates;
 							cells[ix] = { ...cells[ix], candidates, activecandidates, noncandidates }
 						}
 						return { cells }
@@ -460,6 +468,15 @@ export const cellStore = create(
 						cells[ix] = { ...cells[ix], candidates, activecandidates, noncandidates }
 						return { cells }
 					})
+				},
+
+				candidatesValid: (ix) => {
+					// do the remaining active candidates match the solution (if any)
+					const cell =  get().cells[ix];
+					if (cell.value > 0) return true;
+					if (cell.solutionValue === 0) return true;
+					if (!cell.activecandidates.includes(cell.solutionValue)) return false;
+					return true;
 				},
 
 				cellContainsCandidate: (ix, c) => {

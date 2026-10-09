@@ -1,7 +1,5 @@
 import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCells, sqRows012, sqCols012, RCS } from '/src/utilities/constants';
-import { vRows, vCols, vSqs } from '/src/hints/hints';
 import { cells, findTargets, findInternalTargets, includesAll, includesAny } from '/src/hints/hints';
-import { rcsCounts } from './hints';
 
 
 //*****************************************************************************
