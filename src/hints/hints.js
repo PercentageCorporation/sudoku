@@ -22,10 +22,8 @@ export function runHints() {
 	//let conjugatePairs = getConjugatePairs();
 	//console.log("init", conjugatePairs.length)
 
-	result = als();
+	result = loops();
 	if (result) return result[0];
-	//result = loops();
-	//if (result) return result[0];
 
 	result = lockedCandidates1();
 	if (result) return result[0];
@@ -69,8 +67,8 @@ export function runHints() {
 	if (result) return result[0];
 	result = als();
 	if (result) return result[0];
-	//result = loops();
-	//if (result) return result[0];
+	result = loops();
+	if (result) return result[0];
 
 	return null;
 }
