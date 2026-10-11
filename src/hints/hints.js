@@ -67,8 +67,8 @@ export function runHints() {
 	if (result) return result[0];
 	result = als();
 	if (result) return result[0];
-	result = loops();
-	if (result) return result[0];
+	// result = loops();
+	// if (result) return result[0];
 
 	return null;
 }
