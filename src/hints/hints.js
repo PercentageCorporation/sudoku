@@ -452,6 +452,14 @@ export function getActiveCandidates(cix) {
 	return c.activecandidates;
 }
 
+export function getCommonCandidates(c0, c1) {
+	let cls0 = cells[c0];
+	if (cls0.value > 0) return [];
+	let cls1 = cells[c1];
+	if (cls1.value > 0) return [];
+	let common = cls0.activecandidates.filter(value => cls1.activecandidates.includes(value))
+	return common;
+}
 
 // find values only in one row/col and return sq/row/val triples
 function oneRowValues(sq, sqrc) {

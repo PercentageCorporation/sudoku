@@ -41,7 +41,7 @@ export default function PlayMenu() {
 		e.preventDefault();
 		var h = getHint();
 		if (!h) return;
-		//console.log("doHint", h);
+		console.log("doHint", h);
 		switch (h.type) {
 			// hints with targets
 			case "locked":
@@ -71,7 +71,6 @@ export default function PlayMenu() {
 			case 'aicI':
 			case 'colorWing':
 			case 'emptyRectangle':
-				console.log("hint:", h);
 				var tgts = h.targets;
 				tgts.forEach((cix) => {
 					if (h.values) {
@@ -87,8 +86,23 @@ export default function PlayMenu() {
 				clearSelectedCell();
 				break;
 
+			case 'aicIloop':
+			case 'aicII':
+				var tgts = h.targetlist;
+				tgts.forEach((t) => {
+					let tcls = t[0];
+					let vals = t[1];
+					tcls.forEach((tc) => {
+						vals.forEach((v) => {
+							addNonCandidate(tc, v);
+						})
+					})
+				})
+				clearSelectedValue();
+				clearSelectedCell();
+				break;
+
 			case 'colorsII':
-				console.log("hint:", h);
 				var tgts = h.targets;
 				var v = h.value;
 				tgts.forEach((cix) => {
@@ -107,7 +121,7 @@ export default function PlayMenu() {
 				break;
 
 			default:
-				//console.log("Unknown Hint Type:", h.type);
+				console.log("Unknown Hint Type:", h.type);
 				return;
 		}
 

@@ -130,6 +130,8 @@ function Cell({ix}) {
 			case "colorWing":
 			case "xChain":
 			case 'aicI':
+			case 'aicII':
+			case 'aicIloop':
 				if (hint.targets.includes(ix))
 					selMode = 3;
 				else if (hint.parity1.includes(ix))
