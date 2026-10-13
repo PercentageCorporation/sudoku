@@ -81,10 +81,6 @@ function findValuePairsInRCS(arr, val) {
 	return cls;
 }
 
-function addBivalueLinks(cpairs2) {
-
-}
-
 // find conjugate pairs
 // cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
 // if a value only appears twice in a row/col/sq it is a strong link conjugate pair

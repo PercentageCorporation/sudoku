@@ -1,7 +1,7 @@
 import { Rows, Cols, Squares, RCS } from '/src/utilities/constants';
 import { findTargets } from '/src/hints/hints';
 import { vSqs, sCounts2, sameRow, sameCol } from '/src/hints/hints';
-import { canSeeEachOther, canAllSeeEachOther, findTargetsSeenByAll, findTargetsInHouses, getActiveCandidates, getCommonValues, includesAny, includesAll } from './hints';
+import { canSeeEachOther, canAllSeeEachOther, findTargetsSeenByAll, findTargetsInHouses, getActiveCandidates, getValuesInCommon, includesAny, includesAll } from './hints';
 
 
 //*****************************************************************************
@@ -208,7 +208,7 @@ export function als() {
 			// a restricted candidate is a candidate in one ALS that must be in the other ALS
 			// all the occurances of the candidate in either ALS must be able to see each other
 			// first find common candidates
-			let comvals = getCommonValues( alsi[0], alsj[0]);
+			let comvals = getValuesInCommon( alsi[0], alsj[0]);
 			//console.log("comval", i, j, comvals, alsi, alsj);
 			let rcc = findRestrictedCommonCandidates(comvals, alsi, alsj);
 			if (rcc.length === 0) continue;

@@ -84,7 +84,7 @@ function inAnyCluster(clusters, cx) {
 }
 
 // get the values that only occur once in the array
-function getUniqueValues(arr) {
+function getSinglueValues(arr) {
 	var ep = [];
 	var dup = false;
 	arr.sort((a,b) => a-b);
@@ -117,7 +117,7 @@ function getEndpoints(cluster) {
 	var cls = [];
 	cluster.forEach((c) => cls.push(c[0], c[1]));
 
-	var uv = getUniqueValues(cls);
+	var uv = getSinglueValues(cls);
 	return uv;
 }
 

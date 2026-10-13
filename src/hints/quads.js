@@ -32,7 +32,7 @@ function findQuads(arr) {
 	if (count < 5) return [];	// not enough cells for a quad with eliminations
 	// get the values with counts of four or less
 
-	console.log("hcells", hcells);
+	//console.log("hcells", hcells);
 
 	// for each combination of four cells count the candidates
 	let hclen = hcells.length;
@@ -50,12 +50,12 @@ function findQuads(arr) {
 					let qcells = [hci[1],hcj[1],hck[1],hcl[1]];
 
 					if (qvals.length === 4) {
-						console.log("**************");
-						console.log(qvals);
-						console.log(qcells);
+						//console.log("**************");
+						//console.log(qvals);
+						//console.log(qcells);
 						let tgts = findTargets(arr, qvals, qcells);
 						if (tgts) {
-							console.log(tgts);
+							//console.log(tgts);
 							quads.push([qvals,qcells,tgts]);
 						}
 					}
@@ -63,7 +63,7 @@ function findQuads(arr) {
 			}
 		}
 	}
-	console.log("quads", quads);
+	//console.log("quads", quads);
 	return quads;
 }
 
@@ -72,21 +72,21 @@ export function quads() {
 
 	let q = [];
 	for (var i=0; i<9; i++) {
-		console.log("Row ", i);
+		//console.log("Row ", i);
 		let rq = findQuads(Rows[i]);
 		if (rq.length > 0) {
 			let h = quadHint(rq[0]);
 			quads.push(h);
 			break;
 		}
-		console.log("Col ", i);
+		//console.log("Col ", i);
 		let cq = findQuads(Cols[i]);
 		if (cq.length > 0) {
 			let h = quadHint(cq[0]);
 			quads.push(h);
 			break;
 		}
-		console.log("Sq ", i);
+		//console.log("Sq ", i);
 		let sq = findQuads(Squares[i]);
 		if (sq.length > 0) {
 			let h = quadHint(sq[0]);
@@ -95,7 +95,7 @@ export function quads() {
 		}
 	}
 
-	console.log("quads", q);
+	//console.log("quads", q);
 
 	if (quads.length === 0) return null;
 	console.log("quads",quads);

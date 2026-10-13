@@ -11,6 +11,7 @@ import { swordfish } from '/src/hints/swordfish';
 import { colors, colorWing } from '/src/hints/colors';
 import { loops } from "/src/hints/loops";
 import { quads } from "/src/hints/quads";
+import { WXYZWing } from "/src/hints/wings";
 //import { getConjugatePairs } from "/src/hints/conjugates";
 
 export var cells = [];
@@ -23,6 +24,8 @@ export function runHints() {
 	//let conjugatePairs = getConjugatePairs();
 	//console.log("init", conjugatePairs.length)
 
+	result = WXYZWing();
+	if (result) return result[0];
 
 	result = singletons();
 	if (result) return result[0];
@@ -451,10 +454,18 @@ export function includesAny(a,b) {
 	return b.some(r => a.includes(r))
 }
 
-export function getCommonValues(ac1, ac2) {
+export function getValuesInCommon(ac1, ac2) {
 	// find the common value
 	return ac1.filter(item => ac2.includes(item));
 }
+
+export function getAllValues(ac0, ac1) {
+	var s = new Set();
+	ac0.forEach(s.add, s);
+	ac1.forEach(s.add, s);
+	return Array.from(s);
+}
+
 
 export function cellHasCandidate(cix, z) {
 	var c = cells[cix];
