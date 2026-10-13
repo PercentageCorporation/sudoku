@@ -371,11 +371,6 @@ export function loops() {
 		allpaths.push.apply(allpaths, pathsa);
 		//console.log("pathsa", pathsa);
 
-		//let spaths = filterShortest(pathsa);
-		//console.log("spaths0", spaths);
-		//loops = processPaths(spaths);
-		//if (loops.length > 0) break;
-
 		// make the alternate link
 		chain1 = [];	// reset the chain
 		link = [bvep, bvac,  bvac[1], 0, 'x', -1, [1]];
@@ -389,11 +384,6 @@ export function loops() {
 		allpaths.push.apply(allpaths, pathsb);
 		//console.log("pathsb", pathsb);
 	}
-
-	// if (loops.length > 0) {
-	// 	console.log("loops", loops);
-	// 	return loops;
-	// }
 
 	// we need to start with a strong link so we might as well use a cp
 	// for each conjugate pair start the chains with their endpoints
@@ -411,8 +401,8 @@ export function loops() {
 		let sep1 = cp[2][0];
 		let sac1 = cp[2][1];
 
-		//if (sep0 !== 75 && sep1 !== 75) continue;
-		if (sep1 !== 75) continue;
+		//if (sep0 !== 75 && sep1 !== 75) continue;	// TEST
+		//if (sep1 !== 75) continue;	// TEST
 		// make the first link
 		chain1 = [];	// reset the chain
 		let link = [sep0, sac0,  valstart, 0, 'x', -1, [1]];
@@ -437,16 +427,6 @@ export function loops() {
 		let pathsb = getAICPaths(chain1);
 		allpaths.push.apply(allpaths, pathsb);
 		//console.log("pathsb", sep1, pathsb, chain1);
-
-
-		// let paths = [...pathsa, ...pathsb];
-		// if (paths.length === 0) continue;
-		// let spaths = filterShortest(paths);
-		//console.log("spaths", spaths);
-		// get the endpoints and value
-
-		// loops = processPaths(spaths);
-		// if (loops.length > 0) break;
 	}
 
 	//console.log("allpaths", allpaths);
@@ -555,10 +535,10 @@ function findAIC_I(path) {
 			// make sure the endpoints cannot see each other
 			if (!canSeeEachOther(sep, epi)) {
 				let tgts = findTargetsCorners(sval, sep, epi);
+				let apath = path.slice(0, i+1);
+				//console.log("aic1", sval, sep, epi, tgts, apath);
 				if (tgts.length > 0) {
-					let apath = path.slice(0, i+1);
 					aic1.push([sval, sep, epi, tgts, apath]);
-					//console.log("aic1", sval, sep, epi, tgts, apath);
 				}
 			}
 		}
@@ -589,10 +569,10 @@ function findAIC_II(path) {
 				if (cellHasCandidate(epi, sval)) {
 					tgts.push([[epi],[sval]]);
 				}
+				let apath = path.slice(0, i+1);
+				//console.log("aic2", sval, sep, epi, tgts, apath);
 				if (tgts.length > 0) {
-					let apath = path.slice(0, i+1);
 					aic2.push([sval, sep, epi, tgts, apath]);
-					console.log("aic2", sval, sep, epi, tgts, apath);
 				}
 			}
 		}
@@ -618,9 +598,9 @@ function findAIC_I_Loop(path) {
 				if (com.length > 0) {
 					let apath = path.slice(0, i+1);
 					let tgts = findLoopTargets(apath);
+					//console.log("aic1loop", sval, sep, epi, tgts, apath);
 					if (tgts.length > 0) {
 						aic1l.push([sval, sep, epi, tgts, apath]);
-						//console.log("aic1loop", sval, sep, epi, tgts, apath);
 					}
 				}
 			}
@@ -635,24 +615,12 @@ function processPaths(paths) {
 	let hints = [];
 	for (let ap=0; ap<paths.length; ++ap) {
 		let p = paths[ap]
-		//console.log("path", p);
+		//console.log("patha", p);
 
 		let aic1loop = findAIC_I_Loop(p);
 		if (aic1loop) {
 			//console.log("ppaic1Loop", ap, aic1loop);
 			loophints.push(makeLoopHint(aic1loop[0]));
-		}
-	}
-
-	// we don't need long paths any more so save the shortest'
-	let spaths = filterShortest(paths);
-
-	for (let ap=0; ap<spaths.length; ++ap) {
-		let p = spaths[ap]
-		let aic1 = findAIC_I(p);
-		if (aic1) {
-			//console.log("ppaic1", ap, aic1);
-			hints.push(makeHint(aic1[0]));
 		}
 
 		let aic2 = findAIC_II(p);
@@ -660,6 +628,23 @@ function processPaths(paths) {
 			//console.log("ppaic2", ap, aic2);
 			hints.push(makeHint2(aic2[0]));
 		}
+
+	}
+
+	// we don't need long paths any more so save the shortest
+	//let spaths = filterShortest(paths);
+	let spaths = paths;
+	//console.log(paths.length, spaths.length, spaths);
+
+	for (let ap=0; ap<spaths.length; ++ap) {
+		let p = spaths[ap]
+		//console.log("pathb", p);
+		let aic1 = findAIC_I(p);
+		if (aic1) {
+			//console.log("ppaic1", ap, aic1);
+			hints.push(makeHint(aic1[0]));
+		}
+
 	}
 
 	console.log("loophints", loophints);

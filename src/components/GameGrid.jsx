@@ -146,7 +146,8 @@ function Cell({ix}) {
 				break;
 			case "colorsI":
 			case "colorsII":
-			case "alsXZ":
+			case "alsXZ1":
+			case "alsXZ2":
 				if (hint.cells0.includes(ix))
 					selMode = 8;
 				else if (hint.cells1.includes(ix))
@@ -179,6 +180,7 @@ function Cell({ix}) {
 			case "pointingPairSquare":
 			case "hiddenPair":
 			case "hiddenTriple":
+			case "quad":
 			case 'wWing':
 			case 'xWing':
 			case 'xyWing':

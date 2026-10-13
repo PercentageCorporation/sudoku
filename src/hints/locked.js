@@ -1,7 +1,7 @@
 import { Rows, Cols, Squares, RCS } from '/src/utilities/constants';
 import { findTargets } from '/src/hints/hints';
 import { vSqs, sCounts2, sameRow, sameCol } from '/src/hints/hints';
-import { canSeeEachOther, canAllSeeEachOther, findTargetsSeenByAll, getActiveCandidates, getCommonValues, includesAny, includesAll } from './hints';
+import { canSeeEachOther, canAllSeeEachOther, findTargetsSeenByAll, findTargetsInHouses, getActiveCandidates, getCommonValues, includesAny, includesAll } from './hints';
 
 
 //*****************************************************************************
@@ -35,7 +35,7 @@ function allIncluded(ax) {
 	return allincluded;
 }
 
-// get all unsolved cells in a house that have
+// get all unsolved cells in a house that have candidates
 // return an array of cells with their candidates
 // and an array of all candidates in the house
 function getHouseCells(house) {
@@ -50,6 +50,24 @@ function getHouseCells(house) {
 		}
 	}
 	return [hc, Array.from(hac)];
+}
+
+// get the house(s) that the cells lie in
+function getCommonHouses(cls) {
+	let h = [-1,-1,-1];
+	let r = [];
+	let c = [];
+	let s = [];
+	cls.forEach(cl => {
+		r.push(RCS[cl][0]);
+		c.push(RCS[cl][1]);
+		s.push(RCS[cl][2]);
+	})
+	const allEqual = arr => arr.every( v => v === arr[0] );
+	if (allEqual(r)) h[0] = r[0];
+	if (allEqual(c)) h[1] = c[0];
+	if (allEqual(s)) h[2] = s[0];
+	return h;
 }
 
 // find cells containing the value
@@ -121,6 +139,7 @@ function findALS(arr) {
 	return als;
 }
 
+// can any cell in one ALS see a cell in the other ALS
 function canSeeOtherALS(als0, als1) {
 	for (var i=0; i<als0.length; ++i) {
 		for (var j=0; j<als1.length; ++j) {
@@ -130,20 +149,39 @@ function canSeeOtherALS(als0, als1) {
 	return false;
 }
 
+
+function findRestrictedCommonCandidates(comvals, als0, als1) {
+	var rcc = [];
+	for (let cv=0; cv<comvals.length; ++cv) {
+		// get the cells containing the value
+		let val = comvals[cv];
+		// get all the cells containing the candidate from both ALS
+		let valcells = candidateValueCells(val, als0[2], als1[2] )
+		// can all those cells see each other
+		let canallsee = canAllSeeEachOther(valcells);
+		if (!canallsee) continue;
+		//console.log("canallsee2", canallsee, val, comvals, valcells, alsi[2], alsj[2]);
+		// at this point val is a restricted common candidate
+		rcc.push(val);
+	}
+	return rcc;
+}
+
+
 export function als() {
 
-	var alshints = [];
+	let alshints = [];
 
 	// for each house find all ALS
-	var als = [];
-	for (var i=0; i<9; ++i) {
-		var alsr = findALS(Rows[i]);
+	let als = [];
+	for (let i=0; i<9; ++i) {
+		let alsr = findALS(Rows[i]);
 		als.push(...alsr);
 		//console.log("alsr", i, alsr);
-		var alsc = findALS(Cols[i]);
+		let alsc = findALS(Cols[i]);
 		als.push(...alsc);
 		//console.log("alsc", i, alsc);
-		var alss = findALS(Squares[i]);
+		let alss = findALS(Squares[i]);
 		als.push(...alss);
 		//console.log("alss", i, alss);
 	}
@@ -151,15 +189,15 @@ export function als() {
 	//console.log("als", als);
 
 	// als: [ [candidates], [cells], [ [cix0, [ac0]], [cix1, [ac1]], ...] ] ]
-	// for each pair of ALS find a common candidate that is in the same house
-	var alslen = als.length;
-	for (var i=0; i<alslen; ++i) {
-		var alsi = als[i];
+	// for each pair of ALS find a restricted common candidate (or two)
+	let alslen = als.length;
+	for (let i=0; i<alslen; ++i) {
+		let alsi = als[i];
 		//if (!includesAll(alsi[1],[10,15])) continue;
 		//if (!includesAll(alsi[1],[39,40,41,44])) continue;
 		//console.log("alsi", i, alsi);
-		for (var j=i+1; j<alslen; ++j) {
-			var alsj = als[j];
+		for (let j=i+1; j<alslen; ++j) {
+			let alsj = als[j];
 			if (includesAny(alsi[1],alsj[1])) continue;		// skip ALS with cells in common
 			// can the ALSs see each other
 			// can any of the cells in ALS0 see any of the cells in ALS1
@@ -170,37 +208,36 @@ export function als() {
 			// a restricted candidate is a candidate in one ALS that must be in the other ALS
 			// all the occurances of the candidate in either ALS must be able to see each other
 			// first find common candidates
-			var comvals = getCommonValues( alsi[0], alsj[0]);
+			let comvals = getCommonValues( alsi[0], alsj[0]);
 			//console.log("comval", i, j, comvals, alsi, alsj);
-			// for each common candidate can all the cells containing the candidate see each other
-			for (var cv=0; cv<comvals.length; ++cv) {
-				// get the cells containing the value
-				var val = comvals[cv];
-				// get all the cells containing the candidate from both ALS
-				var valcells = candidateValueCells(val, alsi[2], alsj[2] )
-				// can all those cells see each other
-				var canallsee = canAllSeeEachOther(valcells);
-				if (!canallsee) continue;
-				//console.log("canallsee2", canallsee, val, comvals, valcells, alsi[2], alsj[2]);
-				// at this point val is the required common candidate Z
-				var X = val;
-				// now we look for the Z value to be used for elimination
-				var zvals = comvals.filter(e => e !== X);	// remove X from the common values
+			let rcc = findRestrictedCommonCandidates(comvals, alsi, alsj);
+			if (rcc.length === 0) continue;
+
+			//console.log("******************************");
+			//console.log("rcc", rcc, alsi[1], alsj[1]);
+
+			// get all the cells from both ALS
+			let allcells = [];
+			allcells.push(...alsi[1]);
+			allcells.push(...alsj[1]);
+
+			if (rcc.length === 1) {
+				// only one restricted common candidate
+				let X = rcc[0];
+				// therefore all other common candidates can be used a the Z value
+				let zvals = comvals.filter(e => e !== X);	// remove X from the common values
 				//console.log("xvals", val, xvals, comvals);
 				// I think there can be more than one Z val but I am not sure
-				var allcells = [];
-				allcells.push(...alsi[1]);
-				allcells.push(...alsj[1]);
 				zvals.forEach((Z) => {
 					// get the cells from both ALS containg the value X
-					var Zcells = candidateValueCells(Z, alsi[2], alsj[2] );
-					var tgts = findTargetsSeenByAll(Z, Zcells, allcells);
+					let Zcells = candidateValueCells(Z, alsi[2], alsj[2] );
+					let tgts = findTargetsSeenByAll(Z, Zcells, allcells);
 					if (tgts) {
 						//console.log("als", X, Z, alsi, alsj);
 						//console.log("Zcells", Zcells, allcells, tgts);
 						//console.log("cansee", comvals, valcells, alsi[2], alsj[2]);
-						var h = {
-							type: 'alsXZ',
+						let h = {
+							type: 'alsXZ1',
 							row: null,
 							col: null,
 							square: null,
@@ -210,14 +247,76 @@ export function als() {
 							offset: null,
 							value: Z,
 							targets: tgts,
-							msg: `ALS XZ: Cells: ${tgts}, Value: ${Z}`
+							msg: `ALS XZ 1: Cells: ${tgts}, Value: ${Z}`
 						}
 						//console.log(h.msg);
 						alshints.push(h);
 					}
 				})
-			if (alshints.length > 0) break;
+			} else if (rcc.length === 2) {
+				//console.log("******************************");
+				//console.log("rcc2", rcc, comvals, alsi[1], alsj[1]);
+				// I dont't think it matters which is X or Z
+				let X = rcc[0];
+				let Z = rcc[1];
+				// we need values unique to each als
+				let uvi = alsi[0].filter(c => c !== Z && c !== X);
+				let uvj = alsj[0].filter(c => c !== Z && c !== X);
+
+				//console.log("rcc2", rcc, comvals, alsi[0], uvi, alsj[1], uvj, alsi[1], alsj[1]);
+				//getUnique(alsi[0], alsj[0])
+				// get cells containing X from both ALS
+				let Xcells = candidateValueCells(X, alsi[2], alsj[2] );
+				// get cells containing Z from both ALS
+				let Zcells = candidateValueCells(Z, alsi[2], alsj[2] );
+				// find all the cells containing X that can see all the Xcells
+				let tgtsX = findTargetsSeenByAll(X, Xcells, allcells);
+				// find all the cells containing Z that can see all the Zcells
+				let tgtsZ = findTargetsSeenByAll(Z, Zcells, allcells);
+				// find all the cells containing [uvi]
+				let hi = getCommonHouses(alsi[1]);
+				let hj = getCommonHouses(alsj[1]);
+				let tgtsi = findTargetsInHouses(uvi, hi, allcells);
+				let tgtsj = findTargetsInHouses(uvj, hj, allcells);
+
+				if (tgtsX || tgtsZ || tgtsi || tgtsj) {
+					console.log("********************************************", rcc);
+					console.log("rcc2tgtsXZ", X, tgtsX, Z, tgtsZ);
+					console.log("rcc2tgtsI", hi, uvi, tgtsi);
+					console.log("rcc2tgtsJ", hj, uvj, tgtsj);
+
+					let targetlist = [];
+					if (tgtsX) targetlist.push([tgtsX,[X]]);
+					if (tgtsZ) targetlist.push([tgtsZ,[Z]]);
+					if (tgtsi) targetlist.push([tgtsi,uvi]);
+					if (tgtsj) targetlist.push([tgtsj,uvj]);
+					let values = [];
+					let targets = [];
+					targetlist.forEach(t => {values.push(...t[1]); targets.push(...t[0])} )
+
+					let h = {
+						type: 'alsXZ2',
+						row: null,
+						col: null,
+						square: null,
+						cells: allcells,
+						cells0: alsi[1],
+						cells1: alsj[1],
+						offset: null,
+						values: values,
+						targets: targets,
+						targetlist: targetlist,
+						msg: `ALS XZ 2: Cells: ${targets}, Value: ${values}`
+					}
+					//console.log(h.msg);
+					alshints.push(h);
+				}
+
+			} else {	// three or more rcc ?????
+				console.log("three or more rcc ********************************************", rcc);
+				console.log("rcc3+", rcc, alsi[1], alsj[1]);
 			}
+
 			if (alshints.length > 0) break;
 		}
 		if (alshints.length > 0) break;

@@ -87,6 +87,8 @@ function findPairTriples(pairs) {
 }
 
 // for each house find the cells with 2 or 3 candidates
+// return array of cell offsets and candidates
+// : [ [offset, [ac]], [offset, [ac]], ...]
 function rcsPairsTriples(arr) {
 	var pt = [];
 	for (var j=0; j<9; j++) {
@@ -121,6 +123,7 @@ function collectHouseValues(house) {
 	return Array.from(hv).sort((a,b) => a-b);
 }
 
+// house: [ [offset, [ac]], offset, [ac], ...]
 export function packTheHouse(house) {
 	var inHouse = structuredClone(house);
 	//var inHouse = house;
@@ -264,21 +267,21 @@ function findNakedTriples(arr) {
 }
 
 // for the cells in a row/col/square find any triples
+// ptIn: [[offset, [candidates]], [offset, [candidates]], ...]
 export function findHiddenTriple(ptIn) {
-	// ptIn: [[offset, [candidates]], [offset, [candidates]], ...]
 	var ptInlen = ptIn.length;
 	var pt = structuredClone(ptIn);
 	//console.log("ptIn", ptIn);
 	// pt[]: [row/col/sq, [candidates]]
-	var vc = [0,0,0,0,0,0,0,0,0,0];
+	// var vc = [0,0,0,0,0,0,0,0,0,0];
 	// count the values in each cell and collect the indices
-	var ptlen = pt.length;
-	var ptIx = [];
-	for (var i=0; i<ptlen; i++) {
-		//console.log("map", pt[i][1]);
-		pt[i][1].forEach((v) => {vc[v] += 1});
-		ptIx.push(pt[i]);
-	}
+	// var ptlen = pt.length;
+	// var ptIx = [];
+	// for (var i=0; i<ptlen; i++) {
+	// 	//console.log("map", pt[i][1]);
+	// 	pt[i][1].forEach((v) => {vc[v] += 1});
+	// 	ptIx.push(pt[i]);
+	// }
 
 	//console.log("vc", vc);
 	// run the value elimination process
@@ -429,6 +432,9 @@ export function hiddenTriples() {
 	var vSqPT = [];
 
 	// for each row/col/square calculate the possible triples/pairs for each cell;
+	// collect the cells with two or three candidates
+	// for each r/c/s we have a list of cells with two or three candidates
+	// for each r/c/s:  [ rcs-offset, [ [offset, [ac]], [offset, [ac], ...] ]
 	for (var i=0; i<9; i++) {
 		var rc = rcsPairsTriples(Rows[i]);
 		var cc = rcsPairsTriples(Cols[i]);
@@ -437,10 +443,10 @@ export function hiddenTriples() {
 		vColPT.push([i, cc]);
 		vSqPT.push([i, sc]);
 	}
-	var cc = rcsPairsTriples(Cols[4]);
-	vColPT.push([4, cc]);
+	//var cc = rcsPairsTriples(Cols[4]);
+	//vColPT.push([4, cc]);
 	// these are all the cells and their candidates for each row/col/sq cell that have two or more candidates
-	// [ col, [ [offset, [candidates]], [offset, [candidates], ...] ] ]
+	// [ row/col/sq, [ [offset, [candidates]], [offset, [candidates], ...] ] ]
 	//console.log("PT", vRowPT, vColPT, vSqPT);
 
 

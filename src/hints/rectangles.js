@@ -26,6 +26,14 @@ function commonSquare(c0, c1) {
 	return ((RCS[c0][2] === RCS[c1][2]));
 }
 
+// are the two cells in the same house
+function commonHouse(c0, c1) {
+	if (RCS[c0][0] === RCS[c1][0]) return true;
+	if (RCS[c0][1] === RCS[c1][1]) return true;
+	if (RCS[c0][2] === RCS[c1][2]) return true;
+	return false;
+}
+
 // return an array [ row, colun square] containing the index of the common row/col/sq
 // if not in common return -1
 function getCommonHouses(c0, c1) {
@@ -317,6 +325,7 @@ export function uniqueRectangles() {
 								// checking the ends of one common colum is sufficient
 								var ccs = commonSquare(bi, bk);	// if same row, if one column is in square the other has to be
 								if (rcs && ccs) continue;	// everyting is in the same square
+								if (!rcs && !ccs) continue;	// one of them has to be in the same square
 								if (ccs && RCS[bi][2] === RCS[bj][2]) continue; // if column ends in common squares they cannot be in the same square
 								squares.push([bac, [bi, bj, bk, bl]]);
 							} else if (commonColumn(bi, bl) && commonColumn(bj, bk)) {
@@ -324,6 +333,7 @@ export function uniqueRectangles() {
 								// if the rows are in the same square, the columns cannot be
 								var ccs = commonSquare(bi, bl);	// if same row, if one is in common square the other has to be
 								if (rcs && ccs) continue;	// everyting is in the same square
+								if (!rcs && !ccs) continue;	// one of them has to be in the same square
 								if (ccs && RCS[bi][2] === RCS[bj][2]) continue; // cannot be in the same square
 								squares.push([bac, [bi, bj, bk, bl]]);
 							}
@@ -337,6 +347,7 @@ export function uniqueRectangles() {
 								//console.log("cijkl", i, j, k, l, bi, bj, bk, bl);
 								var ccs = commonSquare(bi, bj);	// if same row, if one is in common square the other has to be
 								if (rcs && ccs) continue;	// everyting is in the same square
+								if (!rcs && !ccs) continue;	// one of them has to be in the same square
 								if (ccs && RCS[bi][2] === RCS[bk][2]) continue; // cannot be in the same square
 								squares.push([bac, [bi, bj, bk, bl]]);
 							} else if (commonColumn(bi, bl) && commonColumn(bk, bj)) {
@@ -344,6 +355,7 @@ export function uniqueRectangles() {
 								//console.log(i, j, k, l, bi, bj, bk, bl);
 								var ccs = commonSquare(bi, bl);	// if same row, if one is in common square the other has to be
 								if (rcs && ccs) continue;	// everyting is in the same square
+								if (!rcs && !ccs) continue;	// one of them has to be in the same square
 								if (ccs && RCS[bi][2] === RCS[bk][2]) continue; // cannot be in the same square
 								squares.push([bac, [bi, bj, bk, bl]]);
 							}
@@ -357,12 +369,14 @@ export function uniqueRectangles() {
 								//console.log("ciljk",i, j, k, l, bi, bj, bk, bl);
 								var ccs = commonSquare(bi, bj);	// if same row, if one is in common square the other has to be
 								if (rcs && ccs) continue;	// everyting is in the same square
+								if (!rcs && !ccs) continue;	// one of them has to be in the same square
 								if (ccs && RCS[bi][2] === RCS[bj][2]) continue; // cannot be in the same square
 								squares.push([bac, [bi, bj, bk, bk]]);
 							} else if (commonColumn(bi, bk) && commonColumn(bj, bl)) {
 								//console.log("cikjl",i, j, k, l, bi, bj, bk, bl);
 								var ccs = commonSquare(bi, bk);	// if same row, if one is in common square the other has to be
 								if (rcs && ccs) continue;	// everyting is in the same square
+								if (!rcs && !ccs) continue;	// one of them has to be in the same square
 								if (ccs && RCS[bi][2] === RCS[bj][2]) continue; // cannot be in the same square
 								squares.push([bac, [bi, bj, bk, bl]]);
 							}

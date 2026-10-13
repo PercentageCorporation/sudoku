@@ -10,6 +10,7 @@ import { XChain, XYChain } from '/src/hints/chains';
 import { swordfish } from '/src/hints/swordfish';
 import { colors, colorWing } from '/src/hints/colors';
 import { loops } from "/src/hints/loops";
+import { quads } from "/src/hints/quads";
 //import { getConjugatePairs } from "/src/hints/conjugates";
 
 export var cells = [];
@@ -22,14 +23,12 @@ export function runHints() {
 	//let conjugatePairs = getConjugatePairs();
 	//console.log("init", conjugatePairs.length)
 
-	result = loops();
-	if (result) return result[0];
 
-	result = lockedCandidates1();
-	if (result) return result[0];
 	result = singletons();
 	if (result) return result[0];
 	result = singleCounts();
+	if (result) return result[0];
+	result = lockedCandidates1();
 	if (result) return result[0];
 	result = nakedPairs();
 	if (result) return result[0];
@@ -42,6 +41,8 @@ export function runHints() {
 	result = hiddenPairs();
 	if (result) return result[0];
 	result = hiddenTriples();
+	if (result) return result[0];
+	result = quads();
 	if (result) return result[0];
 	result = uniqueRectangles();
 	if (result) return result[0];
@@ -67,8 +68,8 @@ export function runHints() {
 	if (result) return result[0];
 	result = als();
 	if (result) return result[0];
-	// result = loops();
-	// if (result) return result[0];
+	result = loops();
+	if (result) return result[0];
 
 	return null;
 }
@@ -383,6 +384,22 @@ export function findTargetsSeenByAll(val, cls, ex) {
 	return targets;
 }
 
+// find targets in the specified houses containing any of the vals excluding cells in ex
+export function findTargetsInHouses(vals, houses, ex) {
+	var targets = [];
+	for (let i=0; i<81; ++i) {
+		if (ex.includes(i)) continue;	// skip excluded cells
+		let rcs = RCS[i];
+		if (houses[0] === rcs[0] || houses[1] === rcs[1] || houses[2] === rcs[2]) {
+			if (!cellHasCandidates(i, vals)) continue;
+			targets.push(i);
+		}
+	}
+	if (targets.length === 0) return null;
+	return targets;
+}
+
+
 // targets have to be in the same row/col or row/sq or col/sq
 export function findSeenTargets2(val, c1, c2) {
 	var targets = [];
@@ -443,6 +460,13 @@ export function cellHasCandidate(cix, z) {
 	var c = cells[cix];
 	if (c.value > 0) return false;
 	if (c.activecandidates.includes(z)) return true;
+	return false;
+}
+
+export function cellHasCandidates(cix, ac) {
+	var c = cells[cix];
+	if (c.value > 0) return false;
+	if (includesAny(c.activecandidates, ac)) return true;
 	return false;
 }
 

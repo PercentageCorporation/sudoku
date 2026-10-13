@@ -51,6 +51,7 @@ export default function PlayMenu() {
 			case "pointingPairSquare":
 			case "hiddenPair":
 			case "hiddenTriple":
+			case "quad":
 			case "xWing":
 			case "xyWing":
 			case "xyTriple":
@@ -67,7 +68,7 @@ export default function PlayMenu() {
 			case 'urType6':
 			case 'urType7':
 			case 'colorsI':
-			case 'alsXZ':
+			case 'alsXZ1':
 			case 'aicI':
 			case 'colorWing':
 			case 'emptyRectangle':
@@ -88,6 +89,7 @@ export default function PlayMenu() {
 
 			case 'aicIloop':
 			case 'aicII':
+			case 'alsXZ2':
 				var tgts = h.targetlist;
 				tgts.forEach((t) => {
 					let tcls = t[0];
