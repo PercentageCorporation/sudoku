@@ -24,8 +24,10 @@ export function runHints() {
 	//let conjugatePairs = getConjugatePairs();
 	//console.log("init", conjugatePairs.length)
 
-	result = WXYZWing();
-	if (result) return result[0];
+	//result = WWing();
+	//if (result) return result[0];
+	//result = WXYZWing();
+	//if (result) return result[0];
 
 	result = singletons();
 	if (result) return result[0];
@@ -62,6 +64,8 @@ export function runHints() {
 	result = XYZWing();
 	if (result) return result[0];
 	result = WWing();
+	if (result) return result[0];
+	result = WXYZWing();
 	if (result) return result[0];
 	result = swordfish();
 	if (result) return result[0];
@@ -583,6 +587,18 @@ function oneColValues(sq, sqrc) {
 		}
 	}
 	return rv;
+}
+
+export function inSameHouse(c0, c1) {
+	if (RCS[c0][0] === RCS[c1][0]) return true;
+	if (RCS[c0][1] === RCS[c1][1]) return true;
+	if (RCS[c0][2] === RCS[c1][2]) return true;
+	return false;
+}
+
+export function inSameSquare(c0, c1) {
+	if (RCS[c0][2] === RCS[c1][2]) return true;
+	return false;
 }
 
 export function sameHouse(c0,c1) {

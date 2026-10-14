@@ -156,6 +156,17 @@ function Cell({ix}) {
 						selMode = 3;
 				break;
 
+			case "wxyzWing":
+				if (hint.cells0.includes(ix))
+					selMode = 15;
+				else if (hint.cells1.includes(ix))
+					selMode = 11;
+				else if (hint.cells2.includes(ix))
+					selMode = 13;
+				else if (hint.targets.includes(ix))
+					selMode = 3;
+				break;
+
 			case "swordfish":
 				if (hint.targets.includes(ix))
 					selMode = 3;

@@ -58,7 +58,9 @@ export default function PlayMenu() {
 			case "xChain":
 			case "xyChain":
 			case "xyzWing":
+			case 'wxyzWing':
 			case 'wWing':
+			case 'colorWing':
 			case "swordfish":
 			case "urType1":
 			case 'urType2':
@@ -70,7 +72,6 @@ export default function PlayMenu() {
 			case 'colorsI':
 			case 'alsXZ1':
 			case 'aicI':
-			case 'colorWing':
 			case 'emptyRectangle':
 				var tgts = h.targets;
 				tgts.forEach((cix) => {

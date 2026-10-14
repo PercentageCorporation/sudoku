@@ -1,7 +1,7 @@
 import { RCS, Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCells, sqRows012, sqCols012 } from '/src/utilities/constants';
 import { findTargets, includesAll, includesAny } from '/src/hints/hints';
 import { cells, findSeenTargets2, findTargetsSeenByAll, cellHasCandidate } from '/src/hints/hints';
-import { sameRow2, sameCol2, sameSq2 } from '/src/hints/hints';
+import { sameRow2, sameCol2, sameSq2, inSameSquare } from '/src/hints/hints';
 import { canSeeEachOther, getValuesInCommon, getActiveCandidates, getAllValues } from '/src/hints/hints';
 import { getConjugatePairs, findAllBivalueCells, getBivalueList } from "/src/hints/conjugates";
 
@@ -561,14 +561,14 @@ export function WWing() {
 				//console.log("epc", cpv, ep0, ep1, cpc0, cpc1);
 				if (canSeeEachOther(ep0, cpc0) && canSeeEachOther(ep1, cpc1)) {
 					// check for targets
-					var tgts = findSeenTargets2(epv1, ep0, ep1)
+					var tgts = findSeenTargets2(epv0, ep0, ep1)
 					//console.log("ep match0", epv1, ep, cp, ep0, cpc0, cpc1, ep1, tgts);
-					if (tgts) ww.push([epv1,[ep0, cpc0, cpc1, ep1], tgts ]);
+					if (tgts) ww.push([epv0,[ep0, cpc0, cpc1, ep1], tgts ]);
 
 				} else if (canSeeEachOther(ep0, cpc1) && canSeeEachOther(ep1, cpc0)) {
-					var tgts = findSeenTargets2(epv1, ep0, ep1)
+					var tgts = findSeenTargets2(epv0, ep0, ep1)
 					//console.log("ep match1", epv1, ep, cp, ep0, cpc1, cpc0, ep1, tgts);
-					if (tgts) ww.push([epv1, [ep0, cpc1, cpc0, ep1], tgts ]);
+					if (tgts) ww.push([epv0, [ep0, cpc1, cpc0, ep1], tgts ]);
 				}
 			}
 		}
@@ -589,7 +589,7 @@ export function WWing() {
 			offset: null,
 			value: val,
 			targets: targets,
-			msg: `W-Wing: Cells: ${cls}, Value: ${val}`
+			msg: `W-Wing: Cells: ${targets}, Value: ${val}`
 		}
 		wwings.push(h);
 	})
@@ -631,13 +631,14 @@ function findWXYZPivots(bp, arr) {
 		if (count !== 1) continue;
 		let ac = getActiveCandidates(cix);
 		if (ac.length < 2 || ac.length > 4) continue;
+		let all = getAllValues(bac, ac);
+		if (all.length > 4) continue;	// too many candidates
 		let common = bac.filter(c => ac.includes(c))
 		if (common.length === 0) continue;		// can only be 0, 1, 2
-		let buncommon = (common[0] === bac[0]) ? bac[1] : bac[0];	// get the other candidate
-		let cuncommon = (common[0] === ac[0]) ? ac[1] : bac[0];		// get the other candidate
+		let uncommon = ac.filter(c => !common.includes(c));
 		// only one common candidate
 		//console.log("push", common[0], bix, cix, ac);
-		pivots.push([bix, bac, cix, ac, common[0], buncommon, cuncommon]);
+		pivots.push([bix, bac, cix, ac, common, uncommon]);
 	}
 	//console.log("bvp", bix, bac, pivots);
 
@@ -658,7 +659,7 @@ function getHouseCells(arr, ex) {
 }
 
 // look for wing2 cells in row or column of pivot
-// pivot: [wix, wac, pix, pac, common[0], buncommon, cuncommon]
+// pivot: [wix, wac, pix, pac, common, uncommon]
 function findWing2RC(pivot) {
 	let wing2 = [];
 
@@ -671,53 +672,83 @@ function findWing2RC(pivot) {
 
 	let w1ix = pivot[0];
 	let w1ac = pivot[1];
-	let W = pivot[4];
-	let Z = pivot[5];
-	let X = pivot[6];	// arbitrary as we need to find Y
+	let common = pivot[4];
+	let uncommon = pivot[5];
+	let W = 0;
+	let X = 0;
 	let Y = 0;
+	let Z = 0;
 
 	// find two cells with the desired candidates outside the pivot square
 	// first try the row
-	let hcells = getHouseCells(Rows[prow], pix);
-	let hlen = hcells.length;
-	if (hlen < 2) return [];
-	console.log("hcels", pix, prow, hcells);
-	// for each pair of cells
-	for (let i=0; i<hlen; i++) {
-		let cixi = hcells[i][0];
-		let aci = hcells[i][1];
-		if (aci.length > 3) continue;
-		for (let j=i+1; j<hlen; j++) {
-			let cixj = hcells[j][0];
-			let acj = hcells[j][1];
-			if (acj.length > 3) continue;
-			let com = getValuesInCommon(aci, acj);	// get shared candidates
-			let allw2 = getAllValues(aci, acj);
-			let allpw2 = getAllValues(allw2, pac);
-			let wxz = [W,X,Z];
-			let y = allpw2.filter(a => !wxz.includes(a));
-			let Y = y[0];
-			console.log("w2", cixi, aci, cixj, acj, com, allpw2, W, X, Y, Z);
+	let hcellsr = getHouseCells(Rows[prow], pix);
+	let hcellsc = getHouseCells(Cols[pcol], pix);
+	let hcellsrc = [hcellsr, hcellsc];
+	//console.log("hcells", hcellsr, hcellsc);
 
-			if (com.length === 0) continue;			// there must be at least one common value
-			if (allw2.includes(W)) continue;		// wing2 cannot include wing1 restricted candidate
-			if (!includesAny(pac, allw2)) continue;	// must have something in commong with the pivot
+	hcellsrc.forEach(hcells => {
+		//console.log("hcellsrc", pix, prow, pcol, hcells);
+		let hlen = hcells.length;
+		if (hlen < 2) return [];
+		// for each pair of cells
+		for (let i=0; i<hlen; i++) {
+			let cixi = hcells[i][0];
+			let aci = hcells[i][1];
+			if (aci.length > 3) continue;
+			for (let j=i+1; j<hlen; j++) {
+				let cixj = hcells[j][0];
+				let acj = hcells[j][1];
+				if (acj.length > 3) continue;
 
-			// eliminate any Z in a cell that can be seen by all other cells containing Z
-			let Zcells = [w1ix];	// we know that has a Z
-			if (pac.includes(Z)) Zcells.push(pix);
-			if (aci.includes(Z)) Zcells.push(cixi);
-			if (acj.includes(Z)) Zcells.push(cixj);
-			let allcells = [pix, w1ix, cixi, cixj];
+				let com = getValuesInCommon(aci, acj);	// get shared candidates
+				if (com.length === 0) continue;			// there must be at least one common value
 
-			let tgts = findTargetsSeenByAll(Z, Zcells, allcells);
-			if (tgts) {
-				wing2.push([pix, w1ix, cixi, cixj, Z, tgts])
-				console.log("*****************");
-				console.log(pix, w1ix, cixi, cixj, W, X, Y, Z, tgts);
+				let allw2 = getAllValues(aci, acj);
+				let allpw2 = getAllValues(allw2, pac);
+				let all = getAllValues(allpw2, w1ac);
+				//console.log("all", cixi, cixj,  allw2, allpw2, all);
+				if (all.length > 4) continue;	// too many candidates
+
+				if (common.length === 1) {
+					//console.log("common1", common, uncommon);
+					W = common[0];
+					Z = (W === w1ac[0]) ? w1ac[1] : w1ac[0];	//  if we know W, the other bivalue is Z
+				} else {
+					//console.log("common2", allw2, common, uncommon);
+					if (includesAll(allw2, common)) continue;	// both cannot be in wing2
+					W = (allw2.includes(common[0])) ? common[1] : common[0];	// W is the one not in wing2
+					Z = (W === w1ac[0]) ? w1ac[1] : w1ac[0];	//  if we know W, the other bivalue is Z
+				}
+				console.log("w2", cixi, aci, cixj, acj, com, allpw2, W, X, Y, Z);
+
+				if (!allw2.includes(Z)) continue;
+				if (aci.includes(W) && !inSameSquare(cixi, pix)) continue;
+				if (acj.includes(W) && !inSameSquare(cixj, pix)) continue;
+				if (!includesAny(pac, allw2)) continue;	// must have something in commong with the pivot
+
+				let wxz = [W,X,Z];
+				let y = allpw2.filter(a => !wxz.includes(a));
+				Y = y[0];
+				//console.log("w2", cixi, aci, cixj, acj, com, allpw2, W, X, Y, Z);
+
+
+				// eliminate any Z in a cell that can be seen by all other cells containing Z
+				let Zcells = [w1ix];	// we know that has a Z
+				if (pac.includes(Z)) Zcells.push(pix);
+				if (aci.includes(Z)) Zcells.push(cixi);
+				if (acj.includes(Z)) Zcells.push(cixj);
+				let allcells = [pix, w1ix, cixi, cixj];
+
+				let tgts = findTargetsSeenByAll(Z, Zcells, allcells);
+				if (tgts) {
+					wing2.push([pix, w1ix, cixi, cixj, Z, tgts])
+					console.log("*****************");
+					console.log(pix, w1ix, cixi, cixj, W, X, Y, Z, tgts);
+				}
 			}
 		}
-	}
+	})
+	return wing2;
 }
 
 
@@ -740,31 +771,55 @@ export function WXYZWing() {
 		let bc = bivals[bv];
 		let bix = bc[0];
 		let brcs = RCS[bix];
-		if (bix !== 33) continue;	// TEST
+		//if (bix !== 4) continue;	// TEST
 		// look for a possible pivot cell with one shared house and one shared cadidate
 		//console.log("bv", bv, bix, brcs);
 		//pivots = findWXYZPivots(bc, Rows[brcs[0]]);
 		//pivots = findWXYZPivots(bc, Cols[brcs[1]]);
 		pivots = findWXYZPivots(bc, Squares[brcs[2]]);
-		console.log("pivots", bix, pivots);
-		pivots.forEach(p => {
+		//console.log("pivots", bix, pivots);
+
+		let plen = pivots.length;
+		for (let i=0; i<plen; i++) {
+			let p = pivots[i];
 			wing2 = findWing2RC(p);
-			console.log("wing2", bix, p, wing2);
-			if (wing2) {
-				console.log("wing2", bix, p, wing2);
-
-			}
-
-		})
-		console.log("pw", bix, pivots, wing2);
+			if (wing2.length == 0) continue;
+			let h = wingHint(wing2[0]);
+			wxyzHints.push(h);
+			break;
+		}
+		if (wxyzHints.length > 0) break;
 	}
-
-	console.log("pivots", pivots);
-
 
 	if (wxyzHints.length === 0) return null;
 	console.log("wxyzHints", wxyzHints);
 	return wxyzHints;
+}
+
+function wingHint(wing) {
+	let cells0 = [wing[0]];
+	let cells1 = [wing[1]];
+	let cells2 = [wing[2], wing[3]];
+	let cls = [...cells0, ...cells1, ...cells2];
+	let value = wing[4];
+	let tgts = wing[5];
+
+	let h = {
+		type: 'wxyzWing',
+		rows: null,
+		cols: null,
+		square: null,
+		cells: cls,
+		cells0: cells0,
+		cells1: cells1,
+		cells2: cells2,
+		offset: null,
+		value: value,
+		targets: tgts,
+		msg: `WXYZ-Wing: Cells: ${tgts}, Value: ${value}`
+	}
+
+	return h;
 }
 
 //*****************************************************************************
