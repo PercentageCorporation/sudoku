@@ -25,7 +25,7 @@ export default function PlayMenu() {
 			setMessage("Invalid Board");
 		} else {
 			const solved = checkGameSolved();
-			console.log("gameComplete:", solved, gameComplete);
+			//console.log("gameComplete:", solved, gameComplete);
 			if (solved === 1) {
 				console.log("game solved");
 				setMessage("Game Solved");

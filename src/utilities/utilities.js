@@ -134,11 +134,22 @@ export function valueInRowColSq(cellIx, value) {
 
 export function validateBoard(cells) {
 	//const cells = cellStore.getState().cells;
-	// check for empty candidates
+	// check for empty candidates or more than one single with same value
+	let onesies = new Set();
 	for (var i=0; i<81; ++i) {
 		const c = cells[i];
-		if (c.value === 0 && c.candidates.length === 0) return false;
+		if (c.value === 0) {
+			let ac = c.activecandidates;
+			if (ac.length === 0) return false;
+			if (ac.length === 1) {
+				if (onesies.has(ac[0]))
+					return false;
+				else
+					onesies.add(ac[0]);
+			}
+		}
 	}
+
 	// check each row for duplicates
 	for (var i=0; i<9; ++i) {
 		const row = Rows[i];
@@ -184,7 +195,22 @@ export function validateBoard(cells) {
 
 export function validateManBoard(cells) {
 	//const cells = cellStore.getState().cells;
-	// check for empty candidates
+	// check for empty candidates or more than one single with same value
+	let onesies = new Set();
+	for (var i=0; i<81; ++i) {
+		const c = cells[i];
+		if (c.value === 0) {
+			let ac = c.activecandidates;
+			if (ac.length === 0) return false;
+			if (ac.length === 1) {
+				if (onesies.has(ac[0]))
+					return false;
+				else
+					onesies.add(ac[0]);
+			}
+		}
+	}
+
 	// check each row for duplicates
 	for (var i=0; i<9; ++i) {
 		const row = Rows[i];

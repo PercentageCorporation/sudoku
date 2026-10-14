@@ -6,7 +6,7 @@ export default function LoadGameModal({ onConfirm, onCancel }) {
 
 	useEffect(() => {
 		var games = getGameList();
-		console.log("game list", games);
+		//console.log("game list", games);
 		setGameList(games);
 
 	}, [])

@@ -24,8 +24,6 @@ export function gridToLinearText(grid) {
 	return linear;
 }
 
-
-
 export function getGameList() {
 	var gameList = [];
 	var lcgames = localStorage.getItem('sudoku-games');

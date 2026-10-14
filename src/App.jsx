@@ -7,9 +7,10 @@ import GameGrid from "/src/components/GameGrid";
 import PlayMenu from "/src/components/PlayMenu";
 import Spinner from "/src/components/Spinner";
 import { getGame } from "./utilities/games";
+import SudokuIcon from '/src/assets/percentage-sudoku-192.png'
 
 export default function App() {
-	const { newGame, resetGame, initGame, loadGame, updateCandidates, resetCandidates, saveState, restoreState, getLinearText } = useCellActions();
+	const { newGame, resetGame, initGame, loadGame, clearCandidates, resetCandidates, saveState, restoreState, getLinearText } = useCellActions();
 	const { resetState } = useGameStateStore();
 	const { gameLoaded, difficulty, gameId, saved } = cellStore();
 	const [ loadSavedGame, setLoadSavedGame ] = useState(false);
@@ -67,6 +68,14 @@ export default function App() {
 		navigate("/", { replace: true });
 	}
 
+	function handleClearCandidates(e) {
+		e.preventDefault();
+		clearCandidates();
+		resetState();
+		resetHint();
+		navigate("/", { replace: true });
+	}
+
 	function handleManualGame(e) {
 		e.preventDefault();
 		resetGame();
@@ -79,15 +88,14 @@ export default function App() {
 	}
 
 	function loadConfirm(ix) {
-		console.log("load game", ix);
+		//console.log("load game", ix);
 		setLoadSavedGame(false);
 		var game = getGame(ix);
-		console.log("load game", ix, game.description);
-		console.log(game.game);
+		//console.log("load game", ix, game.description);
+		//console.log(game.game);
 		if (game) {
-			console.log("load game", ix, game.description);
+			//console.log("load game", ix, game.description);
 			loadGame(game.game, game.solution, game.description);
-			//console.log(getManCellsLinear());
 			navigate("/", { replace: true });
 		}
 	}
@@ -111,7 +119,10 @@ export default function App() {
 		<div className="max-w-[412px] mx-2 select-none">
 			{ loadSavedGame && <LoadGameModal onConfirm={loadConfirm} onCancel={loadCancel}/> }
 			<div className="mx-2 h-12 flex items-center text-lg font-semibold">
-				{difficulty === "" ? `Game: ${gameId}` : `Difficulty: ${difficulty} / Game: ${gameId}`}
+				<img src={SudokuIcon} height="40" width="40" />
+				<div className="ml-2">
+					{difficulty === "" ? `${gameId}` : `${gameId} / ${difficulty}`}
+				</div>
 			</div>
 			<div className="">
 				<GameGrid />
@@ -164,16 +175,23 @@ export default function App() {
 					<button
 						type="button"
 						onClick={(e) => handleManualGame(e)}
-						className="px-4 py-2 mr-4 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 					>
 						Manual Game
 					</button>
 					<button
 						type="button"
 						onClick={(e) => handleRefreshCandidates(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 					>
 						Reset Candidates
+					</button>
+					<button
+						type="button"
+						onClick={(e) => handleClearCandidates(e)}
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
+					>
+						Clear Candidates
 					</button>
 				</div>
 				<div className="flex flex-row justify-between mt-2">

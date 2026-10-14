@@ -65,19 +65,21 @@ export const useManCellsStore = create (
 				return val;
 			},
 
+			getManCellsLinear: () => {
+				let linear = new Array(81).fill(0);
+				let cells = get().cells;
+				for (let i = 0; i < 81; i++) {
+					linear[i] = cells[LinearToGrid[i]];
+				}
+				return linear;
+			},
+
 			getManCells: () => {
 				return get().cells
 			},
 
 			getManSolution: () => {
 				return get().solution
-			},
-
-			getManCellsLinear: () => {
-				var linear = ""
-				var cells = get().cells
-				for (var i = 0; i < cells.length; ++i) linear += Number(cells[LinearToGrid[i]])
-				return linear
 			},
 
 			getManCell: (ix) => {
@@ -428,6 +430,19 @@ export const cellStore = create(
 					})
 				},
 
+				clearCandidates: () => {
+					set((state) => {
+						const cells = [...state.cells]
+						for (var ix = 0; ix < 81; ++ix) {
+							const candidates = [];
+							const noncandidates = [];
+							const activecandidates = [];
+							cells[ix] = { ...cells[ix], candidates, activecandidates, noncandidates }
+						}
+						return { cells }
+					})
+				},
+
 				resetCandidates: () => {
 					set((state) => {
 						const cells = [...state.cells]
@@ -437,7 +452,7 @@ export const cellStore = create(
 							//const noncandidates = cells[ix].noncandidates.filter(c => candidates.includes(c));
 							//const activecandidates = candidates.filter(c => noncandidates.indexOf(c) < 0);
 							const noncandidates = [];
-							const activecandidates = candidates;
+							const activecandidates = [...candidates];
 							cells[ix] = { ...cells[ix], candidates, activecandidates, noncandidates }
 						}
 						return { cells }
@@ -558,7 +573,7 @@ export const cellStore = create(
 					set({
 						gameComplete: complete
 					})
-					console.log("gameComplete", solved, complete);
+					//console.log("gameComplete", solved, complete);
 					return solved;
 				},
 

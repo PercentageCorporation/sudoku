@@ -8,9 +8,10 @@ import { deleteGame, getGame, saveGame, linearTextToGrid } from "../utilities/ga
 import SaveGameModal from "./SaveGameModal";
 import ConfirmModal from "./ConfirmModal";
 import SeedGameModal from "./SeedGameModal";
+import { soluitons } from "../utilities/solutions";
 
 function ManualCell({ix}) {
-	const { getManCell, getManSolutionCell, setManSelectedCell, getManSelectedCell } = useManCellsStore();
+	const { getManCell, getManSolutionCell, setManSelectedCell, getManSelectedCell, manSelectedCell } = useManCellsStore();
 	const cell = getManCell(ix);
 	const solution = getManSolutionCell(ix);
 	const val = (cell && cell > 0) ? cell : null;
@@ -66,7 +67,7 @@ export default function ManualGrid() {
 	const navigate = useNavigate();
 	const { initialized, manGameValid, manSelectedCell } = useManCellsStore();
 	const { number: manNumber, description: manDescription } = useManCellsStore();
-	const { setManCellValue, setManSelectedCell, getManSelectedCell, getManCells, getManSolution, setManId, loadManCells, loadManSolution,  initialize  } = useManCellsStore();
+	const { setManCellValue, setManSelectedCell, getManSelectedCell, getManCells, getManCellsLinear, getManSolution, setManId, loadManCells, loadManSolution,  initialize  } = useManCellsStore();
 	const { resetHint } = useHintStore();
 	const { loadGame } = useCellActions();
 
@@ -259,6 +260,19 @@ export default function ManualGrid() {
 		setAddSolution(true);
 	}
 
+	function handleSolutions(e) {
+		e.preventDefault();
+		let game = getManCellsLinear();
+		let sol = soluitons(game);
+		if (sol === 0) {
+			setMessage("No solution");
+		} else if (sol === 1) {
+			setMessage("Unique solution");
+		} else {
+			setMessage("Multiple solutions");
+		}
+	}
+
 	function solutionCancel() {
 		setAddSolution(false);
 	}
@@ -286,7 +300,6 @@ export default function ManualGrid() {
 			console.log("load game", ix, game.description);
 			loadManCells(game.number, game.description, game.game, game.solution);
 			useManCellsStore.persist.rehydrate();
-			//console.log(getManCellsLinear());
 		}
 		navigate("/manual");
 	}
@@ -337,6 +350,11 @@ export default function ManualGrid() {
 		setSeedGame(false);
 	}
 
+	function select(e, ix) {
+		e.preventDefault();
+		console.log("ManSelect", ix);
+	}
+
 	return (
 		<div className="max-w-[412px] mx-2 ">
 			<div>
@@ -353,6 +371,26 @@ export default function ManualGrid() {
 			{
 				index.map((y, ix) => { return (<ManualGrid9 key={ix} y={y} />) })
 			}
+			</div>
+			<div className="mt-4 flex text-lg font-bold text-red-600">
+				{message}
+			</div>
+			<div className="flex flex-row justify-between w-full mt-6" >
+				{[1,2,3,4,5,6,7,8,9].map((s) => {
+					var cn = " bg-green-300";
+					if (manSelectedCell === s) cn = " bg-green-500";
+
+					return (
+						<div key={s} className={"flex justify-center size-8 text-xl font-bold rounded-md hover:cursor-pointer " + cn}
+							onClick={(e) => select(e,s)} >
+						{s}
+						</div>
+					)})
+				}
+				<div className="flex justify-center size-8 text-xl font-bold rounded-md hover:cursor-pointer bg-green-300"
+					onClick={(e) => select(e,0)} >
+					&nbsp;
+				</div>
 			</div>
 			<div className="mt-4 text-sm font-normal">
 				<div className="mx-2 flex flex-row justify-between mt-4">
@@ -460,12 +498,16 @@ export default function ManualGrid() {
 						>
 						Number Grid
 					</button>
+					<button
+						type="button"
+						tabIndex={-1}
+						onClick={(e) => handleSolutions(e)}
+						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						>
+						Check Solutions
+					</button>
 				</div>
 			</div>
-			<div className="mt-4 flex text-lg font-bold text-red-600">
-				{message}
-			</div>
-
 		</div>
 	);
 }
