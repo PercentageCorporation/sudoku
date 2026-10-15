@@ -10,8 +10,35 @@ import ConfirmModal from "./ConfirmModal";
 import SeedGameModal from "./SeedGameModal";
 import { soluitons } from "../utilities/solutions";
 
+function ManualCandidates({ix}) {
+	const { getManSelectedCell, getManCellCandidates } = useManCellsStore();
+	let can = getManCellCandidates(ix);
+	const sel = getManSelectedCell();
+	const clist = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+	const bg = "";
+	//console.log(ix, can, sel);
+	if (can === undefined) can = [];
+	return (
+		<div className={"grid grid-cols-3 h-full leading-none py-0.5" + bg}>
+		{clist.map((c) => {
+			var val = can.includes(c) ? c.toString() : "";
+			var cn = " font-normal";
+			if (c === sel) cn = " font-bold text-orange-600";
+
+			return (
+				<div key={c}
+					className={"flex justify-center items-center w-full min-h-[12px] text-[12px] " + cn}
+					>
+					{val}
+				</div>
+			);
+		})}
+		</div>
+	);
+}
+
 function ManualCell({ix}) {
-	const { getManCell, getManSolutionCell, setManSelectedCell, getManSelectedCell, manSelectedCell } = useManCellsStore();
+	const { getManCell, getManSolutionCell, setManSelectedCell, getManSelectedCell } = useManCellsStore();
 	const cell = getManCell(ix);
 	const solution = getManSolutionCell(ix);
 	const val = (cell && cell > 0) ? cell : null;
@@ -32,15 +59,22 @@ function ManualCell({ix}) {
 			className={"relative z-0 size-11 " + cn + bs}
 			onClick={(e)=>selectCell(e, ix)}
 			>
-			<div className="flex pl-0.5 text-[10px]">
-				{ix}
+			{ !val &&
+				<ManualCandidates ix={ix} />
+			}
+			{ val &&
+			<div>
+				<div className="flex pl-0.5 text-[10px]">
+					{ix}
+				</div>
+				<div className="absolute right-0 bottom-0 pr-0.5 text-[10px]">
+					{sol}
+				</div>
+				<div className="flex justify-center items-center text-3xl font-bold absolute inset-0">
+					{val}
+				</div>
 			</div>
-			<div className="absolute right-0 bottom-0 pr-0.5 text-[10px]">
-				{sol}
-			</div>
-			<div className="flex justify-center items-center text-3xl font-bold absolute inset-0">
-				{val}
-			</div>
+			}
 		</div>
 	);
 }
@@ -83,6 +117,10 @@ export default function ManualGrid() {
 
 	const index = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 	const modalOpen = loadSavedGame || saveManGame || deleteId !== null;
+
+	function checkGame() {
+
+	}
 
 	function handleKeyDown(e)  {
 		const sel = getManSelectedCell();
@@ -353,6 +391,9 @@ export default function ManualGrid() {
 	function select(e, ix) {
 		e.preventDefault();
 		console.log("ManSelect", ix);
+		const sel = getManSelectedCell();
+		if (sel >= 0) setManCellValue(sel, ix);
+		setManSelectedCell(-1);
 	}
 
 	return (

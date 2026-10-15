@@ -6,12 +6,24 @@ import CandidatesModal from "/src/components/CandidatesModal";
 import "/src/styles/borders.css";
 
 function Candidates({ix}) {
-	const selectedValue = useGameStateStore.getState().selectedValue;
+	const { showConjugates, selectedValue } = useGameStateStore();
 	const can = cellStore.getState().cells[ix].candidates;
+	const ac = cellStore.getState().cells[ix].activecandidates;
 	const noncan = cellStore.getState().cells[ix].noncandidates;
+
+	var cip = 0;
+	if (showConjugates) {
+		cip = cellInConjugatePair(ix,selectedValue);
+		//console.log("cellInConjugatePair", ix, selectedValue, cip);
+	}
+
+	let bg = (ac.includes(selectedValue)) ? " bg-green-100" : "";
+	if (showConjugates && (cip = cellInConjugatePair(ix, selectedValue)) > 0 )  {
+		bg = (cip === 1) ? " bg-yellow-200" : " bg-yellow-400";
+	}
+
 	//console.log(ix, can, noncan);
 	const clist = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-	const bg = "";
 
 	return (
 		<div className={"grid grid-cols-3 h-full leading-none py-0.5" + bg}>
@@ -39,7 +51,7 @@ function Candidates({ix}) {
 function Cell({ix}) {
 	const { getCell, setCellValue } = useCellActions();
 	const { updateCandidates, calcNumbersUsed, candidatesValid } = useCellActions();
-	const { selectedValue, selectedCell, showBivalue, showConjugates, setSelectedValue, clearSelectedValue, setSelectedCell, clearSelectedCell, setEditCandidates } = useGameStateStore();
+	const { selectedValue, selectedCell, showBivalue, setSelectedValue, clearSelectedValue, setSelectedCell, clearSelectedCell, setEditCandidates } = useGameStateStore();
 
 	const { hint, resetHint } = useHintStore();
 	const cell = cellStore.getState().cells[ix];
@@ -80,12 +92,6 @@ function Cell({ix}) {
 	// set highlighting
 	var rcs = RCS[ix];
 	var selMode = 0;
-	var cip = 0;
-	if (showConjugates) {
-		cip = cellInConjugatePair(ix,selectedValue);
-		//console.log("cellInConjugatePair", ix, selectedValue, cip);
-	}
-
 
 	if (cell.value > 0 ) {
 		if (selectedCell === ix)
@@ -97,8 +103,6 @@ function Cell({ix}) {
 		if (cell.value > 0 && cell.solutionValue > 0 && cell.value !== cell.solutionValue) selMode = 4;
 	} else if (!candidatesValid(ix)) {
 		selMode = 99;
-	} else if (showConjugates && (cip = cellInConjugatePair(ix, selectedValue)) > 0 )  {
-			selMode = (cip === 1) ? 10 : 11;
 	} else if (showBivalue ) {
 		if (cell.activecandidates.length === 2) {
 			if (selectedValue >= 0)

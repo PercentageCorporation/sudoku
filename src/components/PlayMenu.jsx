@@ -216,9 +216,7 @@ export default function PlayMenu() {
 					updateCandidates();
 				}
 			}
-			if (!validateGame()) {
-				msg = "Invalid Board";
-			}
+			if (validateGame()) msg = "Invalid Board";
 		} else { // s === 0
 			if (selectedCell < 0) {
 				//

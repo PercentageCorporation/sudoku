@@ -57,6 +57,41 @@ export function getNewGame(dif) {
 	return {puzzleGrid, solutionGrid};
 }
 
+export function computeCandidates(cells) {
+	let candidates = Array.from({ length: 81 }, () => []);
+
+	for (let ix=0; ix<81; ++ix) {
+		candidates[ix] = updateCellCandidates(ix, cells);
+	}
+
+	return candidates;
+}
+
+export function updateCellCandidates(ix, cells) {
+
+	let values = [1,2,3,4,5,6,7,8,9];
+	const rowix = cellRow[ix];
+	const colix = cellCol[ix];
+	//console.log("valInRow:", value, ix, rowix, colix);
+	//console.log(Rows[rowix], Cols[colix]);
+	Rows[rowix].map(rix => {
+		const rv = cells[rix];
+		if (rv > 0) values = values.filter(v => v !== rv);
+	})
+	Cols[colix].map(cix => {
+		const cv = cells[cix];
+		if (cv > 0) values = values.filter(v => v !== cv);
+	})
+	const sqix = Math.floor(ix/9);
+	//console.log(sqix, Squares[sqix]);
+	Squares[sqix].map(six => {
+		const sv = cells[six];
+		if (sv > 0) values = values.filter(v => v !== sv);
+	})
+
+	return values;
+}
+
 export function findCandidates(cellIx, cells) {
 	var values = [1,2,3,4,5,6,7,8,9];
 	const rowix = cellRow[cellIx];
@@ -134,19 +169,12 @@ export function valueInRowColSq(cellIx, value) {
 
 export function validateBoard(cells) {
 	//const cells = cellStore.getState().cells;
-	// check for empty candidates or more than one single with same value
-	let onesies = new Set();
+	// check for empty candidates
 	for (var i=0; i<81; ++i) {
 		const c = cells[i];
 		if (c.value === 0) {
 			let ac = c.activecandidates;
 			if (ac.length === 0) return false;
-			if (ac.length === 1) {
-				if (onesies.has(ac[0]))
-					return false;
-				else
-					onesies.add(ac[0]);
-			}
 		}
 	}
 
@@ -193,22 +221,14 @@ export function validateBoard(cells) {
 	return true;
 }
 
-export function validateManBoard(cells) {
+export function validateManBoard(cells, candidates) {
 	//const cells = cellStore.getState().cells;
-	// check for empty candidates or more than one single with same value
-	let onesies = new Set();
+	// check for empty candidates
 	for (var i=0; i<81; ++i) {
 		const c = cells[i];
-		if (c.value === 0) {
-			let ac = c.activecandidates;
-			if (ac.length === 0) return false;
-			if (ac.length === 1) {
-				if (onesies.has(ac[0]))
-					return false;
-				else
-					onesies.add(ac[0]);
-			}
-		}
+		if (c.value !== 0) continue;
+		const ac = candidates[i];
+		if (ac.length === 0) return false;	// no candidates for unsolved cell
 	}
 
 	// check each row for duplicates

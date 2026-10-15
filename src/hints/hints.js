@@ -12,6 +12,7 @@ import { colors, colorWing } from '/src/hints/colors';
 import { loops } from "/src/hints/loops";
 import { quads } from "/src/hints/quads";
 import { WXYZWing } from "/src/hints/wings";
+import { forcingChains } from "/src/hints/forcing";
 //import { getConjugatePairs } from "/src/hints/conjugates";
 
 export var cells = [];
@@ -21,13 +22,9 @@ export function runHints() {
 
 	initCounts();
 	console.log("hints.js", cells.length)
-	//let conjugatePairs = getConjugatePairs();
-	//console.log("init", conjugatePairs.length)
 
-	//result = WWing();
-	//if (result) return result[0];
-	//result = WXYZWing();
-	//if (result) return result[0];
+	result = forcingChains();
+	if (result) return result[0];
 
 	result = singletons();
 	if (result) return result[0];

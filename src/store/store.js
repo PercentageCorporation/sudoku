@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { findCandidates, validateBoard, validateManBoard } from "../utilities/utilities";
+import { findCandidates, validateBoard, validateManBoard, updateCellCandidates, computeCandidates } from "../utilities/utilities";
 import { RCS, LinearToGrid } from "../utilities/constants";
 
 // export const ManCell = {
@@ -15,6 +15,7 @@ export const useManCellsStore = create (
 		(set, get) => ({
 			cells: new Array(81).fill(0),
 			solution: new Array(81).fill(0),
+			candidates: Array.from({ length: 81 }, () => []),
 			number: 0,
 			description: "",
 			manSelectedCell: -1,
@@ -22,11 +23,10 @@ export const useManCellsStore = create (
 			initialized: false,
 
 			initialize: () => {
-				var init = new Array(81).fill(0);
-				var solution = new Array(81).fill(0);
 				set({
-					cells: init,
-					solution: solution,
+					cells: new Array(81).fill(0),
+					solution: new Array(81).fill(0),
+					candidates: Array.from({ length: 81 }, () => []),
 					number: null,
 					description: "New Game",
 					manSelectedCell: -1,
@@ -37,13 +37,15 @@ export const useManCellsStore = create (
 
 			loadManCells: (num, descr, cls, solution) => {
 				if (!solution) solution = new Array(81).fill(0);
+				const candidates = computeCandidates(cls);
 				set({
 					cells: cls,
 					solution: solution,
+					candidates: candidates,
 					number: num,
 					description: descr,
 					manSelectedCell: -1,
-					manGameValid: validateManBoard(cls),
+					manGameValid: validateManBoard(cls, candidates),
 					initialized: true
 				})
 			},
@@ -57,8 +59,9 @@ export const useManCellsStore = create (
 			},
 
 			validateManGame: () => {
-				var cls = get().cells
-				var val = validateManBoard(cls);
+				const cls = get().cells
+				const candidates = get().candidates;
+				const val = validateManBoard(cls, candidates);
 				set({
 					manGameValid: val
 				})
@@ -86,6 +89,10 @@ export const useManCellsStore = create (
 				return get().cells[ix]
 			},
 
+			getManCellCandidates: (ix) => {
+				return get().candidates[ix]
+			},
+
 			getManSolutionCell: (ix) => {
 				var solution = get().solution;
 				if (!solution) return null;
@@ -94,11 +101,13 @@ export const useManCellsStore = create (
 
 			setManCellValue: (ix, value) => {
 				set((state) => {
-					const cells = [...state.cells]
-					cells[ix] = value
+					const cells = [...state.cells];
+					cells[ix] = value;
+					const candidates = computeCandidates(cells);
 					return {
 						cells,
-						manGameValid: validateManBoard(cells)
+						candidates,
+						manGameValid: validateManBoard(cells, candidates),
 					}
 				})
 			},
