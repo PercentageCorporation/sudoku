@@ -105,6 +105,14 @@ export default function PlayMenu() {
 				clearSelectedCell();
 				break;
 
+			case 'forced':
+				var tgt = h.target;
+				var v = h.value;
+				addNonCandidate(tgt, v);
+				clearSelectedValue();
+				clearSelectedCell();
+				break;
+
 			case 'colorsII':
 				var tgts = h.targets;
 				var v = h.value;
@@ -116,6 +124,7 @@ export default function PlayMenu() {
 				break;
 
 			case "cell":
+			case "forcedbv":
 				var cix = h.cells[0];
 				var v = h.value;
 				setCellValue(cix, v);

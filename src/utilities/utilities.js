@@ -61,7 +61,10 @@ export function computeCandidates(cells) {
 	let candidates = Array.from({ length: 81 }, () => []);
 
 	for (let ix=0; ix<81; ++ix) {
-		candidates[ix] = updateCellCandidates(ix, cells);
+		if (cells[ix] !== 0)
+			candidates[ix] = null;
+		else
+			candidates[ix] = updateCellCandidates(ix, cells);
 	}
 
 	return candidates;

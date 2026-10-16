@@ -216,6 +216,11 @@ function Cell({ix}) {
 					selMode = 3;
 			break;
 
+			case 'forced':
+				if (hint.target === ix)
+					selMode = 3;
+				break;
+
 			case 'row':
 				if (hint.row >= 0 && hint.row === rcs[0]) selMode = 3;
 				break;

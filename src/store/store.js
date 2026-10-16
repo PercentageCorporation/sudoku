@@ -403,7 +403,6 @@ export const cellStore = create(
 							}
 						}
 					}),
-					get().actions.resetCandidates(),
 					useGameStateStore.getState().resetState()
 				},
 

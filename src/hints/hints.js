@@ -13,18 +13,19 @@ import { loops } from "/src/hints/loops";
 import { quads } from "/src/hints/quads";
 import { WXYZWing } from "/src/hints/wings";
 import { forcingChains } from "/src/hints/forcing";
+import { biforce } from "/src/hints/forcing2";
 //import { getConjugatePairs } from "/src/hints/conjugates";
 
 export var cells = [];
 
 export function runHints() {
+	const gameComplete = cellStore.getState().gameComplete;
+	if (gameComplete) return null;
 	var result;
 
 	initCounts();
 	console.log("hints.js", cells.length)
 
-	result = forcingChains();
-	if (result) return result[0];
 
 	result = singletons();
 	if (result) return result[0];
@@ -73,6 +74,10 @@ export function runHints() {
 	result = als();
 	if (result) return result[0];
 	result = loops();
+	if (result) return result[0];
+	result = forcingChains();
+	if (result) return result[0];
+	result = biforce();
 	if (result) return result[0];
 
 	return null;
@@ -165,6 +170,30 @@ export function initCounts() {
 	//console.log(rCounts23,cCounts23);
 	//console.log(rCounts2p,cCounts2p);
 
+}
+
+export function validateAllCandidates(arr) {
+	for (var i=0; i<9; ++i) {
+		if (!validHouseCandidates(Rows[i])) return false;
+		if (!validHouseCandidates(Cols[i])) return false;
+		if (!validHouseCandidates(Squares[i])) return false;
+		}
+	return true;
+}
+
+export function validHouseCandidates(arr) {
+	let vals = new Set();
+	for (var i=0; i<9; ++i) {
+		const cix = arr[i];
+		const cell = cells[cix];
+		if (cell.value > 0) continue;
+		const ac = cell.activecandidates;
+		if (ac.length === 0) return false;
+		let val = ac[0];
+		if (vals.has(val)) return false;
+		vals.add(val);
+	}
+	return true;
 }
 
 // count the occurances of the active candidates in a row/col/sq
