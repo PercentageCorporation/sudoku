@@ -10,9 +10,9 @@ import { getGame } from "./utilities/games";
 import SudokuIcon from '/src/assets/percentage-sudoku-192.png'
 
 export default function App() {
-	const { newGame, resetGame, initGame, loadGame, clearCandidates, resetCandidates, saveState, restoreState, getLinearText, getJSON } = useCellActions();
-	const { resetState } = useGameStateStore();
 	const { gameLoaded, difficulty, gameId, saved } = cellStore();
+	const { newGame, resetGame, initGame, loadGame, clearCandidates, resetCandidates, saveState, restoreState, getLinearText, getJSON } = useCellActions();
+	const { resetState, showSolution, toggleShowSolution } = useGameStateStore();
 	const [ loadSavedGame, setLoadSavedGame ] = useState(false);
 	const { resetHint } = useHintStore();
 	const navigate = useNavigate();
@@ -104,7 +104,7 @@ export default function App() {
 		setLoadSavedGame(false);
 	}
 
-	function showLinear(e) {
+	function handleShowLinear(e) {
 		e.preventDefault();
 		var linear = getLinearText();
 		//alert(linear);
@@ -113,6 +113,11 @@ export default function App() {
 		console.log(linearspaces);
 		let json = getJSON();
 		console.log(json);
+	}
+
+	function handleShowSolution(e) {
+		e.preventDefault();
+		toggleShowSolution();
 	}
 
 	if (!gameLoaded) return <Spinner />;
@@ -199,10 +204,17 @@ export default function App() {
 				<div className="flex flex-row justify-between mt-2">
 					<button
 						type="button"
-						onClick={(e) => showLinear(e)}
+						onClick={(e) => handleShowLinear(e)}
 						className="px-4 py-2 mr-4 bg-blue-300 rounded hover:cursor-pointer"
 					>
 						Show Linear
+					</button>
+					<button
+						type="button"
+						onClick={(e) => handleShowSolution(e)}
+						className="px-4 py-2 mr-4 bg-blue-300 rounded hover:cursor-pointer"
+					>
+						{`${showSolution ? 'Hide Solution' : 'Show Solution'}`}
 					</button>
 				</div>
 			</div>

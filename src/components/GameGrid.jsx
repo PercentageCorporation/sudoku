@@ -51,7 +51,7 @@ function Candidates({ix}) {
 function Cell({ix}) {
 	const { getCell, setCellValue } = useCellActions();
 	const { updateCandidates, calcNumbersUsed, candidatesValid } = useCellActions();
-	const { selectedValue, selectedCell, showBivalue, setSelectedValue, clearSelectedValue, setSelectedCell, clearSelectedCell, setEditCandidates } = useGameStateStore();
+	const { selectedValue, selectedCell, showSolution, showBivalue, setSelectedValue, clearSelectedValue, setSelectedCell, clearSelectedCell, setEditCandidates } = useGameStateStore();
 
 	const { hint, resetHint } = useHintStore();
 	const cell = cellStore.getState().cells[ix];
@@ -216,10 +216,12 @@ function Cell({ix}) {
 					selMode = 3;
 			break;
 
-			case 'forcedS':
-			case 'forcedI':
-				if (hint.target === ix)
+			case 'forced':
+			case 'forced2':
+			case 'forced2S':
+				if (hint.target === ix) {
 					selMode = 3;
+				}
 				break;
 
 			case 'row':
@@ -310,12 +312,17 @@ function Cell({ix}) {
 			onDoubleClick={(e)=>doubleClick(e,ix)}
 			onClick={(e)=>selectCell(e, ix)}
 			>
-			{cell.value === 0 &&
+			{!showSolution && cell.value === 0 &&
 					<Candidates ix={ix} />
 			}
 			{cell.value !== 0 &&
 				<div className="flex justify-center items-center w-full h-full text-3xl font-bold">
-						{cell.value}
+					{cell.value}
+				</div>
+			}
+			{showSolution && cell.value === 0 &&
+				<div className="flex justify-center items-center w-full h-full text-xl font-semibold">
+						{`${(showSolution && cell.value === 0) ? cell.solutionValue: cell.value}`}
 				</div>
 			}
 		</div>

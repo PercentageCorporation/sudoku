@@ -339,11 +339,11 @@ export default function ManualGrid() {
 		toggleShowSolution();
 	}
 
-	function solutionCancel() {
+	function addSolutionCancel() {
 		setAddSolution(false);
 	}
 
-	function solutionConfirm(solution) {
+	function addSolutionConfirm(solution) {
 		console.log("seedGame");
 		console.log(solution);
 		setAddSolution(false);
@@ -428,7 +428,7 @@ export default function ManualGrid() {
 		<div className="max-w-[412px] mx-2 ">
 			<div>
 			{ seedGame && <SeedGameModal title="Paste Game" onConfirm={seedConfirm} onCancel={seedCancel}/> }
-			{ addSolution && <SeedGameModal title="Paste Solution" onConfirm={solutionConfirm} onCancel={solutionCancel}/> }
+			{ addSolution && <SeedGameModal title="Paste Solution" onConfirm={addSolutionConfirm} onCancel={addSolutionCancel}/> }
 			{ loadSavedGame && <LoadGameModal onConfirm={loadConfirm} onCancel={loadCancel}/> }
 			{ saveManGame && <SaveGameModal description={manDescription} onConfirm={saveConfirm} onCancel={saveCancel}/> }
 			{ deleteId && <ConfirmModal title={deleteId.title} content={deleteId.content} onConfirm={deleteConfirm} onCancel={deleteCancel}/> }

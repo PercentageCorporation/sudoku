@@ -200,6 +200,7 @@ export const useGameStateStore = create(
 			editCandidates: -1,
 			showBivalue: false,
 			showConjugates: false,
+			showSolution: false,
 			numbersUsed: [0,0,0,0,0,0,0,0,0,0],
 
 			resetState: () => {
@@ -239,6 +240,10 @@ export const useGameStateStore = create(
 
 			setShowConjugates: (tf) => {
 				set({ showConjugates: tf})
+			},
+
+			toggleShowSolution: () => {
+				set({ showSolution: !get().showSolution})
 			},
 
 			calcNumbersUsed: () => {

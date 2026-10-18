@@ -106,7 +106,7 @@ export default function PlayMenu() {
 				break;
 
 			case 'forced':
-			case 'forcedI':
+			case 'forced2':
 				var tgt = h.target;
 				if (h.values) {
 					h.values.forEach((value) => {
@@ -131,7 +131,7 @@ export default function PlayMenu() {
 				break;
 
 			case "cell":
-			case "forcedS":
+			case 'forced2S':
 				var cix = h.cells[0];
 				var v = h.value;
 				setCellValue(cix, v);

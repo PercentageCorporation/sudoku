@@ -14,89 +14,57 @@ let bv1 = 0;
 let bv2 = 0;
 
 let gamecandidates = null;
-//let explorechain = [];
+let explorechain = [];
 
 export function biforce() {
 	let cells = cellStore.getState().cells;
+	gamecandidates = Array.from(cells, c => c.value > 0 ? [] : c.activecandidates);
 	let state  = Array.from(cells, c => c.value);
-	gamecandidates = Array.from(cells, c => c.activecandidates);
 
-	let level = 0;
-
-	console.log("explore0");
-	//explorechain = [];
-	let result = explore(state, level);
-	console.log("explore", result);
+	console.log("elim0");
+	let determination = findElimination(state, gamecandidates);
+	console.log("elim1", determination);
+	let result = determination[0];
+	if (result === INVALID) {
+		console.log("INVALID HINT", determination);
+		let hint = makeForcingHint(determination[1], determination[2]);
+		return [hint]
+	}
 
 	if (result === SOLVED) {
-		if (bv1 === 0 && bv2 === 0) return null;
-		console.log("SOLVED ****", bv1, bv2);
-		let h = makeForcingHintSolved(bv1, bv2);
-		return [h];
-	}
-	if (result === INVALID) {
-		if (bv1 === 0 && bv2 === 0) return null;
-		console.log("INVALID ****", bv1, bv2);
-		let h = makeForcingHintInvalid(result = bv1, bv2);
-		return [h];
-	}
-	if (result === ALLINVALID) {
-		if (bv1 === 0 && bv2 === 0) return null;
-		console.log("ALL INVALID ****", bv1, bv2);
-		let h = makeForcingHintInvalid(result, bv1, bv2);
-		return [h];
+		console.log("SOLVED HINT", determination);
+		let hint = makeForcingHintSolved(determination[1], determination[2]);
+		return [hint];
 	}
 
 	return null;
 }
 
-function makeForcingHintSolved(tgt, value) {
-	let h = {
-		type: 'forcedS',
-		rows: null,
-		cols: null,
-		square: null,
-		cells: [tgt],
-		parity1: null,
-		parity2: null,
-		offset: null,
-		value: value,
-		target: tgt,
-		msg: `ForcedBVS: Cell: ${tgt}, Value: ${value}`
+
+function findElimination(state, candidates) {
+	//const candidates = recomputeCandidates(state);
+	const cix = chooseStartingCell(candidates);
+
+	if (cix < 0) return null;
+	let level = 0;
+
+	for (const value of candidates[cix]) {
+		explorechain = [];
+		const next = structuredClone(state);
+		next[cix] = value;
+		explorechain.push([level, cix, value]);
+		console.log("next **********", cix, value, candidates[cix]);
+		const result = explore(next, level);
+		console.log("chain", explorechain.length, cix, value);
+		if (result === INVALID) {
+			return [INVALID, cix, value];
+		}
+		if (result === SOLVED) {
+			return [SOLVED, cix, value];
+		}
 	}
 
-	return h;
-}
-
-function makeForcingHintInvalid(result, tgt, value) {
-	let vals = (result === ALLINVALID) ? [value] : value;
-
-	let h = {
-		type: 'forcedI',
-		rows: null,
-		cols: null,
-		square: null,
-		cells: [tgt],
-		parity1: null,
-		parity2: null,
-		offset: null,
-		values: vals,
-		target: tgt,
-		msg: `ForcedBVI: Cell: ${tgt}, Value: ${vals}`
-	}
-
-	return h;
-}
-
-export function cellsToLinearText(cls) {
-	var linear = "";
-	for (let i = 0; i < 81; i++) {
-		var val = cls[LinearToGrid[i]];
-		linear += (val === 0) ? " " : Number(val);
-	}
-	//console.log(values);
-	console.log("/"+linear+"/");
-	return linear;
+	return null;
 }
 
 function explore(state, level) {
@@ -122,33 +90,20 @@ function explore(state, level) {
 	for (const value of cellcandidates) {
 		const next = structuredClone(state);
 		next[cix] = value;
-		//explorechain.push([cix, value]);
-		console.log("explore", cix, value, cellcandidates, level);
-		const child = explore(next, level);
-		console.log("explorex", child);
+		//console.log("explore", cix, value, cellcandidates, level);
+		explorechain.push([level, cix, value]);
+		const childResult = explore(next, level);
+		//console.log("explorex", childResult);
 
-		if (child.status === ELIMINATION) {
-			return child;
-		}
-		if (child.status === SOLVED) {
+		if (childResult === SOLVED) {
 			console.log("SOLVED ****", level, cix, cellcandidates, value);
-			return child;
-		}
-		if (child.status === INVALID) {
-			// This candidate is impossible in the current state.
-			return {
-				status: ELIMINATION,
-				cell: cix,
-				value,
-				level,
-				state: structuredClone(state)
-			};
+			return SOLVED;
 		}
 
-		if (child.status === UNKNOWN) hasUnknown = true;
+		if (childResult === UNKNOWN) hasUnknown = true;
 	}
 
-	return {status: hasUnknown ? UNKNOWN : INVALID};
+	return hasUnknown ? UNKNOWN : INVALID;
 }
 
 function applySingles(state, can) {
@@ -241,7 +196,8 @@ function recomputeCandidates(cls) {
 		else {
 			let fc = findCandidates(cls, ix);
 			// we cannot add candidates, only remove them
-			can[ix] = fc.filter(c => gamecandidates[ix].includes(c));
+			//can[ix] = fc.filter(c => gamecandidates[ix].includes(c));
+			can[ix] = fc;
 		}
 	}
 
@@ -269,5 +225,52 @@ function findCandidates(cls, ix) {
 	})
 
 	return values;
+}
+
+export function cellsToLinearText(cls) {
+	var linear = "";
+	for (let i = 0; i < 81; i++) {
+		var val = cls[LinearToGrid[i]];
+		linear += (val === 0) ? " " : Number(val);
+	}
+	//console.log(values);
+	console.log("/"+linear+"/");
+	return linear;
+}
+
+function makeForcingHint(tgt, value) {
+	let h = {
+		type: 'forced2',
+		rows: null,
+		cols: null,
+		square: null,
+		cells: [tgt],
+		parity1: null,
+		parity2: null,
+		offset: null,
+		value: value,
+		target: tgt,
+		msg: `ForcedBV: Cell: ${tgt}, Value: ${value}`
+	}
+
+	return h;
+}
+
+function makeForcingHintSolved(tgt, value) {
+	let h = {
+		type: 'forced2S',
+		rows: null,
+		cols: null,
+		square: null,
+		cells: [tgt],
+		parity1: null,
+		parity2: null,
+		offset: null,
+		value: value,
+		target: tgt,
+		msg: `ForcedBVS: Cell: ${tgt}, Value: ${value}`
+	}
+
+	return h;
 }
 
