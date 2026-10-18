@@ -39,7 +39,7 @@ export default function PlayMenu() {
 
 	function doHint(e) {
 		e.preventDefault();
-		var h = getHint();
+		let h = getHint();
 		if (!h) return;
 		console.log("doHint", h);
 		switch (h.type) {
@@ -106,9 +106,16 @@ export default function PlayMenu() {
 				break;
 
 			case 'forced':
+			case 'forcedI':
 				var tgt = h.target;
-				var v = h.value;
-				addNonCandidate(tgt, v);
+				if (h.values) {
+					h.values.forEach((value) => {
+						addNonCandidate(tgt, value);
+					})
+				}
+				else if (h.value) {
+					addNonCandidate(tgt, h.value);
+				}
 				clearSelectedValue();
 				clearSelectedCell();
 				break;
@@ -124,7 +131,7 @@ export default function PlayMenu() {
 				break;
 
 			case "cell":
-			case "forcedbv":
+			case "forcedS":
 				var cix = h.cells[0];
 				var v = h.value;
 				setCellValue(cix, v);
@@ -142,15 +149,15 @@ export default function PlayMenu() {
 			setMessage("Invalid Board");
 			resetHint();
 		} else {
-
-			var h = runHints();
-			if (h) {
-				console.log("hint:", h, h.msg);
-				setHintMsg(h.msg);
-				setHint(h);
-			} else {
-				resetHint();
-				checkGameSolved();
+			resetHint();
+			let solved = checkGameSolved();
+			if (solved === 0) {
+				let h = runHints();
+				if (h) {
+					console.log("hint:", h, h.msg);
+					setHintMsg(h.msg);
+					setHint(h);
+				}
 			}
 		}
 	}
@@ -180,12 +187,14 @@ export default function PlayMenu() {
 	function bivalue(e) {
 		e.preventDefault();
 		console.log("bivalue", selectedValue);
+		setShowConjugates(false);
 		setShowBivalue(true);
 	}
 
 	function conjugates(e) {
 		e.preventDefault();
 		console.log("conjugates", selectedValue);
+		setShowBivalue(false);
 		setShowConjugates(true);
 		navigate('/');
 	}

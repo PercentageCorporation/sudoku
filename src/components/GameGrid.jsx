@@ -216,7 +216,8 @@ function Cell({ix}) {
 					selMode = 3;
 			break;
 
-			case 'forced':
+			case 'forcedS':
+			case 'forcedI':
 				if (hint.target === ix)
 					selMode = 3;
 				break;

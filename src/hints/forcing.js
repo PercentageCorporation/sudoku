@@ -48,8 +48,8 @@ export function forcingChains() {
 		cells[i].activecandidates.map(v => values[v]++);
 	}
 	strongs.sort((a, b) => b[1] - a[1])
-	console.log("values",values);
-	console.log("strongs",strongs);
+	//console.log("values",values);
+	//console.log("strongs",strongs);
 
 	for (let st=0; st<strongs.length; ++st ) {
 		// get a target cell/value
@@ -94,7 +94,7 @@ function analyzeTarget(tix) {
 			return null;
 		} else {
 			// keep trying
-			console.log("conclusion", tix, targetvalue, conclusion);
+			//console.log("conclusion", tix, targetvalue, conclusion);
 		}
 		if (forced.length > 0) break;
 	}
@@ -103,7 +103,7 @@ function analyzeTarget(tix) {
 
 // tgts: [ [cix, value], [cix,value], ... ]
 function reachConclusion(tgts) {
-	console.log("rc", tgts);
+	//console.log("rc", tgts);
 	let count = 0;
 	while (tgts !== null) {
 		// set the target cells
@@ -115,7 +115,7 @@ function reachConclusion(tgts) {
 
 		var valid = valtgts[0];	// -1: invalid game / 0: no more targets / 1: found single value cells
 		tgts = valtgts[1];
-		console.log("tgts", valid, tgts);
+		//console.log("tgts", valid, tgts);
 		if (valid < 0) {
 			return [valid, tgts, count];
 		}

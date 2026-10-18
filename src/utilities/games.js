@@ -39,6 +39,20 @@ export function getGameList() {
 	return gameList;
 }
 
+export function gameToJSON(game) {
+	let grids = [];
+	let ix = 0;
+	for (let i = 0; i < 9; i++) {
+		let sq = [];
+		for (let j = 0; j < 9; j++) {
+			sq.push(game[ix++]);
+		}
+		grids.push(sq);
+	}
+	let json = JSON.stringify(grids);
+	return json;
+}
+
 export function getGame(ix) {
 	var lcgames = localStorage.getItem('sudoku-games');
 	if (!lcgames) return null;

@@ -16,33 +16,33 @@ function ManualCandidates({ix}) {
 	const sel = getManSelectedCell();
 	const clist = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 	const bg = "";
-	//console.log(ix, can, sel);
 	if (can === undefined) can = [];
 	return (
 		<div className={"grid grid-cols-3 h-full leading-none py-0.5" + bg}>
-		{clist.map((c) => {
-			var val = can.includes(c) ? c.toString() : "";
-			var cn = " font-normal";
-			if (c === sel) cn = " font-bold text-orange-600";
+			{clist.map((c) => {
+				var val = can.includes(c) ? c.toString() : "";
+				var cn = " font-normal";
+				if (c === sel) cn = " font-bold text-orange-600";
 
-			return (
-				<div key={c}
-					className={"flex justify-center items-center w-full min-h-[12px] text-[12px] " + cn}
-					>
-					{val}
-				</div>
-			);
-		})}
+				return (
+						<div key={c}
+							className={"flex justify-center items-center w-full min-h-[12px] text-[12px] " + cn}
+							>
+							{val}
+						</div>
+					)
+				})
+			}
 		</div>
 	);
 }
 
 function ManualCell({ix}) {
-	const { getManCell, getManSolutionCell, setManSelectedCell, getManSelectedCell } = useManCellsStore();
+	const { getManCell, getManSolutionCell, setManSelectedCell, getManSelectedCell, showCandidates, showNumberGrid, showSolution } = useManCellsStore();
 	const cell = getManCell(ix);
 	const solution = getManSolutionCell(ix);
 	const val = (cell && cell > 0) ? cell : null;
-	const sol = (solution && solution > 0) ? solution : null;3
+	const sol = (solution && solution > 0) ? solution : null;
 	const sel = getManSelectedCell();
 	const cn = (ix === sel) ? " bg-green-300" : "";
 	const bs = bstyles[ix];
@@ -59,20 +59,31 @@ function ManualCell({ix}) {
 			className={"relative z-0 size-11 " + cn + bs}
 			onClick={(e)=>selectCell(e, ix)}
 			>
-			{ !val &&
+			{ showCandidates && val === null &&
 				<ManualCandidates ix={ix} />
 			}
-			{ val &&
+			{
 			<div>
-				<div className="flex pl-0.5 text-[10px]">
-					{ix}
-				</div>
+				{ showNumberGrid && (val !== null || !showCandidates) &&
+					<div className="flex pl-0.5 text-[10px]">
+						{ix}
+					</div>
+				}
+				{ showSolution && val !== null &&
 				<div className="absolute right-0 bottom-0 pr-0.5 text-[10px]">
 					{sol}
 				</div>
-				<div className="flex justify-center items-center text-3xl font-bold absolute inset-0">
+				}
+				{ showSolution && val === null &&
+					<div className="flex justify-center items-center text-2xl font-semi absolute inset-0 bg-blue-50">
+						{sol}
+					</div>
+				}
+				{ val !== null &&
+				<div className={"flex justify-center items-center text-3xl font-bold absolute inset-0" + `${sol !== null && sol !== val ? ' bg-red-100' : ''}`} >
 					{val}
 				</div>
+				}
 			</div>
 			}
 		</div>
@@ -99,9 +110,11 @@ function ManualGrid9({y}) {
 
 export default function ManualGrid() {
 	const navigate = useNavigate();
+	const { toggleShowNumberGrid, toggleShowCandidates, toggleShowSolution, showNumberGrid, showCandidates, showSolution } = useManCellsStore();
 	const { initialized, manGameValid, manSelectedCell } = useManCellsStore();
 	const { number: manNumber, description: manDescription } = useManCellsStore();
-	const { setManCellValue, setManSelectedCell, getManSelectedCell, getManCells, getManCellsLinear, getManSolution, setManId, loadManCells, loadManSolution,  initialize  } = useManCellsStore();
+	const { setManCellValue, setManSelectedCell, getManSelectedCell, getManCells, getManCellsLinear } = useManCellsStore();
+	const { getManSolution, setManId, loadManCells, loadManSolution,  initialize } = useManCellsStore();
 	const { resetHint } = useHintStore();
 	const { loadGame } = useCellActions();
 
@@ -112,8 +125,8 @@ export default function ManualGrid() {
 	const [ deleteId, setDeleteId ] = useState(null);
 	const [ message, setMessage] = useState(manGameValid ? null : "Invalid Board");
 
-	console.log("ManGrid", manGameValid, manSelectedCell);
-	console.log("ManGrid1");
+	//console.log("ManGrid", manGameValid, manSelectedCell);
+	//console.log("ManGrid1");
 
 	const index = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 	const modalOpen = loadSavedGame || saveManGame || deleteId !== null;
@@ -130,7 +143,7 @@ export default function ManualGrid() {
 		const key = e.key;
 		if (key.length === 1) char = key[0];
 
-		console.log("key:", key, sel);
+		//console.log("key:", key, sel);
 		switch (e.key) {
 			case " ":
 				if (sel >= 0) setManCellValue(sel, 0);
@@ -311,6 +324,21 @@ export default function ManualGrid() {
 		}
 	}
 
+	function handleNumberGrid(e) {
+		e.preventDefault();
+		toggleShowNumberGrid();
+	}
+
+	function handleClearCandidates(e) {
+		e.preventDefault();
+		toggleShowCandidates();
+	}
+
+	function handleShowSolution(e) {
+		e.preventDefault();
+		toggleShowSolution();
+	}
+
 	function solutionCancel() {
 		setAddSolution(false);
 	}
@@ -433,13 +461,13 @@ export default function ManualGrid() {
 					&nbsp;
 				</div>
 			</div>
-			<div className="mt-4 text-sm font-normal">
-				<div className="mx-2 flex flex-row justify-between mt-4">
+			<div className="mt-4 text-xs font-normal">
+				<div className="mx-2 flex flex-row justify-between mt-2">
 					<button
 						type="button"
 						tabIndex={-1}
 						onClick={(e) => handleClear(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Clear Board
 					</button>
@@ -447,25 +475,25 @@ export default function ManualGrid() {
 						type="button"
 						tabIndex={-1}
 						onClick={(e) => handlePlay(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Play Game
 					</button>
-				</div>
-				<div className="mx-2 flex flex-row justify-between mt-4">
 					<button
 						type="button"
 						tabIndex={-1}
 						onClick={(e) => returnToGame(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Return to Game
 					</button>
+				</div>
+				<div className="mx-2 flex flex-row justify-between mt-2">
 					<button
 						type="button"
 						tabIndex={-1}
 						onClick={(e) => handleSeedGame(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Seed Game
 					</button>
@@ -473,17 +501,17 @@ export default function ManualGrid() {
 						type="button"
 						tabIndex={-1}
 						onClick={(e) => handleReadGame(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Read Game
 					</button>
 				</div>
-				<div className="mx-2 flex flex-row justify-between mt-4">
+				<div className="mx-2 flex flex-row justify-between mt-2">
 					<button
 						type="button"
 						tabIndex={-1}
 						onClick={(e) => handleSaveGame(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Save Game
 					</button>
@@ -491,7 +519,7 @@ export default function ManualGrid() {
 						type="button"
 						tabIndex={-1}
 						onClick={(e) => handleLoadGame(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Load Saved Game
 					</button>
@@ -499,17 +527,17 @@ export default function ManualGrid() {
 						type="button"
 						tabIndex={-1}
 						onClick={(e) => handleDeleteGame(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Delete Game
 					</button>
 				</div>
-				<div className="mx-2 flex flex-row justify-between mt-4">
+				<div className="mx-2 flex flex-row justify-between mt-2">
 					<button
 						type="button"
 						tabIndex={-1}
 						onClick={(e) => handleExportGames(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Export Games
 					</button>
@@ -517,7 +545,7 @@ export default function ManualGrid() {
 						type="button"
 						tabIndex={-1}
 						onClick={(e) => handleImportGame(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Import Games
 					</button>
@@ -525,27 +553,45 @@ export default function ManualGrid() {
 						type="button"
 						tabIndex={-1}
 						onClick={(e) => handleAddSolution(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						Add Solution
 					</button>
 				</div>
-				<div className="mx-2 flex flex-row justify-between mt-4">
+				<div className="mx-2 flex flex-row justify-between mt-2">
 					<button
 						type="button"
 						tabIndex={-1}
 						onClick={(e) => handleNumberGrid(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
-						Number Grid
+						{`${showNumberGrid?  'Hide Grid' : 'Show Grid'}`}
+						</button>
+					<button
+						type="button"
+						tabIndex={-1}
+						onClick={(e) => handleClearCandidates(e)}
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						>
+						{`${showCandidates ?  'Hide Candidates' : 'Show Candidates'}`}
+					</button>
+				</div>
+				<div className="mx-2 flex flex-row justify-between mt-2">
+					<button
+						type="button"
+						tabIndex={-1}
+						onClick={(e) => handleShowSolution(e)}
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						>
+						{`${showSolution ?  'Hide Solution' : 'Show Solution'}`}
 					</button>
 					<button
 						type="button"
 						tabIndex={-1}
 						onClick={(e) => handleSolutions(e)}
-						className="px-4 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
-						Check Solutions
+						Check Solution
 					</button>
 				</div>
 			</div>

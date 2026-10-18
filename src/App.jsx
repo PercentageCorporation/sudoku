@@ -10,7 +10,7 @@ import { getGame } from "./utilities/games";
 import SudokuIcon from '/src/assets/percentage-sudoku-192.png'
 
 export default function App() {
-	const { newGame, resetGame, initGame, loadGame, clearCandidates, resetCandidates, saveState, restoreState, getLinearText } = useCellActions();
+	const { newGame, resetGame, initGame, loadGame, clearCandidates, resetCandidates, saveState, restoreState, getLinearText, getJSON } = useCellActions();
 	const { resetState } = useGameStateStore();
 	const { gameLoaded, difficulty, gameId, saved } = cellStore();
 	const [ loadSavedGame, setLoadSavedGame ] = useState(false);
@@ -111,6 +111,8 @@ export default function App() {
 		console.log(linear);
 		var linearspaces = linear.replaceAll('0', ' ');
 		console.log(linearspaces);
+		let json = getJSON();
+		console.log(json);
 	}
 
 	if (!gameLoaded) return <Spinner />;

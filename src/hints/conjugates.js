@@ -17,7 +17,7 @@ export function getConjugatePairs() {
 		conjugatePairs = cp[0];
 
 		conjugateCells = cells;
-		console.log("conjugate pairs updated", conjugatePairs.length);
+		//console.log("conjugate pairs updated", conjugatePairs.length);
 	}
 
 	return conjugatePairs;

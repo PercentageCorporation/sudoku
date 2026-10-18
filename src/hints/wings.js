@@ -719,7 +719,7 @@ function findWing2RC(pivot) {
 					W = (allw2.includes(common[0])) ? common[1] : common[0];	// W is the one not in wing2
 					Z = (W === w1ac[0]) ? w1ac[1] : w1ac[0];	//  if we know W, the other bivalue is Z
 				}
-				console.log("w2", cixi, aci, cixj, acj, com, allpw2, W, X, Y, Z);
+				//console.log("w2", cixi, aci, cixj, acj, com, allpw2, W, X, Y, Z);
 
 				if (!allw2.includes(Z)) continue;
 				if (aci.includes(W) && !inSameSquare(cixi, pix)) continue;
@@ -759,7 +759,7 @@ export function WXYZWing() {
 
 	// probably easiest to start with bivalue cells
 	bivals = findAllBivalueCells();
-	console.log("bivals", bivals);
+	//console.log("bivals", bivals);
 
 	// we need to start with a strong link so we might as well use a cp
 	// for each conjugate pair start the chains with their endpoints

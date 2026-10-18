@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { findCandidates, validateBoard, validateManBoard, updateCellCandidates, computeCandidates } from "../utilities/utilities";
+import { findCandidates, validateBoard, validateManBoard, computeCandidates } from "../utilities/utilities";
 import { RCS, LinearToGrid } from "../utilities/constants";
 
 // export const ManCell = {
@@ -19,6 +19,9 @@ export const useManCellsStore = create (
 			number: 0,
 			description: "",
 			manSelectedCell: -1,
+			showNumberGrid: false,
+			showCandidates: false,
+			showSolution: false,
 			manGameValid: true,
 			initialized: false,
 
@@ -94,7 +97,7 @@ export const useManCellsStore = create (
 			},
 
 			getManSolutionCell: (ix) => {
-				var solution = get().solution;
+				let solution = get().solution;
 				if (!solution) return null;
 				return solution[ix]
 			},
@@ -127,6 +130,24 @@ export const useManCellsStore = create (
 					number: number,
 					description: description
 				})
+			},
+
+			toggleShowCandidates: () => {
+				set({ showCandidates: !get().showCandidates })
+			},
+
+			toggleShowNumberGrid: () => {
+				set({ showNumberGrid: !get().showNumberGrid })
+			},
+
+			toggleShowSolution: () => {
+				set({ showSolution: !get().showSolution })
+			},
+
+			setManSelectedCell: (ix) => {
+				const sel = get().manSelectedCell;
+				console.log("setManSelectedCell", sel, ix);
+				set({ manSelectedCell: ix })
 			},
 
 		}),
@@ -222,11 +243,11 @@ export const useGameStateStore = create(
 
 			calcNumbersUsed: () => {
 				//console.log("calcNumbersUsed");
-				var complete = false;
-				var nines = 0;
-				var selVal = get().selectedValue;
+				let complete = false;
+				let nines = 0;
+				let selVal = get().selectedValue;
 				const used = [0,0,0,0,0,0,0,0,0,0];
-				for (var i = 0; i < 81; ++i) {
+				for (let i = 0; i < 81; ++i) {
 					const num = cellStore.get().cells[i].value;
 					if (num > 0) used[num] += 1;
 					if (used[num] === 9) nines += 1;
@@ -281,7 +302,7 @@ export const cellStore = create(
 				initGame: (values, solutionValues, difficulty, gameid) => {
 					const initcells = [];
 					//console.log("values:", values);
-					for (var i = 0; i < 81; ++i) initcells.push(
+					for (let i = 0; i < 81; ++i) initcells.push(
 						{
 						row: RCS[i][0],
 						col: RCS[i][1],
@@ -316,7 +337,7 @@ export const cellStore = create(
 				loadGame: (values, solution, gameId) => {
 					const initcells = [];
 					//console.log("values:", values);
-					for (var i = 0; i < 81; ++i) initcells.push(
+					for (let i = 0; i < 81; ++i) initcells.push(
 					{
 						row: RCS[i][0],
 						col: RCS[i][1],
@@ -330,7 +351,7 @@ export const cellStore = create(
 						activecandidates: [],
 						selected: false
 					});
-					for (i = 0; i < 81; ++i) {
+					for (let i = 0; i < 81; ++i) {
 						if (initcells[i].value === 0) {
 							initcells[i].candidates = findCandidates(i, initcells);
 							initcells[i].activecandidates = initcells[i].candidates;
@@ -369,7 +390,7 @@ export const cellStore = create(
 					const parity = 0;
 					set((state) => {
 						const cells = [...state.cells]
-						for (var ix = 0; ix < 81; ++ix) {
+						for (let ix = 0; ix < 81; ++ix) {
 							cells[ix] = {...cells[ix], value: cells[ix].originalValue, noncandidates: [], parity }
 						}
 						return {
@@ -407,8 +428,8 @@ export const cellStore = create(
 				},
 
 				validateGame: () => {
-					var cls = get().cells
-					var val = validateBoard(cls);
+					let cls = get().cells
+					let val = validateBoard(cls);
 					set ({
 						gameValid: val
 					})
@@ -417,11 +438,11 @@ export const cellStore = create(
 
 				calcNumbersUsed: () => {
 					//console.log("calcNumbersUsed");
-					var complete = false;
-					var nines = 0;
-					var selVal = get().selectedValue;
+					let complete = false;
+					let nines = 0;
+					let selVal = get().selectedValue;
 					const used = [0,0,0,0,0,0,0,0,0,0];
-					for (var i = 0; i < 81; ++i) {
+					for (let i = 0; i < 81; ++i) {
 						const num = get().cells[i].value;
 						if (num > 0) used[num] += 1;
 						if (used[num] === 9) nines += 1;
@@ -441,7 +462,7 @@ export const cellStore = create(
 				clearCandidates: () => {
 					set((state) => {
 						const cells = [...state.cells]
-						for (var ix = 0; ix < 81; ++ix) {
+						for (let ix = 0; ix < 81; ++ix) {
 							const candidates = [];
 							const noncandidates = [];
 							const activecandidates = [];
@@ -454,7 +475,7 @@ export const cellStore = create(
 				resetCandidates: () => {
 					set((state) => {
 						const cells = [...state.cells]
-						for (var ix = 0; ix < 81; ++ix) {
+						for (let ix = 0; ix < 81; ++ix) {
 							const candidates = findCandidates(ix, cells);
 							// remove any noncandidates not in the actual candidates list
 							//const noncandidates = cells[ix].noncandidates.filter(c => candidates.includes(c));
@@ -470,7 +491,7 @@ export const cellStore = create(
 				updateCandidates: () => {
 					set((state) => {
 						const cells = [...state.cells]
-						for (var ix = 0; ix < 81; ++ix) {
+						for (let ix = 0; ix < 81; ++ix) {
 							const candidates = findCandidates(ix, cells);
 							// remove from noncandidates any value not in the actual candidates list
 							const noncandidates = cells[ix].noncandidates.filter(c => candidates.includes(c));
@@ -561,9 +582,9 @@ export const cellStore = create(
 				checkGameSolved: () => {
 					//console.log("gameComplete");
 					const cells = get().cells;
-					var alt = false;
-					var complete = true;
-					for (var i=0; i<81; ++i) {
+					let alt = false;
+					let complete = true;
+					for (let i=0; i<81; ++i) {
 						const c = cells[i];
 						if (c.value === 0) {
 							complete = false;
@@ -572,7 +593,7 @@ export const cellStore = create(
 						if (c.solutionValue > 0 && c.value !== c.solutionValue) alt = true;
 					}
 
-					var solved = 0;
+					let solved = 0;
 					if (complete) {
 						solved = 1;
 						if (alt) solved = 2;
@@ -586,13 +607,43 @@ export const cellStore = create(
 				},
 
 				getLinearText: () => {
-					var linear = "";
-					var cells = get().cells;
+					let linear = "";
+					let cells = get().cells;
 					for (let i = 0; i < 81; i++) {
-						var val = cells[LinearToGrid[i]].value;
+						let val = cells[LinearToGrid[i]].value;
 						linear += Number(val);
 					}
 					return linear;
+				},
+
+				getJSON: () => {
+					let cells = get().cells;
+					let ix = 0;
+					let grids = [];
+					for (let i = 0; i < 9; i++) {
+						let sq = [];
+						for (let j = 0; j < 9; j++) {
+							sq.push(cells[ix++].value);
+						}
+						grids.push(sq);
+					}
+					let json = JSON.stringify(grids);
+					return json;
+				},
+
+				getLinearJSON: () => {
+					let cells = get().cells;
+					let grids = [];
+					for (let i = 0; i < 9; i++) {
+						let row = [];
+						for (let j = 0; j < 9; j++) {
+							var val = cells[LinearToGrid[ix]].value;
+							row.push(cells[ix++].value);
+						}
+						grids.push(row);
+					}
+					let json = JSON.stringify(grids);
+					return json;
 				},
 
 				getCells: () => {
