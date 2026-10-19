@@ -18,69 +18,208 @@ import { biforce } from "/src/hints/forcing2";
 
 export var cells = [];
 
+const hintStats = {
+	functions: {},
+	types: {}
+};
+
+export function hintlog(name, result, elapsed) {
+	const stats = hintStats.functions[name] ??= {
+		calls: 0,
+		successes: 0,
+		time: 0,
+		successTime: 0,
+		failureTime: 0,
+		maxTime: 0
+	};
+
+	stats.calls++;
+	stats.time += elapsed;
+	stats.maxTime = Math.max(stats.maxTime, elapsed);
+
+	if (result?.length) {
+		stats.successes++;
+		stats.successTime += elapsed;
+
+		// Record the subtype actually used by the solver.
+		const type = result[0].type ?? name;
+
+		const typeStats = hintStats.types[type] ??= {
+			count: 0,
+			time: 0
+		};
+
+		typeStats.count++;
+		typeStats.time += elapsed;
+	} else {
+		stats.failureTime += elapsed;
+	}
+}
+
+export function tryHint(name, fn) {
+	const start = performance.now();
+	const result = fn();
+	const elapsed = performance.now() - start;
+
+	hintlog(name, result, elapsed);
+
+	return result?.[0] ?? null;
+}
+
+export function showHintStats() {
+	const rows = Object.entries(hintStats.functions)
+	.map(([name, s]) => ({
+		function: name,
+		calls: s.calls,
+		successes: s.successes,
+		successPct: +(100 * s.successes / s.calls).toFixed(1),
+						 totalMs: +s.time.toFixed(2),
+						 successMs: +s.successTime.toFixed(2),
+						 failureMs: +s.failureTime.toFixed(2),
+						 avgMs: +(s.time / s.calls).toFixed(3),
+						 maxMs: +s.maxTime.toFixed(2)
+	}))
+	.sort((a, b) => b.totalMs - a.totalMs);
+
+	const types = Object.entries(hintStats.types)
+	.map(([type, s]) => ({
+		type,
+		count: s.count,
+		totalMs: +s.time.toFixed(2)
+	}))
+	.sort((a, b) => b.count - a.count);
+
+	console.table(rows);
+	console.table(types);
+
+	// Return a copy so it can be copied from DevTools.
+	return {
+		functions: rows,
+		types
+	};
+}
+
+export function resetHintStats() {
+	console.log("resetHintStats");
+	hintStats.functions = {};
+	hintStats.types = {};
+}
+
 export function runHints() {
 	const gameComplete = cellStore.getState().gameComplete;
 	if (gameComplete) return null;
-	var result;
+	//var result;
 
 	initCounts();
 	console.log("hints.js", cells.length)
 
-	result = WWing();
-	if (result) return result[0];
+	let hint;
 
-	result = singletons();
-	if (result) return result[0];
-	result = singleCounts();
-	if (result) return result[0];
-	result = lockedCandidates1();
-	if (result) return result[0];
-	result = nakedPairs();
-	if (result) return result[0];
-	result = nakedTriples();
-	if (result) return result[0];
-	result = pointingPairsSquare();
-	if (result) return result[0];
-	result = pointingPairsRowCol();
-	if (result) return result[0];
-	result = hiddenPairs();
-	if (result) return result[0];
-	result = hiddenTriples();
-	if (result) return result[0];
-	result = quads();
-	if (result) return result[0];
-	result = uniqueRectangles();
-	if (result) return result[0];
-	result = emptyRectangles();
-	if (result) return result[0];
-	result = XWing();
-	if (result) return result[0];
-	result = XChain();
-	if (result) return result[0];
-	result = XYChain();
-	if (result) return result[0];
-	result = XYWing();
-	if (result) return result[0];
-	result = XYZWing();
-	if (result) return result[0];
-	result = WWing();
-	if (result) return result[0];
-	result = WXYZWing();
-	if (result) return result[0];
-	result = swordfish();
-	if (result) return result[0];
-	result = colors();
-	if (result) return result[0];
-	result = colorWing();
-	if (result) return result[0];
-	result = als();
-	if (result) return result[0];
-	result = loops();
-	if (result) return result[0];
-	result = forcingChains();
-	if (result) return result[0];
-	result = biforce();
-	if (result) return result[0];
+	if (hint = tryHint("singletons", singletons)) return hint;
+	if (hint = tryHint("singleCounts", singleCounts)) return hint;
+	if (hint = tryHint("lockedCandidates1", lockedCandidates1)) return hint;
+	if (hint = tryHint("nakedPairs", nakedPairs)) return hint;
+	if (hint = tryHint("nakedTriples", nakedTriples)) return hint;
+	if (hint = tryHint("pointingPairsSquare", pointingPairsSquare)) return hint;
+	if (hint = tryHint("pointingPairsRowCol", pointingPairsRowCol)) return hint;
+	if (hint = tryHint("hiddenPairs", hiddenPairs)) return hint;
+	if (hint = tryHint("hiddenTriples", hiddenTriples)) return hint;
+	if (hint = tryHint("quads", quads)) return hint;
+	if (hint = tryHint("uniqueRectangles", uniqueRectangles)) return hint;
+	if (hint = tryHint("emptyRectangles", emptyRectangles)) return hint;
+	if (hint = tryHint("XWing", XWing)) return hint;
+	if (hint = tryHint("XChain", XChain)) return hint;
+	if (hint = tryHint("XYChain", XYChain)) return hint;
+	if (hint = tryHint("XYWing", XYWing)) return hint;
+	if (hint = tryHint("XYZWing", XYZWing)) return hint;
+	if (hint = tryHint("WWing", WWing)) return hint;
+	if (hint = tryHint("WXYZWing", WXYZWing)) return hint;
+	if (hint = tryHint("swordfish", swordfish)) return hint;
+	if (hint = tryHint("colors", colors)) return hint;
+	if (hint = tryHint("colorWing", colorWing)) return hint;
+	if (hint = tryHint("als", als)) return hint;
+	if (hint = tryHint("loops", loops)) return hint;
+	if (hint = tryHint("forcing", forcingChains)) return hint;
+	if (hint = tryHint("forcingBV", biforce)) return hint;
+
+	// result = singletons();
+	// hintlog("single", result)
+	// if (result) return result[0];
+	// result = singleCounts();
+	// hintlog("singleCounts", result)
+	// if (result) return result[0];
+	// result = lockedCandidates1();
+	// hintlog("lockedCandidates1", result)
+	// if (result) return result[0];
+	// result = nakedPairs();
+	// hintlog("nakedPairs", result)
+	// if (result) return result[0];
+	// result = nakedTriples();
+	// hintlog("nakedTriples", result)
+	// if (result) return result[0];
+	// result = pointingPairsSquare();
+	// hintlog("pointingPairsSquare", result)
+	// if (result) return result[0];
+	// result = pointingPairsRowCol();
+	// hintlog("pointingPairsRowCol", result)
+	// if (result) return result[0];
+	// result = hiddenPairs();
+	// hintlog("hiddenPairs", result)
+	// if (result) return result[0];
+	// result = hiddenTriples();
+	// hintlog("hiddenTriples", result)
+	// if (result) return result[0];
+	// result = quads();
+	// hintlog("quads", result)
+	// if (result) return result[0];
+	// result = uniqueRectangles();
+	// hintlog("uniqueRectangles", result)
+	// if (result) return result[0];
+	// result = emptyRectangles();
+	// hintlog("emptyRectangles", result)
+	// if (result) return result[0];
+	// result = XWing();
+	// hintlog("XWing", result)
+	// if (result) return result[0];
+	// result = XChain();
+	// hintlog("XChain", result)
+	// if (result) return result[0];
+	// result = XYChain();
+	// hintlog("XYChain", result)
+	// if (result) return result[0];
+	// result = XYWing();
+	// hintlog("XYWing", result)
+	// if (result) return result[0];
+	// result = XYZWing();
+	// hintlog("XYZWing", result)
+	// if (result) return result[0];
+	// result = WWing();
+	// hintlog("WWing", result)
+	// if (result) return result[0];
+	// result = WXYZWing();
+	// hintlog("WXYZWing", result)
+	// if (result) return result[0];
+	// result = swordfish();
+	// hintlog("swordfish", result)
+	// if (result) return result[0];
+	// result = colors();
+	// hintlog("colors", result)
+	// if (result) return result[0];
+	// result = colorWing();
+	// hintlog("colorWing", result)
+	// if (result) return result[0];
+	// result = als();
+	// hintlog("als", result)
+	// if (result) return result[0];
+	// result = loops();
+	// hintlog("loops", result)
+	// if (result) return result[0];
+	// result = forcingChains();
+	// hintlog("forcing", result)
+	// if (result) return result[0];
+	// result = biforce();
+	// hintlog("forcingBV", result)
+	// if (result) return result[0];
 
 	return null;
 }

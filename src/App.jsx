@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cellStore, useCellActions, useHintStore, useGameStateStore } from "./store/store";
 import { getSSGame } from "./utilities/sudoku-solutions";
+import { getGame } from "./utilities/games";
+import { resetHintStats } from "/src/hints/hints";
 import LoadGameModal from "/src/components/LoadGameModal";
 import GameGrid from "/src/components/GameGrid";
 import PlayMenu from "/src/components/PlayMenu";
 import Spinner from "/src/components/Spinner";
-import { getGame } from "./utilities/games";
 import SudokuIcon from '/src/assets/percentage-sudoku-192.png'
 
 export default function App() {
@@ -38,6 +39,7 @@ export default function App() {
 		newGame();
 		resetState();
 		clearSolutionLog();
+		resetHintStats();
 		navigate("/", { replace: true });
 	}
 
@@ -47,6 +49,7 @@ export default function App() {
 		resetGame();
 		resetState();
 		clearSolutionLog();
+		resetHintStats();
 		navigate("/", { replace: true });
 	}
 
@@ -102,6 +105,7 @@ export default function App() {
 			loadGame(game.game, game.solution, game.description);
 			resetState();
 			clearSolutionLog();
+			resetHintStats();
 			navigate("/", { replace: true });
 		}
 	}

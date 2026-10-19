@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { cellStore, useHintStore, useCellActions, useGameStateStore } from "../store/store";
 import { validateMove, formatSolution } from "../utilities/utilities";
-import { runHints } from '/src/hints/hints';
+import { runHints, resetHintStats, showHintStats  } from '/src/hints/hints';
 //import Spinner from "./Spinner";
 
 export default function PlayMenu() {
@@ -95,6 +95,7 @@ export default function PlayMenu() {
 				// solved ?
 				console.log("SOLVED");
 				console.log(solutionLog);
+				showHintStats();
 			}
 		}
 	}
@@ -209,7 +210,11 @@ export default function PlayMenu() {
 		}, 0);
 	}
 
-
+	function handleCopyStatistics(e) {
+		e.preventDefault();
+		let hintStats = showHintStats();
+		navigator.clipboard.writeText(JSON.stringify(hintStats, null, 2));
+	}
 	//if (!used.current) return <Spinner />;
 	//console.log("used:", numbersUsed)
 	//console.log("hint:", hint);
@@ -272,13 +277,22 @@ export default function PlayMenu() {
 				</div>
 				<div>
 				{gameComplete &&
-					<button
-						type="button"
-						onClick={(e) => handleSaveSolution(e)}
-						className="ml-4 px-4 h-6 bg-blue-300 rounded hover:cursor-pointer text-xs"
-						>
-						Save Solution
-					</button>
+					<div>
+						<button
+							type="button"
+							onClick={(e) => handleSaveSolution(e)}
+							className="ml-4 px-4 h-6 bg-blue-300 rounded hover:cursor-pointer text-xs"
+							>
+							Save Solution
+						</button>
+						<button
+							type="button"
+							onClick={(e) => handleCopyStatistics(e)}
+							className="ml-4 px-4 h-6 bg-blue-300 rounded hover:cursor-pointer text-xs"
+							>
+							Copy Statistics
+						</button>
+					</div>
 				}
 				</div>
 			</div>

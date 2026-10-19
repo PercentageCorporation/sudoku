@@ -5,6 +5,7 @@ import { useCellActions, useManCellsStore, useHintStore, useGameStateStore } fro
 import { LRUD, bstyles } from "/src/utilities/constants";
 import LoadGameModal from "/src/components/LoadGameModal";
 import { deleteGame, getGame, saveGame, linearTextToGrid } from "../utilities/games";
+import { resetHintStats } from "/src/hints/hints";
 import SaveGameModal from "./SaveGameModal";
 import ConfirmModal from "./ConfirmModal";
 import SeedGameModal from "./SeedGameModal";
@@ -230,6 +231,7 @@ export default function ManualGrid() {
 		console.log("handlePlay");
 		resetState();
 		clearSolutionLog();
+		resetHintStats();
 		const mc = getManCells();
 		const sc = getManSolution();
 		//console.log("handlePlay", mc);
