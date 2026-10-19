@@ -14,7 +14,7 @@ function Candidates({ix}) {
 	let bg = (ac.includes(selectedValue)) ? " bg-green-100" : "";
 	if (showConjugates)  {
 		let cicp = cellInConjugatePair(ix,selectedValue);
-		bg = (cicp === 1) ? " bg-yellow-200" : " bg-yellow-400";
+		if (cicp > 0 ) bg = (cicp === 1) ? " bg-yellow-200" : " bg-yellow-400";
 	}
 	if (showBivalue)  {
 		let cibp = cellInBivaluePair(ix,selectedValue);

@@ -5,7 +5,7 @@ export default function LoadGameModal({ onConfirm, onCancel }) {
 	const [gameList, setGameList] = useState([]);
 
 	useEffect(() => {
-		var games = getGameList();
+		var games = getGameList().reverse();
 		//console.log("game list", games);
 		setGameList(games);
 

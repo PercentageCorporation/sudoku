@@ -128,9 +128,9 @@ function chooseStartingCell(can) {
 		if (can[i] !== null && can[i].length === 2) return i;
 	}
 
-	console.log("can", can);
+	//console.log("can", can);
 	let cpairs = getConjugatePairsBlockMajor(can);
-	console.log("cp", cpairs);
+	//console.log("cp", cpairs);
 	//if (cpairs.length > 0) return cpairs[1][1][1];
 	let strongs = strongLinks(cpairs);
 	console.log("strongs", strongs);
@@ -144,11 +144,9 @@ function chooseStartingCell(can) {
 }
 
 function strongLinks(cpairs) {
-
 	// calculate the number of strong links attached to each cell
 	//let stronglinks = Array.from({ length: 81 }, () => []),
 	let stronglinks = Array(81).fill(0);
-	let values = [0,0,0,0,0,0,0,0,0,0];
 
 	let cplen = cpairs.length;
 	for( let cx=0; cx<cplen; ++cx) {

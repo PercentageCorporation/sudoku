@@ -1,7 +1,7 @@
 import "/src/styles/borders.css";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCellActions, useManCellsStore, useHintStore } from "/src/store/store";
+import { useCellActions, useManCellsStore, useHintStore, useGameStateStore } from "/src/store/store";
 import { LRUD, bstyles } from "/src/utilities/constants";
 import LoadGameModal from "/src/components/LoadGameModal";
 import { deleteGame, getGame, saveGame, linearTextToGrid } from "../utilities/games";
@@ -109,7 +109,6 @@ function ManualGrid9({y}) {
 }
 
 export default function ManualGrid() {
-	const navigate = useNavigate();
 	const { toggleShowNumberGrid, toggleShowCandidates, toggleShowSolution, showNumberGrid, showCandidates, showSolution } = useManCellsStore();
 	const { initialized, manGameValid, manSelectedCell } = useManCellsStore();
 	const { number: manNumber, description: manDescription } = useManCellsStore();
@@ -117,6 +116,7 @@ export default function ManualGrid() {
 	const { getManSolution, setManId, loadManCells, loadManSolution,  initialize } = useManCellsStore();
 	const { resetHint } = useHintStore();
 	const { loadGame } = useCellActions();
+	const { resetState, clearSolutionLog } = useGameStateStore();
 
 	const [ loadSavedGame, setLoadSavedGame ] = useState(false);
 	const [ seedGame, setSeedGame ] = useState(false);
@@ -124,16 +124,13 @@ export default function ManualGrid() {
 	const [ addSolution, setAddSolution ] = useState(false);
 	const [ deleteId, setDeleteId ] = useState(null);
 	const [ message, setMessage] = useState(manGameValid ? null : "Invalid Board");
+	const navigate = useNavigate();
 
 	//console.log("ManGrid", manGameValid, manSelectedCell);
 	//console.log("ManGrid1");
 
 	const index = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 	const modalOpen = loadSavedGame || saveManGame || deleteId !== null;
-
-	function checkGame() {
-
-	}
 
 	function handleKeyDown(e)  {
 		const sel = getManSelectedCell();
@@ -231,6 +228,8 @@ export default function ManualGrid() {
 	function handlePlay(e) {
 		e.preventDefault();
 		console.log("handlePlay");
+		resetState();
+		clearSolutionLog();
 		const mc = getManCells();
 		const sc = getManSolution();
 		//console.log("handlePlay", mc);
@@ -304,7 +303,8 @@ export default function ManualGrid() {
 		setTimeout(function() {
 			document.body.removeChild(a);
 			window.URL.revokeObjectURL(url);
-		}, 0); 	}
+		}, 0);
+	}
 
 	function handleAddSolution(e) {
 		e.preventDefault();
@@ -412,13 +412,16 @@ export default function ManualGrid() {
 		setDeleteId(null);
 	}
 
-	function seedConfirm(gamecells) {
+	function seedConfirm(gamecells, solutioncells) {
 		console.log("seedGame");
 		console.log(gamecells);
 		setSeedGame(false);
-		var grid = linearTextToGrid(gamecells);
-		console.log(grid);
+		let grid = linearTextToGrid(gamecells);
 		loadManCells("", "Imported Game", grid, null);
+		let solution = solutioncells ? linearTextToGrid(solutioncells) : null;
+		console.log(gamecells);
+		if (solution) loadManSolution(solution);
+		//console.log(grid);
 		useManCellsStore.persist.rehydrate();
 		navigate("/manual");
 	}

@@ -49,7 +49,7 @@ export function getConjugatePairsForValue(cpairs, v) {
 }
 
 // get the conjugate pairs that contain the cell [cix]
-export function getConjugatePairsWithCell(cpairs, cix) {
+export function getConjugatePairsWithCell(cix) {
 	getConjugatePairs();
 	var cp = [];
 	conjugatePairs.forEach((cp) => {
@@ -59,12 +59,10 @@ export function getConjugatePairsWithCell(cpairs, cix) {
 }
 
 // is the cell in a conjugate pair
-export function cellInConjugatePair(cix, value) {
+export function cellInConjugatePair(cix, selectedValue) {
 	getConjugatePairs();
-	var cplen = conjugatePairs.length;
-	for (var i=0; i<cplen; ++i) {
-		var cp = conjugatePairs[i];
-		if (value > 0 && value !== cp[0]) continue;
+	for (const cp of conjugatePairs) {
+		if (selectedValue > 0 && selectedValue !== cp[0]) continue;
 		if (cix === cp[1][0]) return 1;
 		if (cix === cp[2][0]) return 2;
 	}

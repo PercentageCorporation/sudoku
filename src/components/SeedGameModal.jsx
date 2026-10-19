@@ -8,15 +8,26 @@ export default function SeedGameModal({ title, onConfirm, onCancel }) {
 	}, [])
 
 	function handleConfirm() {
+		console.log('handleConfirm');
 		var element = document.getElementById("game-cells");
 		if (!element) return;
-		var gamecells = element.value;
-		if (gamecells.length != 81) {
-			alert("Import not correct length");
+		var gamecells = element.value.trim();
+		if (gamecells.length === 81) {
+			if (onConfirm) onConfirm(gamecells, null);
 			return;
 		}
-		console.log('handleConfirm');
-		if (onConfirm) onConfirm(gamecells);
+		let ix = gamecells.indexOf(":1:")
+		if (gamecells.length === 165 && ix === 81) {
+			let game = gamecells.substring(0, 81);
+			let solution = gamecells.substring(84);
+			console.log(game);
+			console.log(solution);
+			if (solution.length === 81) {
+				if (onConfirm) onConfirm(game, solution);
+				return;
+			}
+		}
+		alert("Invalid Input");
 	}
 
 	function handleCancel() {

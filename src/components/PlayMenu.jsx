@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { cellStore, useHintStore, useCellActions, useGameStateStore } from "../store/store";
-import { validateMove } from "../utilities/utilities";
+import { validateMove, formatSolution } from "../utilities/utilities";
 import { runHints } from '/src/hints/hints';
 //import Spinner from "./Spinner";
 
@@ -11,7 +11,7 @@ export default function PlayMenu() {
 	const { setCellValue, clearCellValue, validateGame } = useCellActions();
 	const { checkGameSolved, calcNumbersUsed } = useCellActions();
 	const { updateCandidates, addNonCandidate } = useCellActions();
-	const { gameComplete } = cellStore();
+	const { gameComplete, gameId } = cellStore();
 	const { hint, getHint, setHint, setHintMsg, resetHint } = useHintStore();
 	const [message, setMessage] = useState(gameComplete ? "Game Complete" : null);
 
@@ -190,7 +190,25 @@ export default function PlayMenu() {
 	//updateCandidates();
 	resetHint();
 	checkGameSolved();
-}
+	}
+
+	function handleSaveSolution(e) {
+		e.preventDefault();
+		let filename = gameId + "_solution.txt";
+		let solution = formatSolution(gameId, solutionLog);
+		let file = new Blob([solution], {type: 'text/plain'});
+		let a = document.createElement("a"),
+		url = URL.createObjectURL(file);
+		a.href = url;
+		a.download = filename;
+		document.body.appendChild(a);
+		a.click();
+		setTimeout(function() {
+			document.body.removeChild(a);
+			window.URL.revokeObjectURL(url);
+		}, 0);
+	}
+
 
 	//if (!used.current) return <Spinner />;
 	//console.log("used:", numbersUsed)
@@ -248,8 +266,21 @@ export default function PlayMenu() {
 					}
 				</div>
 			</div>
-			<div className="mt-4 flex text-lg font-bold text-red-600">
-				{message}
+			<div className="mt-2 flex flex-row items-center">
+				<div className="flex text-lg font-bold text-red-600">
+					{message}
+				</div>
+				<div>
+				{gameComplete &&
+					<button
+						type="button"
+						onClick={(e) => handleSaveSolution(e)}
+						className="ml-4 px-4 h-6 bg-blue-300 rounded hover:cursor-pointer text-xs"
+						>
+						Save Solution
+					</button>
+				}
+				</div>
 			</div>
 		</div>
 	)

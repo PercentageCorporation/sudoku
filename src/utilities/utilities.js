@@ -293,4 +293,18 @@ export function validateMove(cellIx, value) {
 	return 0;
 }
 
+export function formatSolution(gameId, solutionLog) {
+	let solutionText = "Solution for: " + gameId + "\r\n\r\n";
+	for (const item of solutionLog) {
+		solutionText += item[0]
+		if (item.length === 4) {
+			solutionText += ": Recursions: " + item[1].toString();
+			solutionText += ", Max Depth: " + item[2].toString();
+			solutionText += ", Contradictions: " + item[3].toString();
+		}
+		solutionText += "\r\n";
+	}
+	return solutionText;
+}
+
 

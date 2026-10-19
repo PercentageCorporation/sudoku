@@ -10,27 +10,27 @@ import { getConjugatePairs, getBivaluePairs, getBivalueList } from "/src/hints/c
 // common functions
 
 function findXYPairs(ppiv, pivots) {
-	var pairs = [];
+	let pairs = [];
 
-	var ppix = ppiv[0];	// pivot cell id
-	var prow = ppiv[1];
-	var pcol = ppiv[2];
-	var psq = ppiv[3];
-	var pac = ppiv[4];
+	let ppix = ppiv[0];	// pivot cell id
+	let prow = ppiv[1];
+	let pcol = ppiv[2];
+	let psq = ppiv[3];
+	let pac = ppiv[4];
 
 	// find pair cells containing XY
-	for (var p=0; p<pivots.length; ++p) {
-		var piv = pivots[p];
+	for (let p=0; p<pivots.length; ++p) {
+		let piv = pivots[p];
 		// piv : [cix, row, col, sq, ac]
 
-		var pix = piv[0];
+		let pix = piv[0];
 		//console.log("piv", ppiv, piv);
 
 		if (pix === ppix) continue;	// skip ourselves
 		if (prow !== piv[1] && pcol !== piv[2] && psq !== piv[3]) continue;	// skip if not same row/col/square
 		if (!pac.includes(pac[0]) && !pac.includes(pac[1])) continue;	// skip if x or y value not in cell
 
-		var ac = piv[4];
+		let ac = piv[4];
 		pairs.push([pix, cellRow[pix], cellCol[pix], cellSquare[pix], ac]);
 	}
 	return pairs;
@@ -483,23 +483,23 @@ export function XYZWing() {
 
 export function WWing() {
 
-	var cpairs = getConjugatePairs();
+	let cpairs = getConjugatePairs();
 	//console.log("cpairs", cpairs);
 	if (cpairs.length === 0) return null;
 
 	// get a list of bivalues and their cells
-	var bvl = getBivalueList();
+	let bvl = getBivalueList();
 	//console.log("bvlist", bvl);
 	// bvl: [ [pair] [cells] ]
 
 	// we have all the bivalue pairs
 	// we need to regroup them into pairs of pairs that cannot see each other
 
-	var endpoints = [];
+	let endpoints = [];
 	bvl.forEach((bvp) => {
 		// bvp: [ [pair] [[cix, cix, ] ]
-		var bvp1 = bvp[1];
-		var b1len = bvp1.length;
+		let bvp1 = bvp[1];
+		let b1len = bvp1.length;
 		if (b1len === 2) {
 			//console.log("push1", bvp1[0], bvp1[1]);
 			if (!canSeeEachOther(bvp1[0], bvp1[1])) {
@@ -508,12 +508,12 @@ export function WWing() {
 			}
 		} else {
 			// for each cell with the pair
-			for (var i=0; i<b1len; ++i) {
-				var bvp1i = bvp1[i];	//
-				for (var j=i+1; j<b1len; ++j) {
-					var bvp1j = bvp1[j];
+			for (let i=0; i<b1len; ++i) {
+				let bvp1i = bvp1[i];	//
+				for (let j=i+1; j<b1len; ++j) {
+					let bvp1j = bvp1[j];
 					if (!canSeeEachOther(bvp1i, bvp1j)) {
-						var bp = [bvp[0],[bvp1i,bvp1j]];
+						let bp = [bvp[0],[bvp1i,bvp1j]];
 						endpoints.push(bp);
 						//console.log("push2", i, j, bp);
 					}
@@ -527,57 +527,52 @@ export function WWing() {
 	// now we need to connect enpoints with conjugate pairs
 	// cp: [ value, [cel0, [ac0]], [cel1, [ac1]] ]
 	// ep: [ [ac], [cel0, cel1] ]
-	var ww = [];
-	var eplen = endpoints.length;
-	var cplen = cpairs.length;
-	for (var ep=0; ep<eplen; ++ep) {
-		var epv0 = endpoints[ep][0][0];
-		var epv1 = endpoints[ep][0][1];
-		var epvals = [epv0,epv1];
-		var ep0 = endpoints[ep][1][0];	// endpoint cell 0
-		var ep1 = endpoints[ep][1][1];	// endpoint cell 1
+	let ww = [];
+	for (const ep of endpoints) {
+		let epv0 = ep[0][0];
+		let epv1 = ep[0][1];
+		let epvals = [epv0,epv1];
+		let ep0 = ep[1][0];	// endpoint cell 0
+		let ep1 = ep[1][1];	// endpoint cell 1
 		//console.log("ep", epvals, epv0, epv1, ep0, ep1);
 		// find conjugate pair of the same value with ends that can be seen by the endpoints
-		for (var cp=0; cp<cplen; ++cp) {
-			// for each value in the pair
-			var cpc0 = cpairs[cp][1][0];
-			var cpc1 = cpairs[cp][2][0];
+		for (const cp of cpairs) {
+			let cpv = cp[0];	// conjugate pair value
+			if (!epvals.includes(cpv)) continue;	// no matching endpoint value
+			// for each cell in the pair
+			let cpc0 = cp[1][0];
+			let cpc1 = cp[2][0];
 			// the endpoint cells can actually match the conjugate pair cells NOT
-			if (ep0 === cpc0) continue;
-			if (ep0 === cpc1) continue;
-			if (ep1 === cpc0) continue;
-			if (ep1 === cpc1) continue;
-			let wingcells = [ep0,ep1,cpc0,cpc1];
+			if (ep0 === cpc0 || ep0 === cpc1 || ep1 === cpc0 || ep1 === cpc1) continue;
+			let wcells = [ep0,ep1,cpc0,cpc1];
 			// can the CP and ENDPOINT be in the same HOUSE ?????
 
-			for( var v=0; v<2; ++v) {
-				var cpv = cpairs[cp][0];
-				if (cpv !== epvals[v]) continue;	// not same value
-				// can each of the ends of the pair be seen by one of the endpoints
-				// two way comparison 0-0 1-1 or 0-1 1-0
-				//console.log("epc", cpv, ep0, ep1, cpc0, cpc1);
-				if (canSeeEachOther(ep0, cpc0) && canSeeEachOther(ep1, cpc1)) {
-					// check for targets
-					var tgts = findTargetsSeenByAll(epv1, [ep0, ep1], wingcells)
-					//console.log("ep match0", epv1, ep, cp, ep0, cpc0, cpc1, ep1, tgts);
-					if (tgts) ww.push([epv1,[ep0, cpc0, cpc1, ep1], tgts ]);
+			let eptv = (cpv === epvals[0]) ? epvals[1] : epvals[0];
 
-				} else if (canSeeEachOther(ep0, cpc1) && canSeeEachOther(ep1, cpc0)) {
-					var tgts = findTargetsSeenByAll(epv1, [ep0, ep1], wingcells)
-					//console.log("ep match1", epv1, ep, cp, ep0, cpc1, cpc0, ep1, tgts);
-					if (tgts) ww.push([epv1, [ep0, cpc1, cpc0, ep1], tgts ]);
-				}
+			// can each of the ends of the pair be seen by one of the endpoints
+			// two way comparison 0-0 1-1 or 0-1 1-0
+			//console.log("epc", cpv, ep0, ep1, cpc0, cpc1);
+			if (canSeeEachOther(ep0, cpc0) && canSeeEachOther(ep1, cpc1)) {
+				// check for targets
+				let tgts = findTargetsSeenByAll(eptv, [ep0, ep1], wcells)
+				//console.log("ep match0", epv1, ep, cp, ep0, cpc0, cpc1, ep1, tgts);
+				if (tgts) ww.push([eptv,[ep0, cpc0, cpc1, ep1], tgts ]);
+
+			} else if (canSeeEachOther(ep0, cpc1) && canSeeEachOther(ep1, cpc0)) {
+				let tgts = findTargetsSeenByAll(eptv, [ep0, ep1], wcells)
+				//console.log("ep match1", epv1, ep, cp, ep0, cpc1, cpc0, ep1, tgts);
+				if (tgts) ww.push([eptv, [ep0, cpc1, cpc0, ep1], tgts ]);
 			}
 		}
 	}
 
-	var wwings = [];
+	let wwings = [];
 	ww.forEach((w) => {
-		var val = w[0];
-		var cls = w[1];
-		var targets = w[2];
+		let val = w[0];
+		let cls = w[1];
+		let targets = w[2];
 
-		var h = {
+		let h = {
 			type: 'wWing',
 			row: null,
 			col: null,

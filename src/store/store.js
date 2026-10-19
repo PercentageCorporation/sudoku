@@ -3,13 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { findCandidates, validateBoard, validateManBoard, computeCandidates } from "../utilities/utilities";
 import { RCS, LinearToGrid } from "../utilities/constants";
 
-// export const ManCell = {
-// 	value: 0,
-// 	selected: false
-// };
-
 export const useManCells = () => useManCellsStore((state) => state.cells);
-
 export const useManCellsStore = create (
 	persist (
 		(set, get) => ({
@@ -231,7 +225,7 @@ export const useHintStore = create (
 	})
 );
 
-export const useGameStateStore = create(
+export const useGameStateStore = create (
 	persist(
 		(set, get) => ({
 			selectedCell: -1,
@@ -326,12 +320,12 @@ export const useGameStateStore = create(
 						selectedValue: selVal
 					})
 			},
-		})
+		}),
+		{
+			name: 'sudoku-game-state', // Unique name for the storage item
+			storage: createJSONStorage(() => sessionStorage), // Use session storage
+		}
 	),
-	{
-		name: 'sudoku-game-state', // Unique name for the storage item
-		storage: createJSONStorage(() => sessionStorage), // Use session storage
-	}
 );
 
 export const Cell = {
