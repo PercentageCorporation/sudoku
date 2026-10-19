@@ -4,7 +4,7 @@ import { cells, vSqs } from '/src/hints/hints';
 import { includesAll, includesAny } from '/src/hints/hints';
 import { rcsContainsValue, findTargets, findSeenTargets2,  findSeenTargets3, findTargetsOnly } from '/src/hints/hints';
 import { getActiveCandidates, getCandidateCells, findCandidatesWithValues, cellHasCandidate } from '/src/hints/hints';
-import { findAllBivalueCells } from '/src/hints/conjugates';
+import { getBivaluePairs } from '/src/hints/conjugates';
 import { countTheHouse, checkForTripleCounts } from '/src/hints/triples';
 import { getConjugatePairs } from "./conjugates";
 
@@ -242,7 +242,7 @@ export function emptyRectangles() {
 // Unique Rectangles
 
 export function uniqueRectangles() {
-	var bvpairs = findAllBivalueCells();
+	var bvpairs = getBivaluePairs();
 	//console.log("bvpairs", bvpairs)
 	// bv: [ cix, [ac] ]
 	// pack the pairs

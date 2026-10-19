@@ -2,7 +2,7 @@ import { includesAny } from './hints';
 import { cells, findSeenTargets2, findTargetsSeenByAll, findTargets } from '/src/hints/hints';
 import { sameRow2, sameCol2, canSeeEachOther, sameHouse } from '/src/hints/hints';
 import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, RCS } from '/src/utilities/constants';
-import { getConjugatePairs, getConjugatePairsForValue, findAllBivalueCells } from "/src/hints/conjugates";
+import { getConjugatePairs, getConjugatePairsForValue, getBivaluePairs } from "/src/hints/conjugates";
 
 //*****************************************************************************
 // common functions
@@ -351,7 +351,7 @@ function linkPaths() {
 }
 
 export function XYChain() {
-	bvpairs = findAllBivalueCells();
+	bvpairs = getBivaluePairs();
 	//console.log("bvpairs",bvpairs)
 	var paths = [];
 

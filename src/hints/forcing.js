@@ -1,5 +1,5 @@
 import { cellStore } from "/src/store/store";
-import { findAllBivalueCells, getConjugatePairs } from '/src/hints/conjugates';
+import { getBivaluePairs, getConjugatePairs } from '/src/hints/conjugates';
 import { Rows, Cols, Squares, cellRow, cellCol, cellSquare } from "/src/utilities/constants";
 
 const INVALID = -1;
@@ -13,7 +13,7 @@ let cells = null;
 export function forcingChains() {
 	let forced = [];
 
-	let bvpairs = findAllBivalueCells();
+	let bvpairs = getBivaluePairs();
 	// bvpairs: [ [cix, [ac]], [cix, [ac]], ...]
 	//console.log("bvpairs",bvpairs)
 	let cpairs = getConjugatePairs();

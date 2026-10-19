@@ -1,25 +1,24 @@
 import { cellStore, useCellActions, useGameStateStore, useHintStore } from "../store/store";
 import { RCS, bstyles } from "/src/utilities/constants";
 import { getRemainingValues } from "../utilities/utilities";
-import { cellInConjugatePair } from '/src/hints/conjugates';
+import { cellInConjugatePair, cellInBivaluePair } from '/src/hints/conjugates';
 import CandidatesModal from "/src/components/CandidatesModal";
 import "/src/styles/borders.css";
 
 function Candidates({ix}) {
-	const { showConjugates, selectedValue } = useGameStateStore();
+	const { selectedValue, showConjugates, showBivalue } = useGameStateStore();
 	const can = cellStore.getState().cells[ix].candidates;
 	const ac = cellStore.getState().cells[ix].activecandidates;
 	const noncan = cellStore.getState().cells[ix].noncandidates;
 
-	var cip = 0;
-	if (showConjugates) {
-		cip = cellInConjugatePair(ix,selectedValue);
-		//console.log("cellInConjugatePair", ix, selectedValue, cip);
-	}
-
 	let bg = (ac.includes(selectedValue)) ? " bg-green-100" : "";
-	if (showConjugates && (cip = cellInConjugatePair(ix, selectedValue)) > 0 )  {
-		bg = (cip === 1) ? " bg-yellow-200" : " bg-yellow-400";
+	if (showConjugates)  {
+		let cicp = cellInConjugatePair(ix,selectedValue);
+		bg = (cicp === 1) ? " bg-yellow-200" : " bg-yellow-400";
+	}
+	if (showBivalue)  {
+		let cibp = cellInBivaluePair(ix,selectedValue);
+		bg = cibp > 0 ? " bg-yellow-200" : "";
 	}
 
 	//console.log(ix, can, noncan);

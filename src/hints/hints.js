@@ -26,6 +26,8 @@ export function runHints() {
 	initCounts();
 	console.log("hints.js", cells.length)
 
+	result = WWing();
+	if (result) return result[0];
 
 	result = singletons();
 	if (result) return result[0];

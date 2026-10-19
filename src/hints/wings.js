@@ -3,7 +3,7 @@ import { findTargets, includesAll, includesAny } from '/src/hints/hints';
 import { cells, findSeenTargets2, findTargetsSeenByAll, cellHasCandidate } from '/src/hints/hints';
 import { sameRow2, sameCol2, sameSq2, inSameSquare } from '/src/hints/hints';
 import { canSeeEachOther, getValuesInCommon, getActiveCandidates, getAllValues } from '/src/hints/hints';
-import { getConjugatePairs, findAllBivalueCells, getBivalueList } from "/src/hints/conjugates";
+import { getConjugatePairs, getBivaluePairs, getBivalueList } from "/src/hints/conjugates";
 
 
 //*****************************************************************************
@@ -521,7 +521,7 @@ export function WWing() {
 			}
 		}
 	});
-	//console.log("endpoints", endpoints);
+	console.log("endpoints", endpoints);
 	if (endpoints.length === 0) return null;
 
 	// now we need to connect enpoints with conjugate pairs
@@ -542,12 +542,12 @@ export function WWing() {
 			// for each value in the pair
 			var cpc0 = cpairs[cp][1][0];
 			var cpc1 = cpairs[cp][2][0];
-			// the endpoint cells can actually match the conjugate pair cells
+			// the endpoint cells can actually match the conjugate pair cells NOT
 			if (ep0 === cpc0) continue;
 			if (ep0 === cpc1) continue;
 			if (ep1 === cpc0) continue;
 			if (ep1 === cpc1) continue;
-
+			let wingcells = [ep0,ep1,cpc0,cpc1];
 			// can the CP and ENDPOINT be in the same HOUSE ?????
 
 			for( var v=0; v<2; ++v) {
@@ -558,14 +558,14 @@ export function WWing() {
 				//console.log("epc", cpv, ep0, ep1, cpc0, cpc1);
 				if (canSeeEachOther(ep0, cpc0) && canSeeEachOther(ep1, cpc1)) {
 					// check for targets
-					var tgts = findSeenTargets2(epv0, ep0, ep1)
+					var tgts = findTargetsSeenByAll(epv1, [ep0, ep1], wingcells)
 					//console.log("ep match0", epv1, ep, cp, ep0, cpc0, cpc1, ep1, tgts);
-					if (tgts) ww.push([epv0,[ep0, cpc0, cpc1, ep1], tgts ]);
+					if (tgts) ww.push([epv1,[ep0, cpc0, cpc1, ep1], tgts ]);
 
 				} else if (canSeeEachOther(ep0, cpc1) && canSeeEachOther(ep1, cpc0)) {
-					var tgts = findSeenTargets2(epv0, ep0, ep1)
+					var tgts = findTargetsSeenByAll(epv1, [ep0, ep1], wingcells)
 					//console.log("ep match1", epv1, ep, cp, ep0, cpc1, cpc0, ep1, tgts);
-					if (tgts) ww.push([epv0, [ep0, cpc1, cpc0, ep1], tgts ]);
+					if (tgts) ww.push([epv1, [ep0, cpc1, cpc0, ep1], tgts ]);
 				}
 			}
 		}
@@ -754,7 +754,7 @@ export function WXYZWing() {
 	let bivals = [];
 
 	// probably easiest to start with bivalue cells
-	bivals = findAllBivalueCells();
+	bivals = getBivaluePairs();
 	//console.log("bivals", bivals);
 
 	// we need to start with a strong link so we might as well use a cp

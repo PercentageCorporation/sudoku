@@ -1,7 +1,7 @@
 import { RCS, Rows } from '/src/utilities/constants';
 import { includesAny, findSeenTargets2, getCommonCandidates } from '/src/hints/hints';
 import { canSeeEachOther, findTargetsSeenByAll, findTargetsSeenByBoth, cellHasCandidate, sameHouse, sameRow3, sameCol3, sameSq3 } from '/src/hints/hints';
-import { getConjugatePairs, findAllBivalueCells } from "/src/hints/conjugates";
+import { getConjugatePairs, getBivaluePairs } from "/src/hints/conjugates";
 import { cellStore } from '/src//store/store';
 
 //*****************************************************************************
@@ -346,7 +346,7 @@ export function loops() {
 	//cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
 	//console.log("cpairs", cpairs);
 
-	bivals = findAllBivalueCells();
+	bivals = getBivaluePairs();
 	//console.log("bivals", bivals);
 	// we need to start with a strong link so we might as well use a cp
 	// for each conjugate pair start the chains with their endpoints

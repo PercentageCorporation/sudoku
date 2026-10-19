@@ -5,6 +5,8 @@ import { initCounts, rCounts2, cCounts2, sCounts2, includesAll } from '/src/hint
 let cells = [];
 let conjugateCells = null;
 let conjugatePairs = [];
+let bivalueCells = null;
+let bivaluePairs = [];
 let strongLinks = [];	// includes conjugate pairs and bivalue cells
 
 // *****************************************************************************
@@ -21,6 +23,19 @@ export function getConjugatePairs() {
 	}
 
 	return conjugatePairs;
+}
+
+export function getBivaluePairs() {
+	cells = cellStore.getState().cells;
+	if (cells !== bivalueCells || bivaluePairs.length === 0) {
+		var bp = findAllBivalueCells();
+		bivaluePairs = bp;
+
+		bivalueCells = cells;
+		//console.log("bivalue pairs updated", bivaluePairs.length);
+	}
+
+	return bivaluePairs;
 }
 
 // get the conjugate pairs for the given value
@@ -56,7 +71,18 @@ export function cellInConjugatePair(cix, value) {
 	return 0;
 }
 
-
+// is the cell in a bivalue pair
+export function cellInBivaluePair(cix, value) {
+	getBivaluePairs();
+	//console.log(cix, value, bivaluePairs)
+	var bvlen = bivaluePairs.length;
+	for (var i=0; i<bvlen; ++i) {
+		var bv = bivaluePairs[i];
+		if (value > 0 && !bv[1].includes(value)) continue;
+		if (cix === bv[0]) return 1;
+	}
+	return 0;
+}
 // find all occurances of the value in the row/col/sq
 function findValuePairsInRCS(arr, val) {
 	var cls = [];
@@ -190,7 +216,7 @@ export function findAllBivalueCells() {
 
 export function getBivalueList() {
 
-	var bvpairs = findAllBivalueCells();
+	var bvpairs = getBivaluePairs();
 	var bvplen = bvpairs.length;
 	//console.log("bvpairs", bvpairs)
 	// bv: [ cix, [ac] ]
