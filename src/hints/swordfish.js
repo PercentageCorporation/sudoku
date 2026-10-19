@@ -578,8 +578,7 @@ export function swordfish() {
 			cols: cols,
 			square: null,
 			cells: cls,
-			offset: null,
-			value: val,
+			values: [val],
 			targets: tgts,
 			msg: `Swordfish: Cells: ${tgts}, Value: ${val}`
 		}

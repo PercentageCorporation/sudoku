@@ -408,7 +408,6 @@ export function nakedTriples() {
 			col: rcs === 'c' ? rcsix : null,
 			square: rcs === 's' ? rcsix : null,
 			cells: cls,
-			offset: null,
 			values: vals,
 			targets: tgts,
 			msg: `Naked Triple: Cells: ${tgts}, Values: ${vals}`
@@ -547,7 +546,6 @@ export function hiddenTriples() {
 			cols: rcs === 'c' ? rcs : null,
 			square: rcs === 's' ? rcs : null,
 			cells: cls,
-			offset: null,
 			values: vals,
 			targets: tgts,
 			msg: `Hidden Triple: Cells: ${tgts}, Values: ${vals}`

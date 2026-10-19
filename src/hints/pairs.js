@@ -184,7 +184,6 @@ export function nakedPairs() {
 			col: null,
 			square: null,
 			cells: cls,
-			offset: null,
 			values: vals,
 			targets: tgts,
 			msg: msg
@@ -278,7 +277,6 @@ export function hiddenPairs() {
 			cols: rcs === 'c' ? rcs : null,
 			square: rcs === 's' ? rcs : null,
 			cells: cls,
-			offset: null,
 			values: vals,
 			targets: tgts,
 			msg: `Hidden Pair: Cells: ${tgts}, Values: ${vals}`
@@ -339,8 +337,7 @@ export function pointingPairsSquare() {
 						col: null,
 						square: sqix,
 						cells: cels,
-						offset: null,
-						value: value,
+						values: [value],
 						targets: targets,
 						msg: msg
 					};
@@ -382,8 +379,7 @@ export function pointingPairsSquare() {
 						col: cx,
 						square: sqix,
 						cells: cels,
-						offset: null,
-						value: value,
+						values: [value],
 						targets: targets,
 						msg: msg
 					};
@@ -557,7 +553,6 @@ export function pointingPairsRowCol() {
 			col: pp.col,
 			square: pp.square,
 			cells: pp.cells,
-			offset: null,
 			values: pp.values,
 			targets: pp.targets,
 			msg: msg

@@ -80,6 +80,45 @@ export const useManCellsStore = create (
 				return linear;
 			},
 
+			getManCellsLinearText: () => {
+				let linear = "";
+				let cells = get().cells;
+				for (let i = 0; i < 81; i++) {
+					let val = cells[LinearToGrid[i]];
+					linear += Number(val);
+				}
+				return linear;
+			},
+
+			getManJSON: () => {
+				let cells = get().cells;
+				let ix = 0;
+				let grids = [];
+				for (let i = 0; i < 9; i++) {
+					let sq = [];
+					for (let j = 0; j < 9; j++) {
+						sq.push(cells[ix++]);
+					}
+					grids.push(sq);
+				}
+				let json = JSON.stringify(grids);
+				return json;
+			},
+
+			getManLinearJSON: () => {
+				let cells = get().cells;
+				let grids = [];
+				for (let i = 0; i < 9; i++) {
+					let row = [];
+					for (let j = 0; j < 9; j++) {
+						row.push(cells[ix++]);
+					}
+					grids.push(row);
+				}
+				let json = JSON.stringify(grids);
+				return json;
+			},
+
 			getManCells: () => {
 				return get().cells
 			},
@@ -202,6 +241,7 @@ export const useGameStateStore = create(
 			showConjugates: false,
 			showSolution: false,
 			numbersUsed: [0,0,0,0,0,0,0,0,0,0],
+			solutionLog: [],
 
 			resetState: () => {
 				set({
@@ -210,8 +250,18 @@ export const useGameStateStore = create(
 					editCandidates: -1,
 					showBivalue: false,
 					showConjugates: false,
-					numbersUsed: [0,0,0,0,0,0,0,0,0,0]
+					numbersUsed: [0,0,0,0,0,0,0,0,0,0],
 				})
+			},
+
+			clearSolutionLog: () => {
+				set({ solutionLog: []})
+			},
+
+			addSolutionLog: (item) => {
+				let log = get().solutionLog;
+				log.push(item);
+				set({ solutionLog: log})
 			},
 
 			setSelectedValue: (sel) => {
@@ -238,8 +288,16 @@ export const useGameStateStore = create(
 				set({ showBivalue: tf})
 			},
 
+			clearShowBivalue: () => {
+				set({ showBivalue: false})
+			},
+
 			setShowConjugates: (tf) => {
 				set({ showConjugates: tf})
+			},
+
+			clearShowConjugates: () => {
+				set({ showConjugates: false})
 			},
 
 			toggleShowSolution: () => {
@@ -657,6 +715,10 @@ export const cellStore = create(
 
 				getCell: (ix) => {
 					return get().cells[ix]
+				},
+
+				getCellSolution: (ix) => {
+					return get().cells[ix].solutionValue
 				},
 
 				showCell: (ix) => {

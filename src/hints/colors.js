@@ -354,8 +354,7 @@ export function colorWing() {
 			parity2: p2,
 			parity3: p3,
 			parity4: p4,
-			offset: null,
-			value: value,
+			values: [value],
 			targets: tgts,
 			msg: `Color Wing: Cells: ${tgts}, Value: ${value}`
 		}
@@ -449,8 +448,7 @@ export function colors() {
 					cells: cls,
 					cells0: red,
 					cells1: blue,
-					offset: null,
-					value: value,
+					values: [value],
 					targets: tgts,
 					msg: `Colors II: Cells: ${tgts}, Value: ${value}`
 				}
@@ -481,8 +479,7 @@ export function colors() {
 					cells: cls,
 					cells0: red,
 					cells1: blue,
-					offset: null,
-					value: value,
+					values: [value],
 					targets: tgts,
 					msg: `Colors I: Cells: ${tgts}, Value: ${value}`
 				}

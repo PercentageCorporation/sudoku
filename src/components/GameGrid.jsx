@@ -131,6 +131,11 @@ function Cell({ix}) {
 		}
 	} else if (hint.type) {
 		switch (hint.type) {
+			case 'cell':
+			case 'forced2S':
+				if (hint.targetcells[0] === ix) selMode = 3;
+				break;
+
 			case "colorWing":
 			case "xChain":
 			case 'aicI':
@@ -218,8 +223,7 @@ function Cell({ix}) {
 
 			case 'forced':
 			case 'forced2':
-			case 'forced2S':
-				if (hint.target === ix) {
+				if (hint.targets.includes(ix)) {
 					selMode = 3;
 				}
 				break;
@@ -230,10 +234,6 @@ function Cell({ix}) {
 
 			case 'col':
 				if (hint.col >= 0 && hint.col === rcs[1]) selMode = 3;
-				break;
-
-			case 'cell':
-				if (hint.cells[0] === ix) selMode = 3;
 				break;
 
 			default:

@@ -255,8 +255,7 @@ export function XWing() {
 			cols: null,
 			square: null,
 			cells: cls,
-			offset: null,
-			value: val,
+			values: [val],
 			targets: tgts,
 			msg: `XWing Cells: ${cls}, Value: ${val}`
 		}
@@ -353,8 +352,7 @@ export function XYWing() {
 						cols: null,
 						square: null,
 						cells: cls,
-						offset: null,
-						value: z,
+						values: [z],
 						targets: tgts,
 						msg: `XY-Wing: Cells: ${tgts}, Value: ${z}`
 					}
@@ -464,8 +462,7 @@ export function XYZWing() {
 						col: null,
 						square: null,
 						cells: cls,
-						offset: null,
-						value: val,
+						values: [val],
 						targets: targets,
 						msg: `XYZ-Wing: Cells: ${cls}, Value: ${val}`
 					}
@@ -586,8 +583,7 @@ export function WWing() {
 			col: null,
 			square: null,
 			cells: cls,
-			offset: null,
-			value: val,
+			values: [val],
 			targets: targets,
 			msg: `W-Wing: Cells: ${targets}, Value: ${val}`
 		}
@@ -813,8 +809,7 @@ function wingHint(wing) {
 		cells0: cells0,
 		cells1: cells1,
 		cells2: cells2,
-		offset: null,
-		value: value,
+		values: [value],
 		targets: tgts,
 		msg: `WXYZ-Wing: Cells: ${tgts}, Value: ${value}`
 	}

@@ -237,8 +237,7 @@ export function XChain() {
 			cells: cls,
 			parity1: parity1,
 			parity2: parity2,
-			offset: null,
-			value: val,
+			values: [val],
 			targets: tgts,
 			msg: `X-Chain: Cells: ${tgts}, Value: ${val}`
 		}
@@ -425,8 +424,7 @@ export function XYChain() {
 			cols: null,
 			square: null,
 			cells: cls,
-			offset: null,
-			value: val,
+			values: [val],
 			targets: tgts,
 			msg: `XY-Chain: Cells: ${tgts}, Value: ${val}`
 		}

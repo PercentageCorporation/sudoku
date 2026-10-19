@@ -688,8 +688,7 @@ function makeHint(aic) {
 		cells: [ep0, ep1],
 		parity1: parity1,
 		parity2: parity2,
-		offset: null,
-		value: val,
+		values: [val],
 		targets: tgts,
 		msg: `AIC I: Cells: ${tgts}, Value: ${val}`
 	}
@@ -737,7 +736,6 @@ function makeHint2(aic) {
 		cells: [ep0, ep1],
 		parity1: parity1,
 		parity2: parity2,
-		offset: null,
 		values: values,
 		targets: tgts,
 		targetlist: tgtslist,
@@ -787,7 +785,6 @@ function makeLoopHint(aic) {
 		cells: [ep0, ep1],
 		parity1: parity1,
 		parity2: parity2,
-		offset: null,
 		values: values,
 		targets: tgts,
 		targetlist: tgtslist,

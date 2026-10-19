@@ -1,5 +1,6 @@
 import { cellStore } from "/src/store/store";
 import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, LinearToGrid } from "/src/utilities/constants";
+import { getConjugatePairsBlockMajor } from "/src/hints/conjugates";
 
 const INVALID = -1;
 const ALLINVALID = -2;
@@ -10,30 +11,30 @@ const ELIMINATION = 4;
 
 //******************************************************************************
 
-let bv1 = 0;
-let bv2 = 0;
-
 let gamecandidates = null;
 let explorechain = [];
+let maxlevel = 0;
+let numinvalid = 0;
 
+let start = 0;
 export function biforce() {
 	let cells = cellStore.getState().cells;
 	gamecandidates = Array.from(cells, c => c.value > 0 ? [] : c.activecandidates);
 	let state  = Array.from(cells, c => c.value);
 
-	console.log("elim0");
+	//console.log("elim0");
 	let determination = findElimination(state, gamecandidates);
-	console.log("elim1", determination);
+	//console.log("elim1", determination);
 	let result = determination[0];
 	if (result === INVALID) {
 		console.log("INVALID HINT", determination);
-		let hint = makeForcingHint(determination[1], determination[2]);
+		let hint = makeForcingHint(determination);
 		return [hint]
 	}
 
 	if (result === SOLVED) {
 		console.log("SOLVED HINT", determination);
-		let hint = makeForcingHintSolved(determination[1], determination[2]);
+		let hint = makeForcingHintSolved(determination);
 		return [hint];
 	}
 
@@ -42,25 +43,28 @@ export function biforce() {
 
 
 function findElimination(state, candidates) {
-	//const candidates = recomputeCandidates(state);
 	const cix = chooseStartingCell(candidates);
-
 	if (cix < 0) return null;
-	let level = 0;
+
+	maxlevel = 0;
+	numinvalid = 0;
 
 	for (const value of candidates[cix]) {
+		let level = 0;
 		explorechain = [];
 		const next = structuredClone(state);
 		next[cix] = value;
 		explorechain.push([level, cix, value]);
 		console.log("next **********", cix, value, candidates[cix]);
 		const result = explore(next, level);
-		console.log("chain", explorechain.length, cix, value);
+
+		let chainlen = explorechain.length;
+		console.log("chain", chainlen, maxlevel, numinvalid);
 		if (result === INVALID) {
-			return [INVALID, cix, value];
+			return [INVALID, cix, value, chainlen, maxlevel, numinvalid];
 		}
 		if (result === SOLVED) {
-			return [SOLVED, cix, value];
+			return [SOLVED, cix, value, chainlen, maxlevel, numinvalid];
 		}
 	}
 
@@ -69,14 +73,16 @@ function findElimination(state, candidates) {
 
 function explore(state, level) {
 	++level;
+	if (level > maxlevel) maxlevel = level;
 	do {
 		var statecandidates = recomputeCandidates(state);
 	} while (applySingles(state, statecandidates));
 
 	let result = hasContradiction(state, statecandidates);
+	if (result !== VALID && result !== SOLVED) numinvalid++;
 	if (result === INVALID) return INVALID;
 	if (result === SOLVED) {
-		console.log("SOLVED ****", level);
+		//console.log("SOLVED ****", level);
 		return SOLVED;
 	}
 
@@ -96,7 +102,7 @@ function explore(state, level) {
 		//console.log("explorex", childResult);
 
 		if (childResult === SOLVED) {
-			console.log("SOLVED ****", level, cix, cellcandidates, value);
+			//console.log("SOLVED ****", level, cix, cellcandidates, value);
 			return SOLVED;
 		}
 
@@ -121,11 +127,49 @@ function chooseStartingCell(can) {
 	for( let i=0; i<81; ++i) {
 		if (can[i] !== null && can[i].length === 2) return i;
 	}
+
+	console.log("can", can);
+	let cpairs = getConjugatePairsBlockMajor(can);
+	console.log("cp", cpairs);
+	//if (cpairs.length > 0) return cpairs[1][1][1];
+	let strongs = strongLinks(cpairs);
+	console.log("strongs", strongs);
+	if (strongs.length > 0) return strongs[0][0];
+
 	// no 2s, go for 3s
 	for( let i=0; i<81; ++i) {
 		if (can[i] !== null && can[i].length === 3) return i;
 	}
 	return -1;
+}
+
+function strongLinks(cpairs) {
+
+	// calculate the number of strong links attached to each cell
+	//let stronglinks = Array.from({ length: 81 }, () => []),
+	let stronglinks = Array(81).fill(0);
+	let values = [0,0,0,0,0,0,0,0,0,0];
+
+	let cplen = cpairs.length;
+	for( let cx=0; cx<cplen; ++cx) {
+		let cp = cpairs[cx];
+		stronglinks[cp[1][0]]++;
+		stronglinks[cp[1][1]]++;
+	}
+
+	// let bvlen = bvpairs.length;
+	// for( let bx=0; bx<bvlen; ++bx) {
+	// 	let bp = bvpairs[bx];
+	// 	stronglinks[bp[0]]++;
+	// }
+
+	//console.log("stronglinks",stronglinks);
+	let strongs = [];
+	for( let i=0; i<81; ++i) {
+		if (stronglinks[i] > 0) strongs.push([i, stronglinks[i]]);
+	}
+	strongs.sort((a, b) => b[1] - a[1])
+	return strongs;
 }
 
 function hasContradiction(state, can) {
@@ -238,36 +282,49 @@ export function cellsToLinearText(cls) {
 	return linear;
 }
 
-function makeForcingHint(tgt, value) {
+function makeForcingHint(determination) {
+	let tgt = determination[1];
+	let value = determination[2];
+	let cl = determination[3];
+	let lev = determination[4];
+	let conts = determination[5];
 	let h = {
 		type: 'forced2',
 		rows: null,
 		cols: null,
 		square: null,
-		cells: [tgt],
+		cells: null,
 		parity1: null,
 		parity2: null,
-		offset: null,
-		value: value,
-		target: tgt,
+		levels: lev,
+		depth: cl,
+		contradictions: conts,
+		values: [value],
+		targets: [tgt],
 		msg: `ForcedBV: Cell: ${tgt}, Value: ${value}`
 	}
 
 	return h;
 }
 
-function makeForcingHintSolved(tgt, value) {
+function makeForcingHintSolved(determination) {
+	let tgt = determination[1];
+	let value = determination[2];
+	let cl = determination[3];
+	let lev = determination[4];
+	let conts = determination[5];
 	let h = {
 		type: 'forced2S',
 		rows: null,
 		cols: null,
 		square: null,
-		cells: [tgt],
+		targetcells: [tgt],
 		parity1: null,
 		parity2: null,
-		offset: null,
-		value: value,
-		target: tgt,
+		levels: lev,
+		depth: cl,
+		contradictions: conts,
+		values: [value],
 		msg: `ForcedBVS: Cell: ${tgt}, Value: ${value}`
 	}
 

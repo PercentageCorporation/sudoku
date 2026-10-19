@@ -218,8 +218,7 @@ export function emptyRectangles() {
 							cols: null,
 							square: null,
 							cells: cls,
-							offset: null,
-							value: value,
+							values: [value],
 							targets: [target],
 							msg: `Empty Rect: Cells: ${target}, Value: ${value}`
 						}
@@ -456,7 +455,6 @@ export function uniqueRectangles() {
 				cols: null,
 				square: null,
 				cells: sqcells,
-				offset: null,
 				values: vals,
 				targets: tgts,
 				msg: `UR Type 1: Cells: ${tgts}, Value: ${vals}`
@@ -483,8 +481,7 @@ export function uniqueRectangles() {
 					cols: null,
 					square: null,
 					cells: sqcells,
-					offset: null,
-					value: val,
+					values: [val],
 					targets: tgts,
 					msg: `UR Type 2: Cells: ${tgts}, Value: ${val}`
 				}
@@ -524,7 +521,6 @@ export function uniqueRectangles() {
 							cols: null,
 							square: null,
 							cells: sqcells,
-							offset: null,
 							values: virtcell,
 							targets: tgts,
 							msg: `UR Type 3: Cells: ${tgts}, Value: ${virtcell}`
@@ -569,7 +565,6 @@ export function uniqueRectangles() {
 							cols: null,
 							square: null,
 							cells: sqcells,
-							offset: null,
 							values: vals,
 							targets: tgts,
 							msg: `UR Type 3: Cells: ${tgts}, Values: ${vals}`
@@ -606,8 +601,7 @@ export function uniqueRectangles() {
 					cols: null,
 					square: null,
 					cells: sqcells,
-					offset: null,
-					value: val,
+					values: [val],
 					targets: tgts,
 					msg: `UR Type 5: Cells: ${tgts}, Value: ${val}`
 				}
@@ -653,8 +647,7 @@ export function uniqueRectangles() {
 					cols: null,
 					square: null,
 					cells: sqcells,
-					offset: null,
-					value: val,
+					values: [val],
 					targets: extras,
 					msg: `UR Type 6: Cells: ${extras}, Value: ${val}`
 				}
@@ -704,8 +697,7 @@ export function uniqueRectangles() {
 					cols: null,
 					square: null,
 					cells: sqcells,
-					offset: null,
-					value: val,
+					values: [val],
 					targets: extras,
 					msg: `UR Type 4: Cells: ${extras}, Value: ${val}`
 				}
@@ -755,8 +747,7 @@ export function uniqueRectangles() {
 						cols: null,
 						square: null,
 						cells: sqcells,
-						offset: null,
-						value: val,
+						values: [val],
 						targets: [corner0],
 						msg: `UR Type 7: Cells: ${corner0}, Value: ${val}`
 					}
@@ -806,8 +797,7 @@ export function uniqueRectangles() {
 						cols: null,
 						square: null,
 						cells: sqcells,
-						offset: null,
-						value: val,
+						values: [val],
 						targets: [corner],
 						msg: `UR Type 7: Cells: ${corner}, Value: ${val}`
 					}

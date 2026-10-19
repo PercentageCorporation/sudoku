@@ -23,9 +23,8 @@ function hasSingleValueHint(arr) {
 			row: null,
 			col: null,
 			square: null,
-			cells: [pos.cell],
-			offset: pos.offset,
-			value: sv,
+			targetcells: [pos.cell],
+			values: [sv],
 			msg: ""
 		}
 		return rs;
@@ -54,19 +53,19 @@ export function singleCounts() {
 		var hassv = hasSingleValueHint(Rows[i])
 		if (hassv) {
 			hassv.row = i;
-			hassv.msg = `Single: Row: ${i+1}, Cell:  ${hassv.cells}, Value: ${hassv.value}`
+			hassv.msg = `Single: Row: ${i+1}, Cell: ${hassv.targetcells}, Value: ${hassv.values}`
 			singleCounts.push(hassv)
 		}
 		var hassv = hasSingleValueHint(Cols[i])
 		if (hassv) {
 			hassv.col = i;
-			hassv.msg = `Single: Column: ${i+1}, Cell:  ${hassv.cells}, Value: ${hassv.value}`
+			hassv.msg = `Single: Column: ${i+1}, Cell: ${hassv.targetcells}, Value: ${hassv.values}`
 			singleCounts.push(hassv)
 		}
 		var hassv = hasSingleValueHint(Squares[i])
 		if (hassv) {
 			hassv.square = i;
-			hassv.msg = `Single: Square: ${i+1}, Cell:  ${hassv.cells}, Value: ${hassv.value}`
+			hassv.msg = `Single: Square: ${i+1}, Cell: ${hassv.targetcells}, Value: ${hassv.values}`
 			singleCounts.push(hassv)
 		}
 	}
@@ -85,18 +84,16 @@ export function singletons() {
 	for (var ix=0; ix<81; ++ix) {
 		var c = cells[ix];
 		const ac = c.activecandidates;
-		if (c.value === 0 && ac.length === 1){
+		if (c.value === 0 && ac.length === 1) {
 			//console.log("single:", ix, c.candidates[0]);
-			var sv = c.activecandidates[0];
 			var s = {
 				type: 'cell',
 				row: cellRow[ix],
 				col: cellCol[ix],
 				square: cellSquare[ix],
-				cells: [ix],
-				offset: null,
-				value: sv,
-				msg: `Single: Cell:  ${ix+1}, Value: ${sv}`
+				targetcells: [ix],
+				values: ac,
+				msg: `Single: Cell: ${ix+1}, Value: ${ac}`
 			}
 			singletons.push(s);
 		}

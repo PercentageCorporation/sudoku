@@ -244,8 +244,7 @@ export function als() {
 							cells: allcells,
 							cells0: alsi[1],
 							cells1: alsj[1],
-							offset: null,
-							value: Z,
+							values: [Z],
 							targets: tgts,
 							msg: `ALS XZ 1: Cells: ${tgts}, Value: ${Z}`
 						}
@@ -302,7 +301,6 @@ export function als() {
 						cells: allcells,
 						cells0: alsi[1],
 						cells1: alsj[1],
-						offset: null,
 						values: values,
 						targets: targets,
 						targetlist: targetlist,
@@ -377,8 +375,7 @@ export function lockedCandidates1() {
 			col: rcs === 'c' ? rcsix : null,
 			square: sq,
 			cells: cls,
-			offset: null,
-			value: val,
+			values: [val],
 			targets: tgts,
 			msg: `Locked1: Cells: ${tgts}, Value: ${val}`
 		}

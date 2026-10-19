@@ -113,7 +113,6 @@ function quadHint(q) {
 		col: null,
 		square: null,
 		cells: cls,
-		offset: null,
 		values: vals,
 		targets: tgts,
 		msg: `Quad: Cells: ${tgts}, Value: ${vals}`

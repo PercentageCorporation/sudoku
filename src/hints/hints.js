@@ -562,7 +562,7 @@ function oneRowValues(sq, sqrc) {
 				row: row,
 				col: null,
 				cells: c,
-				value: v,
+				values: [v],
 				count: vcount,
 			}
 			);
@@ -606,7 +606,7 @@ function oneColValues(sq, sqrc) {
 					row: null,
 					col: col,
 					cells: c,
-					value: v,
+					values: [v],
 					count: vcount,
 				}
 			);

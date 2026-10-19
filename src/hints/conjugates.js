@@ -225,3 +225,134 @@ export function getBivalueList() {
 	return bvpl;
 }
 
+export function getConjugatePairsRowMajor(values, candidates) {
+	const pairs = [];
+
+	// Examine each digit in each house
+	function checkHouse(indices, type, house) {
+		for (let value = 1; value <= 9; value++) {
+			const cells = indices.filter(ix =>
+			values[ix] === 0 &&
+			candidates[ix].includes(value)
+			);
+
+			if (cells.length === 2) {
+				pairs.push({
+					value,
+					cells,
+					type,
+					house
+				});
+			}
+		}
+	}
+
+	// Rows
+	for (let row = 0; row < 9; row++) {
+		const indices = Array.from(
+			{ length: 9 },
+			(_, col) => row * 9 + col
+		);
+
+		checkHouse(indices, "row", row);
+	}
+
+	// Columns
+	for (let col = 0; col < 9; col++) {
+		const indices = Array.from(
+			{ length: 9 },
+			(_, row) => row * 9 + col
+		);
+
+		checkHouse(indices, "col", col);
+	}
+
+	// Boxes
+	for (let box = 0; box < 9; box++) {
+		const br = Math.floor(box / 3) * 3;
+		const bc = (box % 3) * 3;
+		const indices = [];
+
+		for (let r = 0; r < 3; r++) {
+			for (let c = 0; c < 3; c++) {
+				indices.push((br + r) * 9 + bc + c);
+			}
+		}
+
+		checkHouse(indices, "box", box);
+	}
+
+	return pairs;
+}
+
+export function getConjugatePairsBlockMajor(candidates) {
+	const pairs = [];
+
+	function checkHouse(indices, type, house) {
+		for (let value = 1; value <= 9; value++) {
+			const cells = indices.filter(ix => candidates[ix] !== null && candidates[ix].includes(value));
+			if (cells.length === 2) {
+				// Avoid duplicate conjugate pairs
+				if (!pairs.some(p =>
+					p.value === value &&
+					p.cells[0] === cells[0] &&
+					p.cells[1] === cells[1]
+				)) {
+					pairs.push([
+						value,
+						cells,
+						type,
+						house
+					]);
+				} else {
+
+				}
+			}
+		}
+	}
+
+	// Convert row/column to block-major index
+	function index(row, col) {
+		const box = Math.floor(row / 3) * 3 +
+		Math.floor(col / 3);
+
+		const pos = (row % 3) * 3 + (col % 3);
+
+		return box * 9 + pos;
+	}
+
+	// Rows
+	for (let row = 0; row < 9; row++) {
+		const indices = [];
+
+		for (let col = 0; col < 9; col++) {
+			indices.push(index(row, col));
+		}
+
+		checkHouse(indices, "row", row);
+	}
+
+	// Columns
+	for (let col = 0; col < 9; col++) {
+		const indices = [];
+
+		for (let row = 0; row < 9; row++) {
+			indices.push(index(row, col));
+		}
+
+		checkHouse(indices, "col", col);
+	}
+
+	// Boxes
+	for (let box = 0; box < 9; box++) {
+		const indices = [];
+
+		for (let pos = 0; pos < 9; pos++) {
+			indices.push(box * 9 + pos);
+		}
+
+		checkHouse(indices, "box", box);
+	}
+
+	return pairs;
+}

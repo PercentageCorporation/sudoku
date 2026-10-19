@@ -272,9 +272,8 @@ function makeForcingHint(tgt, value) {
 		cells: [tgt],
 		parity1: null,
 		parity2: null,
-		offset: null,
-		value: value,
-		target: tgt,
+		values: [value],
+		targets: [tgt],
 		msg: `Forced: Cell: ${tgt}, Value: ${value}`
 	}
 

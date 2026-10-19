@@ -113,7 +113,7 @@ export default function ManualGrid() {
 	const { toggleShowNumberGrid, toggleShowCandidates, toggleShowSolution, showNumberGrid, showCandidates, showSolution } = useManCellsStore();
 	const { initialized, manGameValid, manSelectedCell } = useManCellsStore();
 	const { number: manNumber, description: manDescription } = useManCellsStore();
-	const { setManCellValue, setManSelectedCell, getManSelectedCell, getManCells, getManCellsLinear } = useManCellsStore();
+	const { setManCellValue, setManSelectedCell, getManSelectedCell, getManCells, getManCellsLinear, getManCellsLinearText, getManJSON } = useManCellsStore();
 	const { getManSolution, setManId, loadManCells, loadManSolution,  initialize } = useManCellsStore();
 	const { resetHint } = useHintStore();
 	const { loadGame } = useCellActions();
@@ -339,6 +339,17 @@ export default function ManualGrid() {
 		toggleShowSolution();
 	}
 
+	function handleShowLinear(e) {
+		e.preventDefault();
+		var linear = getManCellsLinearText();
+		//alert(linear);
+		console.log(linear);
+		var linearspaces = linear.replaceAll('0', ' ');
+		console.log(linearspaces);
+		let json = getManJSON();
+		console.log(json);
+	}
+
 	function addSolutionCancel() {
 		setAddSolution(false);
 	}
@@ -500,6 +511,14 @@ export default function ManualGrid() {
 					<button
 						type="button"
 						tabIndex={-1}
+						onClick={(e) => handleAddSolution(e)}
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						>
+						Add Solution
+					</button>
+					<button
+						type="button"
+						tabIndex={-1}
 						onClick={(e) => handleReadGame(e)}
 						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
@@ -549,14 +568,6 @@ export default function ManualGrid() {
 						>
 						Import Games
 					</button>
-					<button
-						type="button"
-						tabIndex={-1}
-						onClick={(e) => handleAddSolution(e)}
-						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
-						>
-						Add Solution
-					</button>
 				</div>
 				<div className="mx-2 flex flex-row justify-between mt-2">
 					<button
@@ -574,6 +585,14 @@ export default function ManualGrid() {
 						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
 						>
 						{`${showCandidates ?  'Hide Candidates' : 'Show Candidates'}`}
+					</button>
+					<button
+						type="button"
+						tabIndex={-1}
+						onClick={(e) => handleShowLinear(e)}
+						className="px-2 py-2 bg-blue-300 rounded hover:cursor-pointer"
+						>
+						Show Linear
 					</button>
 				</div>
 				<div className="mx-2 flex flex-row justify-between mt-2">

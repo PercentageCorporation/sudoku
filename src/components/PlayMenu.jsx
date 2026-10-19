@@ -7,6 +7,7 @@ import { runHints } from '/src/hints/hints';
 
 export default function PlayMenu() {
 	const { selectedValue, selectedCell, setSelectedValue, clearSelectedValue, clearSelectedCell, numbersUsed, setShowBivalue, setShowConjugates, resetState } = useGameStateStore();
+	const { addSolutionLog, solutionLog } = useGameStateStore();
 	const { setCellValue, clearCellValue, validateGame } = useCellActions();
 	const { checkGameSolved, calcNumbersUsed } = useCellActions();
 	const { updateCandidates, addNonCandidate } = useCellActions();
@@ -42,109 +43,41 @@ export default function PlayMenu() {
 		let h = getHint();
 		if (!h) return;
 		console.log("doHint", h);
-		switch (h.type) {
-			// hints with targets
-			case "locked":
-			case "nakedPair":
-			case "nakedTriple":
-			case "pointingPair":
-			case "pointingPairSquare":
-			case "hiddenPair":
-			case "hiddenTriple":
-			case "quad":
-			case "xWing":
-			case "xyWing":
-			case "xyTriple":
-			case "xChain":
-			case "xyChain":
-			case "xyzWing":
-			case 'wxyzWing':
-			case 'wWing':
-			case 'colorWing':
-			case "swordfish":
-			case "urType1":
-			case 'urType2':
-			case 'urType3':
-			case 'urType4':
-			case 'urType5':
-			case 'urType6':
-			case 'urType7':
-			case 'colorsI':
-			case 'alsXZ1':
-			case 'aicI':
-			case 'emptyRectangle':
-				var tgts = h.targets;
-				tgts.forEach((cix) => {
-					if (h.values) {
-						h.values.forEach((value) => {
-							addNonCandidate(cix, value);
-						})
-					}
-					else if (h.value) {
-						addNonCandidate(cix, h.value);
-					}
-				})
-				clearSelectedValue();
-				clearSelectedCell();
-				break;
 
-			case 'aicIloop':
-			case 'aicII':
-			case 'alsXZ2':
-				var tgts = h.targetlist;
-				tgts.forEach((t) => {
-					let tcls = t[0];
-					let vals = t[1];
-					tcls.forEach((tc) => {
-						vals.forEach((v) => {
-							addNonCandidate(tc, v);
-						})
+		let type = h.type;
+		let targetcells = h.targetcells;
+		let targetlist = h.targetlist;
+		let targets = h.targets;
+		let values = h.values;
+
+		if (targetcells) {
+			let cix = targetcells[0];
+			let v = values[0];
+			setCellValue(cix, v);
+		} else if (targetlist) {
+			targetlist.forEach((t) => {
+				let tcls = t[0];
+				let vals = t[1];
+				tcls.forEach((tc) => {
+					vals.forEach((v) => {
+						addNonCandidate(tc, v);
 					})
 				})
-				clearSelectedValue();
-				clearSelectedCell();
-				break;
+			})
 
-			case 'forced':
-			case 'forced2':
-				var tgt = h.target;
-				if (h.values) {
-					h.values.forEach((value) => {
-						addNonCandidate(tgt, value);
-					})
-				}
-				else if (h.value) {
-					addNonCandidate(tgt, h.value);
-				}
-				clearSelectedValue();
-				clearSelectedCell();
-				break;
-
-			case 'colorsII':
-				var tgts = h.targets;
-				var v = h.value;
-				tgts.forEach((cix) => {
-					setCellValue(cix, v);
+		} else if (targets) {
+			targets.forEach((cix) => {
+				values.forEach((value) => {
+					addNonCandidate(cix, value);
 				})
-				clearSelectedValue();
-				clearSelectedCell();
-				break;
-
-			case "cell":
-			case 'forced2S':
-				var cix = h.cells[0];
-				var v = h.value;
-				setCellValue(cix, v);
-				setSelectedValue(v);
-				clearSelectedCell();
-				break;
-
-			default:
-				console.log("Unknown Hint Type:", h.type);
-				return;
+			})
 		}
-
 		clearSelectedValue();
+		clearSelectedCell();
+
+		let log = (type.startsWith('forced2')) ? [type, h.depth, h.levels, h.contradictions ] : [type];
+		addSolutionLog(log);
+
 		if (!validateGame()) {
 			setMessage("Invalid Board");
 			resetHint();
@@ -158,6 +91,10 @@ export default function PlayMenu() {
 					setHintMsg(h.msg);
 					setHint(h);
 				}
+			} else {
+				// solved ?
+				console.log("SOLVED");
+				console.log(solutionLog);
 			}
 		}
 	}
@@ -165,7 +102,7 @@ export default function PlayMenu() {
 	function showHint(e) {
 		e.preventDefault();
 		//console.log("showHint", hint);
-		clearSelectedValue();
+		resetState();
 		var h = runHints();
 		if (!h) {
 			//resetHint();
