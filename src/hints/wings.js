@@ -460,7 +460,7 @@ export function WWing() {
 			}
 		}
 	});
-	console.log("endpoints", endpoints);
+	//console.log("endpoints", endpoints);
 	if (endpoints.length === 0) return null;
 
 	// now we need to connect enpoints with conjugate pairs

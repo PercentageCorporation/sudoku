@@ -359,6 +359,7 @@ export function loops() {
 		//console.log("bp", bp);
 		//if (bvep !== 18) continue;
 		// make the first link
+		console.log("bv0start", bp);
 		chain1 = [];	// reset the chain
 		let link = [bvep, bvac,  bvac[0], 0, 'x', -1, [1]];
 		chain1.push(link);
@@ -368,10 +369,14 @@ export function loops() {
 
 		//console.log("chain0", chain1);
 		let pathsa = getAICPaths(chain1);
-		allpaths.push.apply(allpaths, pathsa);
+		//allpaths.push.apply(allpaths, pathsa);
 		//console.log("pathsa", pathsa);
+		console.log("bv0end", pathsa.length);
+		loops = processPaths(pathsa);
+		if (loops.length > 0) return loops;
 
 		// make the alternate link
+		console.log("bv1start", bp);
 		chain1 = [];	// reset the chain
 		link = [bvep, bvac,  bvac[1], 0, 'x', -1, [1]];
 		chain1.push(link);
@@ -381,8 +386,11 @@ export function loops() {
 
 		//console.log("chain1", chain1);
 		let pathsb = getAICPaths(chain1);
-		allpaths.push.apply(allpaths, pathsb);
+		//allpaths.push.apply(allpaths, pathsb);
 		//console.log("pathsb", pathsb);
+		console.log("bv1end", pathsb.length);
+		loops = processPaths(pathsb);
+		if (loops.length > 0) return loops;
 	}
 
 	// we need to start with a strong link so we might as well use a cp
@@ -404,6 +412,7 @@ export function loops() {
 		//if (sep0 !== 75 && sep1 !== 75) continue;	// TEST
 		//if (sep1 !== 75) continue;	// TEST
 		// make the first link
+		console.log("cp0start", cp);
 		chain1 = [];	// reset the chain
 		let link = [sep0, sac0,  valstart, 0, 'x', -1, [1]];
 		chain1.push(link);
@@ -413,10 +422,14 @@ export function loops() {
 
 		//console.log("chain1", cv, chain1);
 		let pathsa = getAICPaths(chain1);
-		allpaths.push.apply(allpaths, pathsa);
+		//allpaths.push.apply(allpaths, pathsa);
 		//console.log("pathsa", cv, pathsa);
+		console.log("cp0end", pathsa.length);
+		loops = processPaths(pathsa);
+		if (loops.length > 0) return loops;
 
 		// make the alternate link
+		console.log("cp1start", cp);
 		chain1 = [];	// reset the chain
 		link = [sep1, sac1,  valstart, 0, 'x', -1, [1]];
 		chain1.push(link);
@@ -425,12 +438,15 @@ export function loops() {
 		nextLink(1);
 
 		let pathsb = getAICPaths(chain1);
-		allpaths.push.apply(allpaths, pathsb);
+		//allpaths.push.apply(allpaths, pathsb);
 		//console.log("pathsb", sep1, pathsb, chain1);
+		console.log("cp1end", pathsb.length);
+		loops = processPaths(pathsb);
+		if (loops.length > 0) return loops;
 	}
 
 	//console.log("allpaths", allpaths);
-	loops = processPaths(allpaths);
+	//loops = processPaths(allpaths);
 
 	if (loops.length === 0) return null;
 	console.log("loops", loops);
@@ -503,11 +519,6 @@ function removeDuplicatePaths(paths) {
 		seen.add(key);
 		return true;
 	});
-}
-
-// do the two cells have candidates in common?
-function candidatesInCommon(c0, c1) {
-
 }
 
 function findTargetsCorners(val, c0, c1) {
