@@ -52,21 +52,27 @@ export function singleCounts() {
 	for (var i=0; i<9; ++i) {
 		var hassv = hasSingleValueHint(Rows[i])
 		if (hassv) {
+			hassv.type = 'cellR';
 			hassv.row = i;
 			hassv.msg = `Single: Row: ${i+1}, Cell: ${hassv.targetcells}, Value: ${hassv.values}`
 			singleCounts.push(hassv)
+			break;
 		}
 		var hassv = hasSingleValueHint(Cols[i])
 		if (hassv) {
+			hassv.type = 'cellC';
 			hassv.col = i;
 			hassv.msg = `Single: Column: ${i+1}, Cell: ${hassv.targetcells}, Value: ${hassv.values}`
 			singleCounts.push(hassv)
+			break;
 		}
 		var hassv = hasSingleValueHint(Squares[i])
 		if (hassv) {
+			hassv.type = 'cellS';
 			hassv.square = i;
 			hassv.msg = `Single: Square: ${i+1}, Cell: ${hassv.targetcells}, Value: ${hassv.values}`
 			singleCounts.push(hassv)
+			break;
 		}
 	}
 
@@ -96,6 +102,7 @@ export function singletons() {
 				msg: `Single: Cell: ${ix+1}, Value: ${ac}`
 			}
 			singletons.push(s);
+			break;
 		}
 	};
 	if (singletons.length == 0) return null;

@@ -36,70 +36,6 @@ function findXYPairs(ppiv, pivots) {
 	return pairs;
 }
 
-// the kill zone is definded as those cells sharing a house with the wings
-// if the wings are far apart this means only the corners of the square defined by the wing cells are targets
-// ?????? if the wings intersect the same square, then row/square combination can be used to find the kill zone
-function findKillZone(pix, p0, p1, val) {
-	// px: cix, row, col, sq, ac
-	var targets = [];
-
-	var psq = cellSquare[pix];
-	var p0r = p0[1];
-	var p0c = p0[2];
-	var p0s = p0[3];
-	var p1r = p1[1];
-	var p1c = p1[2];
-	var p1s = p1[3];
-
-	// the corners are obvious candidates for the kill zone
-	var c0x = Rows[p0r][p1c];
-	var c1x = Rows[p1r][p0c];
-	if (pix !== c0x && cellHasCandidate(c0x,val)) targets.push(c0x);
-	if (pix !== c1x && cellHasCandidate(c1x,val)) targets.push(c1x);
-
-	// if the pivot and one of the wings are in the same square we can consider the following
-	// otherwise we go home
-
-	if (psq !== p0s && psq !== p1s) return targets;
-	//console.log("looking for more", psq, p0s, p1s);
-
-	// if the row/col of a wing intersects the square of the other wing
-	// then the cells in common are target candidates
-	// we can use the corners to define the wing squares
-	// does row/col p0r/p0c intersect p1s and/or does row/col p1r/p2r intersect p0s
-
-	var sqrows0 = sqRows012[p0s];	// rows in wing 0 square
-	var sqcols0 = sqCols012[p0s];	// rows in wing 0 square
-	var sqrows1 = sqRows012[p1s];	// rows in wing 1 square
-	var sqcols1 = sqCols012[p1s];	// rows in wing 1 square
-
-	if (sqrows0.includes(p1r)) {
-		var s0ix = p1r % 3;
-		var tgtcls = sqRowCells[p0s][s0ix];
-		tgtcls.forEach((tc) => {if (pix !== tc && cellHasCandidate(tc,val)) targets.push(tc)});
-		//console.log("rowsInSq 0", sqrows0, p0r, p1r, p0s, p1s, s0ix, tgtcls);
-	}
-	if (sqrows1.includes(p0r)) {
-		var s1ix = p0r % 3;
-		var tgtcls = sqRowCells[p1s][s1ix];
-		tgtcls.forEach((tc) => {if (pix !== tc && cellHasCandidate(tc,val)) targets.push(tc)});
-		//console.log("rowsInSq 1", sqrows1, p0r, p1r, p0s, p1s, s1ix, tgtcls);
-	}
-	if (sqcols0.includes(p1c)) {
-		var s0ix = p1c % 3;
-		var tgtcls = sqColCells[p0s][s0ix];
-		tgtcls.forEach((tc) => {if (pix !== tc && cellHasCandidate(tc,val)) targets.push(tc)});
-		//console.log("colsInSq 0", sqrows0, p0c, p1c, p0s, p1s, s0ix, tgtcls);
-	}
-	if (sqcols1.includes(p0c)) {
-		var s1ix = p0c % 3;
-		var tgtcls = sqRowCells[p1s][s1ix];
-		tgtcls.forEach((tc) => {if (pix !== tc && cellHasCandidate(tc,val)) targets.push(tc)});
-		//console.log("colsInSq 1", sqrows1, p0c, p1c, p0s, p1s, s1ix, tgtcls);
-	}
-
-	return targets;
-}
 
 function findAllTrivalueCells() {
 	var bv = [];
@@ -203,41 +139,48 @@ export function XWing() {
 					//console.log("xw", value, r0, r1, c0, c1);
 					var cls = [r0c0, r0c1, r1c0, r1c1];
 					feathers.push([value, cls, tgts]);
+					break;
 				}
 			}
+			if (feathers.length > 0) break;
 		}
 		// do the same for the column pairs
-		var cplen = colPairs.length;
-		for (var i=0; i<cplen; ++i) {
-			var pi = colPairs[i];
-			for (var j=i+1; j<cplen; ++j) {
-				var pj = colPairs[j];
-				//console.log(pi, pj);
-				var c0r0 = pi[1][0];	//  r0c0 r0c1
-				var c0r1 = pi[1][1];
-				var c1r0 = pj[1][0];	//  r1c0 r1c1
-				var c1r1 = pj[1][1];
-				//console.log("xwc", value, pi, pj, c0r0, c0r1, c1r0, c1r1);
-				if (!sameRow2(c0r0,c1r0) || !sameRow2(c0r1,c1r1)) continue;
-				//console.log("xwc1", value, pi, pj, c0r0, c0r1, c1r0, c1r1);
-				// we have an X-Wing in columns at this point
+		if (feathers.length === 0) {
+			var cplen = colPairs.length;
+			for (var i=0; i<cplen; ++i) {
+				var pi = colPairs[i];
+				for (var j=i+1; j<cplen; ++j) {
+					var pj = colPairs[j];
+					//console.log(pi, pj);
+					var c0r0 = pi[1][0];	//  r0c0 r0c1
+					var c0r1 = pi[1][1];
+					var c1r0 = pj[1][0];	//  r1c0 r1c1
+					var c1r1 = pj[1][1];
+					//console.log("xwc", value, pi, pj, c0r0, c0r1, c1r0, c1r1);
+					if (!sameRow2(c0r0,c1r0) || !sameRow2(c0r1,c1r1)) continue;
+					//console.log("xwc1", value, pi, pj, c0r0, c0r1, c1r0, c1r1);
+					// we have an X-Wing in columns at this point
 
-				// HOWEVER, they cannot share a square (if this is possible ???)
-				if (sameSq2(c0r0, c1r0)) continue;
+					// HOWEVER, they cannot share a square (if this is possible ???)
+					if (sameSq2(c0r0, c1r0)) continue;
 
-				// check the rows for possible targets
-				var t0 = findTargets(Rows[cellRow[c0r0]], [value], [c0r0,c1r0]);
-				var t1 = findTargets(Rows[cellRow[c0r1]], [value], [c0r1,c1r1]);
-				var tgts = [];
-				if (t0) tgts = tgts.concat(t0);
-				if (t1) tgts = tgts.concat(t1);
-				if (tgts.length > 0) {
-					//console.log("xw", value, r0, r1, c0, c1);
-					var cls = [c0r0, c0r1, c1r0, c1r1];
-					feathers.push([value, cls, tgts]);
+					// check the rows for possible targets
+					var t0 = findTargets(Rows[cellRow[c0r0]], [value], [c0r0,c1r0]);
+					var t1 = findTargets(Rows[cellRow[c0r1]], [value], [c0r1,c1r1]);
+					var tgts = [];
+					if (t0) tgts = tgts.concat(t0);
+					if (t1) tgts = tgts.concat(t1);
+					if (tgts.length > 0) {
+						//console.log("xw", value, r0, r1, c0, c1);
+						var cls = [c0r0, c0r1, c1r0, c1r1];
+						feathers.push([value, cls, tgts]);
+						break;
+					}
 				}
+				if (feathers.length > 0) break;
 			}
 		}
+		if (feathers.length > 0) break;
 	}
 
 	console.log("feathers", feathers);
@@ -338,9 +281,7 @@ export function XYWing() {
 				// I think we found one
 				//console.log("xy wings", pix, z, prow, pcol, psq, pac, pi, pj)
 				// get the intersecting cells
-				//var killBill = findKillZone(pix, pi, pj, z);
 				var tgts = findSeenTargets2(z, pi[0], pj[0]);
-				//console.log("killBill", z, killBill);
 
 				//console.log("xy tgts", z, cix0, cix1, killBill);
 				if (tgts) {
@@ -358,10 +299,10 @@ export function XYWing() {
 					}
 					//console.log("hint", h);
 					xywings.push(h);
+					return xywings;
 				}
 			}
 		}
-
 	}
 
 	if (xywings.length === 0) return null;
@@ -411,10 +352,6 @@ export function XYZWing() {
 			// the second wing must be in the same row or col of the pivot but cannot be in the same square
 			// it also cannot be in the same row or column as the other wing
 
-			var w1r = cellRow[cix1];	// w1 row
-			var w1c = cellCol[cix1];	// w1 col
-			//console.log("wing1", cix1, w1r, w1c, w1ac);
-
 			for (var cix2=0; cix2<81; ++cix2) {
 				var c = cells[cix2];
 				if (c.value > 0) continue;
@@ -452,6 +389,7 @@ export function XYZWing() {
 					if (tac.includes(val)) {
 						//console.log("found target", tix, tac);
 						targets.push(tix);
+						break;
 					}
 				}
 
@@ -467,6 +405,7 @@ export function XYZWing() {
 						msg: `XYZ-Wing: Cells: ${cls}, Value: ${val}`
 					}
 					xyzHints.push(h);
+					return xyzHints;
 				}
 			}
 		}
@@ -556,14 +495,21 @@ export function WWing() {
 				// check for targets
 				let tgts = findTargetsSeenByAll(eptv, [ep0, ep1], wcells)
 				//console.log("ep match0", epv1, ep, cp, ep0, cpc0, cpc1, ep1, tgts);
-				if (tgts) ww.push([eptv,[ep0, cpc0, cpc1, ep1], tgts ]);
+				if (tgts) {
+					ww.push([eptv,[ep0, cpc0, cpc1, ep1], tgts ]);
+					break;
+				}
 
 			} else if (canSeeEachOther(ep0, cpc1) && canSeeEachOther(ep1, cpc0)) {
 				let tgts = findTargetsSeenByAll(eptv, [ep0, ep1], wcells)
 				//console.log("ep match1", epv1, ep, cp, ep0, cpc1, cpc0, ep1, tgts);
-				if (tgts) ww.push([eptv, [ep0, cpc1, cpc0, ep1], tgts ]);
+				if (tgts) {
+					ww.push([eptv, [ep0, cpc1, cpc0, ep1], tgts ]);
+					break;
+				}
 			}
 		}
+		if (ww.length > 0) break;
 	}
 
 	let wwings = [];
@@ -779,7 +725,6 @@ export function WXYZWing() {
 			wxyzHints.push(h);
 			break;
 		}
-		if (wxyzHints.length > 0) break;
 	}
 
 	if (wxyzHints.length === 0) return null;

@@ -297,10 +297,13 @@ export function formatSolution(gameId, solutionLog) {
 	let solutionText = "Solution for: " + gameId + "\r\n\r\n";
 	for (const item of solutionLog) {
 		solutionText += item[0]
-		if (item.length === 4) {
-			solutionText += ": Recursions: " + item[1].toString();
-			solutionText += ", Max Depth: " + item[2].toString();
-			solutionText += ", Contradictions: " + item[3].toString();
+		solutionText += " : ";
+		for (const elim of item[1]) {
+			let cix = elim[0];
+			let val = elim[1];
+			let changed = elim[2] ? "" : "NC";
+
+			solutionText += `${cix}:${val} ${changed}/ `;
 		}
 		solutionText += "\r\n";
 	}

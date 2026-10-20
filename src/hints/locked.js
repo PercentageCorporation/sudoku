@@ -360,7 +360,7 @@ export function lockedCandidates1() {
 	//console.log("lc", lc);
 
 	var lchints = [];
-	lc.forEach((lh) => {
+	for (const lh of lc) {
 		var rcs = lh[0];
 		var rcsix = lh[1];
 		var val = lh[2];
@@ -380,7 +380,8 @@ export function lockedCandidates1() {
 			msg: `Locked1: Cells: ${tgts}, Value: ${val}`
 		}
 		lchints.push(h);
-	})
+		break;
+	}
 
 	if (lchints.length === 0) return null;
 	console.log("lchints", lchints);

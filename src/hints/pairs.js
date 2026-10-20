@@ -6,9 +6,6 @@ import { cells, vRows, vCols, vSqs } from '/src/hints/hints';
 //*****************************************************************************
 // common functions
 
-
-
-
 // get the indices of the row/col/sq that have values with a count of two
 // this uses the xCounts2 arrays
 function pairIndices(arr) {
@@ -159,9 +156,11 @@ export function nakedPairs() {
 			var tgts = findTargets(Cols[rcsix], vals, cls);
 			//console.log("ct", rcsix, cls, vals, tgts);
 			if (tgts) npHints.push(['col', rcsix, cls, vals, tgts]);
+			break;
 		} else if (rcs === 's') {
 			var tgts = findTargets(Squares[rcsix], vals, cls);
 			if (tgts) npHints.push(['square', rcsix, cls, vals, tgts]);
+			break;
 		}
 	}
 
@@ -169,7 +168,7 @@ export function nakedPairs() {
 
 	var nakedPairs = [];
 
-	npHints.forEach((nph) => {
+	for (const nph of npHints) {
 		//console.log("nph", nph);
 		var dir = nph[0];
 		var cls = nph[2];
@@ -190,7 +189,8 @@ export function nakedPairs() {
 		};
 
 		nakedPairs.push(h);
-	})
+		break;
+	}
 
 	console.log("nakedPairs", nakedPairs);
 	if (nakedPairs.length === 0) return null;
@@ -251,7 +251,7 @@ export function hiddenPairs() {
 	})
 
 	var hpTargets = [];
-	hpc.forEach((hp) => {
+	for (const hp of hpc) {
 		var rcs = hp[0];		// house type rcs
 		var ix = hp[1];		// house rcs index
 		var vals = hp[2];
@@ -259,12 +259,13 @@ export function hiddenPairs() {
 		var tgts = findInternalTargets(cls,vals);
 		if (tgts) {
 			hpTargets.push([rcs,ix,cls,tgts[1],tgts[0]]);
+			break;
 		}
-	})
+	}
 	//console.log("hpc", hpc);
 
 	var hiddenPairs = [];
-	hpTargets.forEach((hp) => {
+	for (const hp of hpTargets) {
 		var rcs = hp[0];
 		var cls = hp[2];
 		var vals = hp[3];
@@ -282,7 +283,8 @@ export function hiddenPairs() {
 			msg: `Hidden Pair: Cells: ${tgts}, Values: ${vals}`
 		}
 		hiddenPairs.push(h);
-	})
+		break;
+	}
 
 	if (hiddenPairs.length === 0) return null;
 	console.log("hiddenPairs",hiddenPairs)
@@ -299,7 +301,6 @@ export function pointingPairsSquare() {
 	const ppsHints = [];
 
 	for (var value=1; value<10; ++value) {
-
 		// for each row, count the number of times a value appears in a square
 		for (var r=0; r<9; ++r) {
 			var row = Rows[r];
@@ -384,9 +385,11 @@ export function pointingPairsSquare() {
 						msg: msg
 					};
 					ppsHints.push(ppsh);
+					break;
 				}
 			}
 		}
+		if (ppsHints.length > 0) break;
 	}
 
 	//console.log("ppsHints", ppsHints);
@@ -535,19 +538,20 @@ export function pointingPairsRowCol() {
 		//console.log("end",prevSrc)
 		if (prevSrc) {
 			ppCandidates.push(src);
+			break;
 		}
 	}
 
 	//console.log("ppCandidates", ppCandidates)
 	var ppHints = [];
-	ppCandidates.forEach((pp) => {
+	for (const pp of ppCandidates) {
 		var msg = "Pointing ";
 		msg += pp.cells.length === 3 ? "Triple: " : "Pair: ";
 		msg += pp.row ? `Row: ${pp.row+1}` : "";
 		msg += pp.col ? `Column: ${pp.col+1}` : "";
 		msg += `, Value: ${pp.values}`;
 
-		var pp = {
+		var h = {
 			type: 'pointingPair',
 			row: pp.row,
 			col: pp.col,
@@ -557,8 +561,9 @@ export function pointingPairsRowCol() {
 			targets: pp.targets,
 			msg: msg
 		}
-		ppHints.push(pp);
-	})
+		ppHints.push(h);
+		break;
+	}
 
 	if (ppHints.length === 0) return null;
 	return ppHints;

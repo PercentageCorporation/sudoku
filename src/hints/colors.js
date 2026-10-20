@@ -453,7 +453,7 @@ export function colors() {
 					msg: `Colors II: Cells: ${tgts}, Value: ${value}`
 				}
 				colors.push(h);
-				continue;
+				break;
 			}
 
 			// are there any occurances of value in a cell not included in red and blue
@@ -484,8 +484,8 @@ export function colors() {
 					msg: `Colors I: Cells: ${tgts}, Value: ${value}`
 				}
 				colors.push(h);
+				break;
 			}
-			if (colors.length > 0) break;
 		}
 		if (colors.length > 0) break;
 	}

@@ -602,32 +602,46 @@ export const cellStore = create(
 				},
 
 				addNonCandidate: (ix, value) => {
+					let updated = false;
+
 					set((state) => {
-						const cells = [...state.cells]
-						if (!cells[ix].noncandidates.includes(value)) {
-							const noncandidates = [...cells[ix].noncandidates, value]
-							const activecandidates = cells[ix].candidates.filter(c => noncandidates.indexOf(c) < 0);
-							cells[ix] = {
-								...cells[ix],
-								noncandidates,
-								activecandidates
-							}
+						const cell = state.cells[ix];
+						if (cell.noncandidates.includes(value)) {
+							return state;  // No change
 						}
-						return { cells }
-					})
+
+						const cells = [...state.cells];
+						const noncandidates = [...cell.noncandidates, value];
+
+						cells[ix] = {
+							...cell,
+							noncandidates,
+							activecandidates: cell.candidates.filter(
+								c => !noncandidates.includes(c)
+							)
+						};
+
+						updated = true;
+						return { cells };
+					});
+
+					return updated;
 				},
 
 				removeNonCandidate: (ix, value) => {
 					set((state) => {
+						const cell = state.cells[ix];
+						if (!cell.noncandidates.includes(value)) {
+							return state;  // No change
+						}
+
 						const cells = [...state.cells]
-						if (cells[ix].noncandidates.includes(value)) {
-							const noncandidates = cells[ix].noncandidates.filter(v != value)
-							const activecandidates = cells[ix].candidates.filter(c => noncandidates.indexOf(c) < 0);
-							cells[ix] = {
-								...cells[ix],
-								noncandidates,
-								activecandidates
-							}
+						const noncandidates = cells[ix].noncandidates.filter(v != value)
+						const activecandidates = cells[ix].candidates.filter(c => noncandidates.indexOf(c) < 0);
+						cells[ix] = {
+							...cells[ix],
+							noncandidates,
+							activecandidates
 						}
 						return { cells }
 					})

@@ -96,7 +96,6 @@ function analyzeTarget(tix) {
 			// keep trying
 			//console.log("conclusion", tix, targetvalue, conclusion);
 		}
-		if (forced.length > 0) break;
 	}
 	return forced;
 }
@@ -223,21 +222,6 @@ function recomputeCandidates() {
 
 	return fccandidates;
 }
-
-function findBivalueCells(can) {
-	var bv = [];
-	for (var cix=0; cix<81; ++cix) {
-		var ac = can[cix];
-		if ( ac !== null && ac.length === 2) {
-			bv.push([cix,  ac]);
-		}
-	}
-	bv = bv.sort((a,b) => a[1][0] - b[1][0]);	// sort by first candidate
-	bv = bv.sort((a,b) => a[1][1] - b[1][1]);	// then by second candidate
-
-	return bv;
-}
-
 
 function updateCandidates(ix) {
 

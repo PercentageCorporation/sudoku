@@ -43,24 +43,25 @@ export default function PlayMenu() {
 		let h = getHint();
 		if (!h) return;
 		console.log("doHint", h);
-
+		let elims = [];
 		let type = h.type;
 		let targetcells = h.targetcells;
 		let targetlist = h.targetlist;
 		let targets = h.targets;
 		let values = h.values;
-
 		if (targetcells) {
 			let cix = targetcells[0];
 			let v = values[0];
 			setCellValue(cix, v);
+			elims.push([cix, v, true]);
 		} else if (targetlist) {
 			targetlist.forEach((t) => {
 				let tcls = t[0];
 				let vals = t[1];
 				tcls.forEach((tc) => {
 					vals.forEach((v) => {
-						addNonCandidate(tc, v);
+						let changed = addNonCandidate(tc, v);
+						elims.push([tc, v, changed]);
 					})
 				})
 			})
@@ -68,14 +69,16 @@ export default function PlayMenu() {
 		} else if (targets) {
 			targets.forEach((cix) => {
 				values.forEach((value) => {
-					addNonCandidate(cix, value);
+					let changed = addNonCandidate(cix, value);
+					elims.push([cix, value, changed]);
 				})
 			})
 		}
 		clearSelectedValue();
 		clearSelectedCell();
 
-		let log = (type.startsWith('forced2')) ? [type, h.depth, h.levels, h.contradictions ] : [type];
+		//let log = (type.startsWith('forced2')) ? [type,  h.depth, h.levels, h.contradictions ] : [type];
+		let log = [type, elims];
 		addSolutionLog(log);
 
 		if (!validateGame()) {

@@ -131,6 +131,9 @@ function Cell({ix}) {
 	} else if (hint.type) {
 		switch (hint.type) {
 			case 'cell':
+			case 'cellR':
+			case 'cellC':
+			case 'cellS':
 			case 'forced2S':
 				if (hint.targetcells[0] === ix) selMode = 3;
 				break;

@@ -521,7 +521,7 @@ export function swordfish() {
 	//console.log("sf?", cr, cc);
 
 	// look for row targets
-	cr.forEach((crx) => {
+	for (const crx of cr) {
 		//console.log("crx", crx);
 		var val = crx[0];
 		var rows = crx[1];	// row indices
@@ -536,27 +536,30 @@ export function swordfish() {
 		//console.log("cicrT", tgts);
 		if (tgts.length > 0) {
 			sfcandidates.push([val, rows, cols, ccls, tgts ])
+			break;
 		}
-	})
+	}
 
 	// look for column targets
-	cc.forEach((ccx) => {
-		//console.log("ccx", ccx);
-		var val = ccx[0];
-		var cols = ccx[1];	// col indices
-		var rows = ccx[2];	// row indices
-		var rcls = ccx[3];	// cells in rows
-		// find targets in the three rows
-		var tgts = [];
-		for (var i=0; i<3; ++i) {
-			var t = findTargets(Rows[rows[i]], [val], rcls[i]);
-			if (t) tgts.push(...t);
+	if (sfcandidates.length === 0)
+		for (const ccx of cc) {
+			//console.log("ccx", ccx);
+			var val = ccx[0];
+			var cols = ccx[1];	// col indices
+			var rows = ccx[2];	// row indices
+			var rcls = ccx[3];	// cells in rows
+			// find targets in the three rows
+			var tgts = [];
+			for (var i=0; i<3; ++i) {
+				var t = findTargets(Rows[rows[i]], [val], rcls[i]);
+				if (t) tgts.push(...t);
+			}
+			//console.log("ciccT", tgts);
+			if (tgts.length > 0) {
+				sfcandidates.push([val, rows, cols, rcls, tgts ])
+				break;
+			}
 		}
-		//console.log("ciccT", tgts);
-		if (tgts.length > 0) {
-			sfcandidates.push([val, rows, cols, rcls, tgts ])
-		}
-	})
 
 
 	//console.log("sfcandidates",sfcandidates);

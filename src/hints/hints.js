@@ -14,6 +14,7 @@ import { quads } from "/src/hints/quads";
 import { WXYZWing } from "/src/hints/wings";
 import { forcingChains } from "/src/hints/forcing";
 import { biforce } from "/src/hints/forcing2";
+import { suedecoq } from "/src/hints/suedecoq";
 //import { getConjugatePairs } from "/src/hints/conjugates";
 
 export var cells = [];
@@ -115,6 +116,8 @@ export function runHints() {
 
 	let hint;
 
+	if (hint = tryHint("suedecoq", suedecoq)) return hint;
+
 	if (hint = tryHint("singletons", singletons)) return hint;
 	if (hint = tryHint("singleCounts", singleCounts)) return hint;
 	if (hint = tryHint("lockedCandidates1", lockedCandidates1)) return hint;
@@ -141,85 +144,6 @@ export function runHints() {
 	if (hint = tryHint("loops", loops)) return hint;
 	if (hint = tryHint("forcing", forcingChains)) return hint;
 	if (hint = tryHint("forcingBV", biforce)) return hint;
-
-	// result = singletons();
-	// hintlog("single", result)
-	// if (result) return result[0];
-	// result = singleCounts();
-	// hintlog("singleCounts", result)
-	// if (result) return result[0];
-	// result = lockedCandidates1();
-	// hintlog("lockedCandidates1", result)
-	// if (result) return result[0];
-	// result = nakedPairs();
-	// hintlog("nakedPairs", result)
-	// if (result) return result[0];
-	// result = nakedTriples();
-	// hintlog("nakedTriples", result)
-	// if (result) return result[0];
-	// result = pointingPairsSquare();
-	// hintlog("pointingPairsSquare", result)
-	// if (result) return result[0];
-	// result = pointingPairsRowCol();
-	// hintlog("pointingPairsRowCol", result)
-	// if (result) return result[0];
-	// result = hiddenPairs();
-	// hintlog("hiddenPairs", result)
-	// if (result) return result[0];
-	// result = hiddenTriples();
-	// hintlog("hiddenTriples", result)
-	// if (result) return result[0];
-	// result = quads();
-	// hintlog("quads", result)
-	// if (result) return result[0];
-	// result = uniqueRectangles();
-	// hintlog("uniqueRectangles", result)
-	// if (result) return result[0];
-	// result = emptyRectangles();
-	// hintlog("emptyRectangles", result)
-	// if (result) return result[0];
-	// result = XWing();
-	// hintlog("XWing", result)
-	// if (result) return result[0];
-	// result = XChain();
-	// hintlog("XChain", result)
-	// if (result) return result[0];
-	// result = XYChain();
-	// hintlog("XYChain", result)
-	// if (result) return result[0];
-	// result = XYWing();
-	// hintlog("XYWing", result)
-	// if (result) return result[0];
-	// result = XYZWing();
-	// hintlog("XYZWing", result)
-	// if (result) return result[0];
-	// result = WWing();
-	// hintlog("WWing", result)
-	// if (result) return result[0];
-	// result = WXYZWing();
-	// hintlog("WXYZWing", result)
-	// if (result) return result[0];
-	// result = swordfish();
-	// hintlog("swordfish", result)
-	// if (result) return result[0];
-	// result = colors();
-	// hintlog("colors", result)
-	// if (result) return result[0];
-	// result = colorWing();
-	// hintlog("colorWing", result)
-	// if (result) return result[0];
-	// result = als();
-	// hintlog("als", result)
-	// if (result) return result[0];
-	// result = loops();
-	// hintlog("loops", result)
-	// if (result) return result[0];
-	// result = forcingChains();
-	// hintlog("forcing", result)
-	// if (result) return result[0];
-	// result = biforce();
-	// hintlog("forcingBV", result)
-	// if (result) return result[0];
 
 	return null;
 }

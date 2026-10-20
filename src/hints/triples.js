@@ -479,7 +479,7 @@ export function hiddenTriples() {
 	//console.log(rowC, colC, sqC);
 
 	var targets = [];
-	rowC.forEach((rc) => {
+	for (const rc of rowC) {
 		var r = rc[0];
 		var row = Rows[r];
 		var cls = [ row[rc[1][0]],row[rc[1][1]],row[rc[1][2]] ];
@@ -492,47 +492,52 @@ export function hiddenTriples() {
 				// have targets
 				//console.log("r",r,cls,tgtvals[1],tgtvals[0]);
 				targets.push(["r",r,cls,tgtvals[1],tgtvals[0]]);
+				break;
 			}
 		}
-	})
+	}
 
-	colC.forEach((cc) => {
-		var c = cc[0];
-		var col = Cols[c];
-		var cls = [ col[cc[1][0]],col[cc[1][1]],col[cc[1][2]] ];
-		var vals = cc[2];
-		//console.log("cc", c, col, cls, vals);
-		var et = findTargets(col, vals, cls);
-		if (!et) {
-			var tgtvals = findInternalTargets(cls, vals);
-			if (tgtvals) {
-				// have targets
-				//console.log("c",c,cls,tgtvals[1],tgtvals[0]);
-				targets.push(["c",c,cls,tgtvals[1],tgtvals[0]]);
+	if (targets.length === 0)
+		for (const cc of colC) {
+			var c = cc[0];
+			var col = Cols[c];
+			var cls = [ col[cc[1][0]],col[cc[1][1]],col[cc[1][2]] ];
+			var vals = cc[2];
+			//console.log("cc", c, col, cls, vals);
+			var et = findTargets(col, vals, cls);
+			if (!et) {
+				var tgtvals = findInternalTargets(cls, vals);
+				if (tgtvals) {
+					// have targets
+					//console.log("c",c,cls,tgtvals[1],tgtvals[0]);
+					targets.push(["c",c,cls,tgtvals[1],tgtvals[0]]);
+					break;
+				}
 			}
 		}
-	})
 
-	sqC.forEach((sc) => {
-		var s = sc[0];
-		var sq = Squares[s];
-		var cls = [ sq[sc[1][0]],sq[sc[1][1]],sq[sc[1][2]] ];
-		var vals = sc[2];
-		var et = findTargets(sq, vals, cls);
-		if (!et) {
-			var tgtvals = findInternalTargets(cls, vals);
-			if (tgtvals) {
-				// have targets
-				//console.log("s",s,cls,tgtvals[1],tgtvals[0]);
-				targets.push(["s",s,cls,tgtvals[1],tgtvals[0]]);
+	if (targets.length === 0)
+		for (const sc of sqC) {
+			var s = sc[0];
+			var sq = Squares[s];
+			var cls = [ sq[sc[1][0]],sq[sc[1][1]],sq[sc[1][2]] ];
+			var vals = sc[2];
+			var et = findTargets(sq, vals, cls);
+			if (!et) {
+				var tgtvals = findInternalTargets(cls, vals);
+				if (tgtvals) {
+					// have targets
+					//console.log("s",s,cls,tgtvals[1],tgtvals[0]);
+					targets.push(["s",s,cls,tgtvals[1],tgtvals[0]]);
+					break;
+				}
 			}
 		}
-	})
 
 	console.log("targets",targets);
 
 	var triples = [];
-	targets.forEach((tgt) => {
+	for (const tgt of targets) {
 		var dir = tgt[0];
 		var rcs = tgt[1];
 		var cls = tgt[2];
@@ -551,8 +556,8 @@ export function hiddenTriples() {
 			msg: `Hidden Triple: Cells: ${tgts}, Values: ${vals}`
 		}
 		triples.push(h);
-
-	})
+		break;
+	}
 
 	// convert targets to hints
 

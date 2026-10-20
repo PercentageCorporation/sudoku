@@ -621,14 +621,15 @@ function processPaths(paths) {
 		if (aic1loop) {
 			//console.log("ppaic1Loop", ap, aic1loop);
 			loophints.push(makeLoopHint(aic1loop[0]));
+			return loophints;
 		}
 
 		let aic2 = findAIC_II(p);
 		if (aic2) {
 			//console.log("ppaic2", ap, aic2);
 			hints.push(makeHint2(aic2[0]));
+			return hints;
 		}
-
 	}
 
 	// we don't need long paths any more so save the shortest
@@ -643,6 +644,7 @@ function processPaths(paths) {
 		if (aic1) {
 			//console.log("ppaic1", ap, aic1);
 			hints.push(makeHint(aic1[0]));
+			return hints;
 		}
 
 	}

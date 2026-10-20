@@ -184,7 +184,7 @@ export function emptyRectangles() {
 
 				// find a conjugate pairs for value with one end in the same row or column (but not same square) as the empty rectangle
 				var cps = findMatchingConjugatePairs(cpairs, value, row, col, s);
-				cps.forEach((cp) => {
+				for (const cp of cps) {
 					//console.log("cp", cp);
 					// see if there are any candidates at the intersecting cell
 					var target = null;
@@ -223,12 +223,14 @@ export function emptyRectangles() {
 							msg: `Empty Rect: Cells: ${target}, Value: ${value}`
 						}
 						rectangles.push(h);
+						break;
 					}
-				})
+				}
+				if (rectangles.length > 0) break;
 			}
-
-
+			if (rectangles.length > 0) break;
 		}
+		if (rectangles.length > 0) break;
 	}
 
 
@@ -461,7 +463,7 @@ export function uniqueRectangles() {
 			}
 
 			rectangles.push(h);
-			continue;
+			return rectangles;
 		}
 
 		// Type 2 has two non-diagonal cells with one extra candidate that is the same in both cells
@@ -486,8 +488,8 @@ export function uniqueRectangles() {
 					msg: `UR Type 2: Cells: ${tgts}, Value: ${val}`
 				}
 				rectangles.push(h);
+				return rectangles;
 			}
-			continue;
 		}
 
 		// Type 3 maybe
@@ -526,8 +528,8 @@ export function uniqueRectangles() {
 							msg: `UR Type 3: Cells: ${tgts}, Value: ${virtcell}`
 						}
 						rectangles.push(h);
+						return rectangles;
 					}
-					continue;
 				}
 			}
 			if (virtcell.length === 2 ||  virtcell.length === 3) {
@@ -570,8 +572,8 @@ export function uniqueRectangles() {
 							msg: `UR Type 3: Cells: ${tgts}, Values: ${vals}`
 						}
 						rectangles.push(h);
+						return rectangles;
 					}
-					continue;
 				}
 
 
@@ -606,8 +608,8 @@ export function uniqueRectangles() {
 					msg: `UR Type 5: Cells: ${tgts}, Value: ${val}`
 				}
 				rectangles.push(h);
+				return rectangles;
 			}
-			continue;
 		}
 
 		if (nonextras === 1) continue;	// ????
@@ -652,7 +654,7 @@ export function uniqueRectangles() {
 					msg: `UR Type 6: Cells: ${extras}, Value: ${val}`
 				}
 				rectangles.push(h);
-				continue;
+				return rectangles;
 			}
 		}
 
@@ -702,7 +704,7 @@ export function uniqueRectangles() {
 					msg: `UR Type 4: Cells: ${extras}, Value: ${val}`
 				}
 				rectangles.push(h);
-				continue;
+				return rectangles;
 			}
 		}
 
@@ -752,7 +754,7 @@ export function uniqueRectangles() {
 						msg: `UR Type 7: Cells: ${corner0}, Value: ${val}`
 					}
 					rectangles.push(h);
-					continue;
+					return rectangles;
 				}
 			}
 
@@ -802,13 +804,10 @@ export function uniqueRectangles() {
 						msg: `UR Type 7: Cells: ${corner}, Value: ${val}`
 					}
 					rectangles.push(h);
-					continue;
+					return rectangles;
 				}
 			}
 		}
-
-
-
 	}
 
 	if (rectangles.length === 0) return null;
