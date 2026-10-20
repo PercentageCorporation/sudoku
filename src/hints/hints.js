@@ -116,7 +116,6 @@ export function runHints() {
 
 	let hint;
 
-	if (hint = tryHint("suedecoq", suedecoq)) return hint;
 
 	if (hint = tryHint("singletons", singletons)) return hint;
 	if (hint = tryHint("singleCounts", singleCounts)) return hint;
@@ -130,6 +129,7 @@ export function runHints() {
 	if (hint = tryHint("quads", quads)) return hint;
 	if (hint = tryHint("uniqueRectangles", uniqueRectangles)) return hint;
 	if (hint = tryHint("emptyRectangles", emptyRectangles)) return hint;
+	if (hint = tryHint("suedecoq", suedecoq)) return hint;
 	if (hint = tryHint("XWing", XWing)) return hint;
 	if (hint = tryHint("XChain", XChain)) return hint;
 	if (hint = tryHint("XYChain", XYChain)) return hint;
@@ -591,95 +591,6 @@ export function getCommonCandidates(c0, c1) {
 	return common;
 }
 
-// find values only in one row/col and return sq/row/val triples
-function oneRowValues(sq, sqrc) {
-	var rv = [];
-	//console.log(sqrc)
-	for (var v=1; v<10; ++v) {
-		var count = 0;
-		var row;
-		var vcount;
-		var c;
-		if (sqrc[0][0][v] > 0  && sqrc[1][0][v] === 0 && sqrc[2][0][v] === 0) {
-			// row 0 has value
-			++count;
-			row = sqRows012[sq][0];
-			vcount = sqrc[0][0][v];
-			c = sqrc[0][1][v];
-		}
-		if (sqrc[0][0][v] ===0  && sqrc[1][0][v] > 0 && sqrc[2][0][v] === 0) {
-			++count;
-			row = sqRows012[sq][1];
-			vcount = sqrc[1][0][v];
-			c = sqrc[1][1][v];
-		}
-		if (sqrc[0][0][v] === 0  && sqrc[1][0][v] === 0 && sqrc[2][0][v] > 0) {
-			++count
-			row = sqRows012[sq][2];
-			vcount = sqrc[2][0][v];
-			c = sqrc[2][1][v];
-		}
-
-		if (count === 1) {
-			rv.push(
-			{
-				square: sq,
-				row: row,
-				col: null,
-				cells: c,
-				values: [v],
-				count: vcount,
-			}
-			);
-		}
-	}
-	return rv;
-}
-
-function oneColValues(sq, sqrc) {
-	var rv = [];
-	//console.log(sqrc)
-	for (var v=1; v<10; ++v) {
-		var count = 0;
-		var col;
-		var vcount;
-		var c;
-		if (sqrc[0][0][v] > 0  && sqrc[1][0][v] === 0 && sqrc[2][0][v] === 0) {
-			// col 0 has value
-			++count;
-			col = sqCols012[sq][0];
-			vcount = sqrc[0][0][v];
-			c = sqrc[0][1][v];
-		}
-		if (sqrc[0][0][v] ===0  && sqrc[1][0][v] > 0 && sqrc[2][0][v] === 0) {
-			++count;
-			col = sqCols012[sq][1];
-			vcount = sqrc[1][0][v];
-			c = sqrc[1][1][v];
-		}
-		if (sqrc[0][0][v] === 0  && sqrc[1][0][v] === 0 && sqrc[2][0][v] > 0) {
-			++count
-			col = sqCols012[sq][2];
-			vcount = sqrc[2][0][v];
-			c = sqrc[2][1][v];
-		}
-
-		if (count === 1) {
-			rv.push(
-				{
-					square: sq,
-					row: null,
-					col: col,
-					cells: c,
-					values: [v],
-					count: vcount,
-				}
-			);
-		}
-	}
-	return rv;
-}
-
 export function inSameHouse(c0, c1) {
 	if (RCS[c0][0] === RCS[c1][0]) return true;
 	if (RCS[c0][1] === RCS[c1][1]) return true;
@@ -706,7 +617,7 @@ export function sameRow(cls) {
 	var clen = cls.length;
 	for (var i=0; i<clen; ++i) {
 		for (var j=i+1; j<clen; ++j) {
-			if (RCS[cls[i]][0] !== RCS[cls[j]][0]) return null;
+			if (RCS[cls[i]][0] !== RCS[cls[j]][0]) return -1;
 		}
 	}
 	return RCS[cls[0]][0];
@@ -716,7 +627,7 @@ export function sameCol(cls) {
 	var clen = cls.length;
 	for (var i=0; i<clen; ++i) {
 		for (var j=i+1; j<clen; ++j) {
-			if (RCS[cls[i]][1] !== RCS[cls[j]][1]) return null;
+			if (RCS[cls[i]][1] !== RCS[cls[j]][1]) return -1;
 		}
 	}
 	return RCS[cls[0]][1];
@@ -734,34 +645,34 @@ export function sameSq(cls) {
 
 export function sameRow2(c0, c1) {
 	if (RCS[c0][0] === RCS[c1][0]) return RCS[c0][0];
-	return null;
+	return -1;
 }
 
 export function sameCol2(c0, c1) {
 	if (RCS[c0][1] === RCS[c1][1]) return RCS[c0][1];
-	return null;
+	return -1;
 }
 
 export function sameSq2(c0, c1) {
 	if (RCS[c0][2] === RCS[c1][2]) return RCS[c0][2];
-	return null;
+	return -1;
 }
 
 export function sameRow3(c0, c1, c2) {
-	if (RCS[c0][0] !== RCS[c1][0]) return null;
-	if (RCS[c0][0] !== RCS[c2][0]) return null;
+	if (RCS[c0][0] !== RCS[c1][0]) return -1;
+	if (RCS[c0][0] !== RCS[c2][0]) return -1;
 	return RCS[c0][0];
 }
 
 export function sameCol3(c0, c1, c2) {
-	if (RCS[c0][1] !== RCS[c1][1]) return null;
-	if (RCS[c0][1] !== RCS[c2][1]) return null;
+	if (RCS[c0][1] !== RCS[c1][1]) return -1;
+	if (RCS[c0][1] !== RCS[c2][1]) return -1;
 	return RCS[c0][1];
 }
 
 export function sameSq3(c0, c1, c2) {
-	if (RCS[c0][2] !== RCS[c1][2]) return null;
-	if (RCS[c0][2] !== RCS[c2][2]) return null;
+	if (RCS[c0][2] !== RCS[c1][2]) return -1;
+	if (RCS[c0][2] !== RCS[c2][2]) return -1;
 	return RCS[c0][2];
 }
 

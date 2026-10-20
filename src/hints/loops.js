@@ -1,6 +1,6 @@
 import { RCS, Rows } from '/src/utilities/constants';
-import { includesAny, findSeenTargets2, getCommonCandidates } from '/src/hints/hints';
-import { canSeeEachOther, findTargetsSeenByAll, findTargetsSeenByBoth, cellHasCandidate, sameHouse, sameRow3, sameCol3, sameSq3 } from '/src/hints/hints';
+import { getCommonCandidates } from '/src/hints/hints';
+import { canSeeEachOther, findTargetsSeenByAll, cellHasCandidate } from '/src/hints/hints';
 import { getConjugatePairs, getBivaluePairs } from "/src/hints/conjugates";
 import { cellStore } from '/src//store/store';
 

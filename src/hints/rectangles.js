@@ -148,8 +148,8 @@ export function emptyRectangles() {
 			if (sv === 2) {
 				var c0 = sqcells[0];
 				var c1 = sqcells[1];
-				if (sameRow2(c0, c1) !== null) continue;
-				if (sameCol2(c0, c1) !== null) continue;
+				if (sameRow2(c0, c1) >= 0) continue;
+				if (sameCol2(c0, c1) >= 0) continue;
 				//console.log("er2", s, value, c0, c1, sv)
 				// since there are only two cells not in the same row or col
 				// we can use either row/col combination as possibilities

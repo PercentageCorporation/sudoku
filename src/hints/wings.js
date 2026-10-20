@@ -120,12 +120,12 @@ export function XWing() {
 				var r1c1 = pj[1][1];
 				//console.log("xwr", value, pi, pj, r0c0, r0c1, r1c0, r1c1);
 
-				if (!sameCol2(r0c0,r1c0) || !sameCol2(r0c1,r1c1)) continue;
+				if (sameCol2(r0c0,r1c0) < 0 || sameCol2(r0c1,r1c1) < 0) continue;
 				//console.log("xwr", value, pi, pj, r0c0, r0c1, r1c0, r1c1);
 				// we have an X-Wing in rows at this point
 
 				// HOWEVER, they cannot share a square (if this is possible ???)
-				if (sameSq2(r0c0, r1c0)) continue;
+				if (sameSq2(r0c0, r1c0) >= 0) continue;
 
 				// check the columns for possible targets
 				//console.log(Cols[cellCol[r0c0]], Cols[cellCol[r0c1]]);
@@ -157,12 +157,12 @@ export function XWing() {
 					var c1r0 = pj[1][0];	//  r1c0 r1c1
 					var c1r1 = pj[1][1];
 					//console.log("xwc", value, pi, pj, c0r0, c0r1, c1r0, c1r1);
-					if (!sameRow2(c0r0,c1r0) || !sameRow2(c0r1,c1r1)) continue;
+					if (sameRow2(c0r0,c1r0) < 0 || sameRow2(c0r1,c1r1) < 0) continue;
 					//console.log("xwc1", value, pi, pj, c0r0, c0r1, c1r0, c1r1);
 					// we have an X-Wing in columns at this point
 
 					// HOWEVER, they cannot share a square (if this is possible ???)
-					if (sameSq2(c0r0, c1r0)) continue;
+					if (sameSq2(c0r0, c1r0) >= 0) continue;
 
 					// check the rows for possible targets
 					var t0 = findTargets(Rows[cellRow[c0r0]], [value], [c0r0,c1r0]);

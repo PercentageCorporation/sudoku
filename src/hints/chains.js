@@ -66,9 +66,9 @@ function findNextXLink(cvp, cix) {
 		if (endpointsInPath(cix, ep0, ep1)) continue;
 		var curix = i;
 		if (sameRow2(epx, ep0)) chain.push([i, ep0, ep1, cix, []]);
-		else if (sameRow2(epx, ep1)) chain.push([i, ep1, ep0, cix, []]);
-		else if (sameCol2(epx, ep0)) chain.push([i, ep0, ep1, cix, []]);
-		else if (sameCol2(epx, ep1)) chain.push([i, ep1, ep0, cix, []]);
+		else if (sameRow2(epx, ep1) >= 0) chain.push([i, ep1, ep0, cix, []]);
+		else if (sameCol2(epx, ep0) >= 0) chain.push([i, ep0, ep1, cix, []]);
+		else if (sameCol2(epx, ep1) >= 0) chain.push([i, ep1, ep0, cix, []]);
 		else { curix = -1; }
 
 		if (curix >= 0) {

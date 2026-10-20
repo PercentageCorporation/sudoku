@@ -341,14 +341,14 @@ export function lockedCandidates1() {
 				var cls = findTargets(square, [v], [])
 				var srow = sameRow(cls);
 				//console.log("vcnt", s, v, vcnt, cls, srow);
-				if (srow !== null) {
+				if (srow >= 0) {
 					var arr = Rows[srow];
 					var tgts = findTargets(arr, [v], square);
 					//console.log("tgts", tgts);
 					if (tgts) lc.push(['r', srow, v, cls, tgts, s])
 				} else {
 					var scol = sameCol(cls);
-					if (scol !== null) {
+					if (scol >= 0) {
 						var arr = Cols[scol];
 						var tgts = findTargets(arr, [v], square);
 						if (tgts) lc.push(['c', scol, v, cls, tgts, s])
