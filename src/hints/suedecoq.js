@@ -1,5 +1,5 @@
 import { Rows, Cols, Squares, cellRow, cellCol, cellSquare, sqRowCells, sqColCells, sqRows012, sqCols012, RCS } from '/src/utilities/constants';
-import { cells, findTargets, findInternalTargets, includesAll, includesAny, sameRow, sameCol } from '/src/hints/hints';
+import { cells, findTargetsInHouses, includesAll, includesAny, sameRow, sameCol } from '/src/hints/hints';
 import { getBivaluePairs } from "/src/hints/conjugates";
 
 //*****************************************************************************
@@ -57,6 +57,7 @@ export function suedecoq() {
 
 				let cix = null;
 				for (const ix of arr) {
+					if (ix === cixi || ix === cixj) continue;
 					if (cells[ix].value > 0) continue;
 					let acx = cells[ix].activecandidates;
 					if (acx.length !== 2) continue;
@@ -66,20 +67,39 @@ export function suedecoq() {
 				}
 				if (!cix) continue;
 
-				console.log("FOUND", cixi, cixj, bpix, cix, bpxac, allac);
+				console.log("FOUND", cixi, cixj, bpix, cix, bpac, bpxac, allac);
 				// eliminate bpac from Square
-
+				let tgtss = findTargetsInHouses(bpac, [-1,-1,bpsq], [cixi, cixj, bpix])
 				// eliminate acx from row/col
+				let house = row ? [row,-1,-1] : [-1,col,-1];
+				let tgtsrc = findTargetsInHouses(bpxac, house, [cixi, cixj, cix])
 
+				console.log("tgts", tgtss, bpac, tgtsrc, bpxac);
+				if (tgtss || tgtsrc) {
+					let targets = tgtss ? [...tgtss] : [];
+					if (tgtsrc) targets = [...tgtss, ...tgtsrc];
+					let values = [...bpac, ...bpxac];
+					let targetlist = [];
+					if (tgtss) targetlist.push([tgtss, bpac]);
+					if (tgtsrc) targetlist.push([tgtsrc, bpxac]);
 
+					let h = {
+						type: 'sdc',
+						rows: null,
+						cols: null,
+						square: null,
+						cells0: [cixi, cixj],
+						cells1: [bpix, cix],
+						values: values,
+						targets: targets,
+						targetlist: targetlist,
+						msg: `SuedeCoq: Cells: ${targets}, Value: ${values}`
+					}
+					return [h];
+				}
 			}
 		}
-
-
-
 	}
-
-
 
 	return null;
 }

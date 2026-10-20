@@ -340,7 +340,6 @@ function getAICPaths(chain1) {
 // chain: [ ep, ac, incoming candidate, outgoing candidate, incoming link weak/strong, previous link,  [next links]]]
 // cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
 export function loops() {
-	let  allpaths = [];
 	let  loops = [];
 	cpairs = getConjugatePairs();
 	//cpairs: [ value, [cix0, [ac0]], [cix1, [ac1]] ]
@@ -356,8 +355,6 @@ export function loops() {
 		let  bp = bivals[bv];
 		let  bvep = bp[0]
 		let  bvac = bp[1];
-		//console.log("bp", bp);
-		//if (bvep !== 18) continue;
 		// make the first link
 		console.log("bv0start", bp);
 		chain1 = [];	// reset the chain
@@ -445,12 +442,7 @@ export function loops() {
 		if (loops.length > 0) return loops;
 	}
 
-	//console.log("allpaths", allpaths);
-	//loops = processPaths(allpaths);
-
-	if (loops.length === 0) return null;
-	console.log("loops", loops);
-	return loops;
+	return null
 }
 
 function findLoopTargets(path) {

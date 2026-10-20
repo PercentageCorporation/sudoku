@@ -159,6 +159,7 @@ function Cell({ix}) {
 			case "colorsII":
 			case "alsXZ1":
 			case "alsXZ2":
+			case "sdc":
 				if (hint.cells0.includes(ix))
 					selMode = 8;
 				else if (hint.cells1.includes(ix))
