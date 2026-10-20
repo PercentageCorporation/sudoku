@@ -6,7 +6,7 @@ import ManualGrid from './components/ManualGrid.jsx';
 
 createRoot(document.getElementById('root')).render(
 	<Router>
-		<div id="dashboard" className="flex flex-col h-dvh max-w-103">
+		<div id="dashboard" className="flex flex-col h-dvh max-w-103 sudoku-container">
 			<div className="h-full bg-slate-100">
 				<Routes>
 					<Route path="/" element={<App />} />
